@@ -11,9 +11,9 @@
   "-DCMAKE_ANDROID_NDK=C:\\Users\\Oriol\\AppData\\Local\\Android\\sdk\\ndk\\28.2.13676358" ^
   "-DCMAKE_TOOLCHAIN_FILE=C:\\Users\\Oriol\\AppData\\Local\\Android\\sdk\\ndk\\28.2.13676358\\build\\cmake\\android.toolchain.cmake" ^
   "-DCMAKE_MAKE_PROGRAM=C:\\Users\\Oriol\\AppData\\Local\\Android\\Sdk\\cmake\\3.22.1\\bin\\ninja.exe" ^
-  "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=C:\\Users\\Oriol\\Documents\\GitHub\\SunTimer\\android\\app\\build\\intermediates\\cxx\\debug\\3b2ee4j1\\obj\\x86_64" ^
-  "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=C:\\Users\\Oriol\\Documents\\GitHub\\SunTimer\\android\\app\\build\\intermediates\\cxx\\debug\\3b2ee4j1\\obj\\x86_64" ^
-  "-BC:\\Users\\Oriol\\Documents\\GitHub\\SunTimer\\android\\app\\.cxx\\debug\\3b2ee4j1\\x86_64" ^
+  "-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=C:\\Users\\Oriol\\Documents\\GitHub\\SunExposureTimer\\sunexposuretimer\\android\\app\\build\\intermediates\\cxx\\debug\\3b2ee4j1\\obj\\x86_64" ^
+  "-DCMAKE_RUNTIME_OUTPUT_DIRECTORY=C:\\Users\\Oriol\\Documents\\GitHub\\SunExposureTimer\\sunexposuretimer\\android\\app\\build\\intermediates\\cxx\\debug\\3b2ee4j1\\obj\\x86_64" ^
+  "-BC:\\Users\\Oriol\\Documents\\GitHub\\SunExposureTimer\\sunexposuretimer\\android\\app\\.cxx\\debug\\3b2ee4j1\\x86_64" ^
   -GNinja ^
   -Wno-dev ^
   --no-warn-unused-cli ^
