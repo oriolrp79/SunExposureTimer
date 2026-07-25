@@ -1154,12 +1154,26 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       FittedBox(
                                         fit: BoxFit.scaleDown,
                                         alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          "${_luxValue.toString()} lx",
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 40,
-                                            fontWeight: FontWeight.bold,
-                                            color: const Color(0xFF2C3E50),
+                                        child: Text.rich(
+                                          TextSpan(
+                                            text: _luxValue.toString(),
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 40,
+                                              fontWeight: FontWeight.bold,
+                                              color: const Color(0xFF2C3E50),
+                                            ),
+                                            children: [
+                                              TextSpan(
+                                                text: " lx",
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 18,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: const Color(
+                                                    0xFF2C3E50,
+                                                  ).withOpacity(0.6),
+                                                ),
+                                              ),
+                                            ],
                                           ),
                                         ),
                                       ),
