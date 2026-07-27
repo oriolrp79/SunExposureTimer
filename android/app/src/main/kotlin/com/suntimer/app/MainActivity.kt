@@ -1,4 +1,4 @@
-package com.suntimer.sun_timer
+package com.suntimer.app
 
 import io.flutter.embedding.android.FlutterActivity
 

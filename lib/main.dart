@@ -988,12 +988,34 @@ class _DashboardScreenState extends State<DashboardScreen>
               color: const Color(0xFF2C3E50),
             ),
           ),
-          content: Text(
-            "El sensor de luz ayuda a estimar si estás a la sombra o al sol directo. Recuerda que la arena y el agua reflejan hasta un 20% de la radiación UV incluso a la sombra.",
-            style: GoogleFonts.poppins(
-              color: const Color(0xFF2C3E50).withOpacity(0.8),
-              fontSize: 14,
-            ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "El sensor de luz ayuda a estimar si estás a la sombra o al sol directo. Recuerda que la arena y el agua reflejan hasta un 20% de la radiación UV incluso a la sombra.",
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF2C3E50).withOpacity(0.8),
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Utiliza el algoritmo de Dosis Eritemática Estándar (SED) y la escala de fototipos cutáneos de Fitzpatrick respaldada por la OMS.",
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF2C3E50).withOpacity(0.8),
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                "Datos de radiación UV basados en modelos meteorológicos globales de la NOAA / ECMWF.",
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF2C3E50).withOpacity(0.8),
+                  fontSize: 14,
+                ),
+              ),
+            ],
           ),
           actions: [
             TextButton(
@@ -1028,281 +1050,445 @@ class _DashboardScreenState extends State<DashboardScreen>
     }
 
     return Scaffold(
-      backgroundColor: backgroundColor,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24.0,
-                    vertical: 16.0,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // HEADER DE LA APLICACIÓN
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: const BoxDecoration(
+          image: DecorationImage(
+            image: AssetImage('assets/sand.jpg'),
+            fit: BoxFit.cover,
+          ),
+        ),
+        child: Container(
+          width: double.infinity,
+          height: double.infinity,
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [backgroundColor, backgroundColor.withOpacity(0.0)],
+            ),
+          ),
+          child: SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24.0,
+                        vertical: 16.0,
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  "Sun Exposure Timer",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 20,
-                                    fontWeight: FontWeight.bold,
-                                    color: const Color(0xFF2C3E50),
-                                    letterSpacing: 0.5,
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                                Text(
-                                  "$dayString • $season",
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    color: const Color(
-                                      0xFF2C3E50,
-                                    ).withOpacity(0.6),
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 12),
-                          // Indicador de Hora e Info GPS
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.end,
+                          // HEADER DE LA APLICACIÓN
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: [
-                              Text(
-                                _currentTimeString,
-                                style: GoogleFonts.poppins(
-                                  fontSize: 22,
-                                  fontWeight: FontWeight.w700,
-                                  color: const Color(0xFF2C3E50),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      "Sun Exposure Timer",
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: const Color(0xFF2C3E50),
+                                        letterSpacing: 0.5,
+                                      ),
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                    Row(
+                                      children: [
+                                        Flexible(
+                                          child: Text(
+                                            "$dayString • $season",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                              color: const Color(
+                                                0xFF2C3E50,
+                                              ).withOpacity(0.6),
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 6),
+                                        GestureDetector(
+                                          onTap: _showLightSensorInfoDialog,
+                                          child: Icon(
+                                            Icons.info_outline_rounded,
+                                            size: 16,
+                                            color: const Color(
+                                              0xFF2C3E50,
+                                            ).withOpacity(0.6),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ],
                                 ),
                               ),
-                              const SizedBox(height: 2),
-                              Row(
+                              const SizedBox(width: 12),
+                              // Indicador de Hora e Info GPS
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
                                 children: [
-                                  Icon(
-                                    _locationError
-                                        ? Icons.location_off
-                                        : Icons.location_on,
-                                    size: 14,
-                                    color: _locationError
-                                        ? Colors.orange
-                                        : const Color(0xFF73C6B6),
-                                  ),
-                                  const SizedBox(width: 4),
                                   Text(
-                                    _locationError ? "Simulada" : "GPS Activo",
+                                    _currentTimeString,
                                     style: GoogleFonts.poppins(
-                                      fontSize: 11,
-                                      color: const Color(
-                                        0xFF2C3E50,
-                                      ).withOpacity(0.6),
+                                      fontSize: 22,
+                                      fontWeight: FontWeight.w700,
+                                      color: const Color(0xFF2C3E50),
                                     ),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Row(
+                                    children: [
+                                      Icon(
+                                        _locationError
+                                            ? Icons.location_off
+                                            : Icons.location_on,
+                                        size: 14,
+                                        color: _locationError
+                                            ? Colors.orange
+                                            : const Color(0xFF73C6B6),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        _locationError
+                                            ? "Simulada"
+                                            : "GPS Activo",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11,
+                                          color: const Color(
+                                            0xFF2C3E50,
+                                          ).withOpacity(0.6),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ],
                               ),
                             ],
                           ),
-                        ],
-                      ),
-                      const SizedBox(height: 20),
+                          const SizedBox(height: 20),
 
-                      // FILA DE FOTOTIPO SELECCIONADO
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x0A000000),
-                              blurRadius: 16,
-                              offset: Offset(0, 4),
+                          // FILA DE FOTOTIPO SELECCIONADO
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
                             ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 28,
-                              height: 28,
-                              decoration: BoxDecoration(
-                                color: currentType.color,
-                                shape: BoxShape.circle,
-                                border: Border.all(
-                                  color: const Color(
-                                    0xFF2C3E50,
-                                  ).withOpacity(0.2),
-                                  width: 2,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x0A000000),
+                                  blurRadius: 16,
+                                  offset: Offset(0, 4),
                                 ),
-                              ),
+                              ],
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Tu tipo de piel: ${currentType.name}",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF2C3E50),
-                                    ),
-                                  ),
-                                  Text(
-                                    "Dosis segura: ${currentType.dose} J/m²",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 11,
+                            child: Row(
+                              children: [
+                                Container(
+                                  width: 28,
+                                  height: 28,
+                                  decoration: BoxDecoration(
+                                    color: currentType.color,
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
                                       color: const Color(
                                         0xFF2C3E50,
-                                      ).withOpacity(0.6),
+                                      ).withOpacity(0.2),
+                                      width: 2,
                                     ),
                                   ),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: widget.onResetSkinType,
-                              icon: const Icon(
-                                Icons.edit_outlined,
-                                size: 20,
-                                color: Color(0xFF73C6B6),
-                              ),
-                              tooltip: "Cambiar fototipo",
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      // COORDINADAS CARD
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.circular(24),
-                          boxShadow: const [
-                            BoxShadow(
-                              color: Color(0x0A000000),
-                              blurRadius: 16,
-                              offset: Offset(0, 4),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.map_outlined,
-                              color: Color(0xFF73C6B6),
-                              size: 24,
-                            ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    "Coordenadas",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 11,
-                                      color: const Color(
-                                        0xFF2C3E50,
-                                      ).withOpacity(0.6),
-                                    ),
-                                  ),
-                                  Text(
-                                    _locationName,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(0xFF2C3E50),
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            IconButton(
-                              onPressed: _fetchLocationAndUv,
-                              icon: _isFetchingUv
-                                  ? const SizedBox(
-                                      width: 18,
-                                      height: 18,
-                                      child: CircularProgressIndicator(
-                                        strokeWidth: 2,
-                                        valueColor: AlwaysStoppedAnimation(
-                                          Color(0xFF73C6B6),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Tu tipo de piel: ${currentType.name}",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF2C3E50),
                                         ),
                                       ),
-                                    )
-                                  : const Icon(
-                                      Icons.refresh_rounded,
-                                      size: 20,
-                                      color: Color(0xFF73C6B6),
-                                    ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-
-                      Row(
-                        children: [
-                          // SENSOR LUZ AMBIENTAL
-                          Expanded(
-                            child: Container(
-                              height: 148,
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0x0A000000),
-                                    blurRadius: 16,
-                                    offset: Offset(0, 4),
+                                      Text(
+                                        "Dosis segura: ${currentType.dose} J/m²",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11,
+                                          color: const Color(
+                                            0xFF2C3E50,
+                                          ).withOpacity(0.6),
+                                        ),
+                                      ),
+                                    ],
                                   ),
-                                ],
+                                ),
+                                IconButton(
+                                  onPressed: widget.onResetSkinType,
+                                  icon: const Icon(
+                                    Icons.edit_outlined,
+                                    size: 20,
+                                    color: Color(0xFF73C6B6),
+                                  ),
+                                  tooltip: "Cambiar fototipo",
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          // COORDINADAS CARD
+                          Container(
+                            padding: const EdgeInsets.all(16),
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0x0A000000),
+                                  blurRadius: 16,
+                                  offset: Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              children: [
+                                const Icon(
+                                  Icons.map_outlined,
+                                  color: Color(0xFF73C6B6),
+                                  size: 24,
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Coordenadas",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 11,
+                                          color: const Color(
+                                            0xFF2C3E50,
+                                          ).withOpacity(0.6),
+                                        ),
+                                      ),
+                                      Text(
+                                        _locationName,
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(0xFF2C3E50),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                IconButton(
+                                  onPressed: _fetchLocationAndUv,
+                                  icon: _isFetchingUv
+                                      ? const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            valueColor: AlwaysStoppedAnimation(
+                                              Color(0xFF73C6B6),
+                                            ),
+                                          ),
+                                        )
+                                      : const Icon(
+                                          Icons.refresh_rounded,
+                                          size: 20,
+                                          color: Color(0xFF73C6B6),
+                                        ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+
+                          Row(
+                            children: [
+                              // SENSOR LUZ AMBIENTAL
+                              Expanded(
+                                child: Container(
+                                  height: 148,
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(24),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x0A000000),
+                                        blurRadius: 16,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      SizedBox(
+                                        height: 38,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    _hasPhysicalLightSensor
+                                                        ? "Luz real"
+                                                        : "Lux Simulado",
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 12,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: const Color(
+                                                        0xFF2C3E50,
+                                                      ).withOpacity(0.6),
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                  const SizedBox(height: 2),
+                                                  GestureDetector(
+                                                    onTap:
+                                                        _showLightSensorInfoDialog,
+                                                    child: Icon(
+                                                      Icons
+                                                          .info_outline_rounded,
+                                                      size: 14,
+                                                      color: const Color(
+                                                        0xFF2C3E50,
+                                                      ).withOpacity(0.5),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            const SizedBox(width: 4),
+                                            Icon(
+                                              _getEnvironmentIcon(_luxValue),
+                                              size: 20,
+                                              color: _getEnvironmentIconColor(
+                                                _luxValue,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerLeft,
+                                            child: Text.rich(
+                                              TextSpan(
+                                                text: _formatLux(_luxValue),
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 42,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: const Color(
+                                                    0xFF2C3E50,
+                                                  ),
+                                                ),
+                                                children: [
+                                                  TextSpan(
+                                                    text: " lx",
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                      color: const Color(
+                                                        0xFF2C3E50,
+                                                      ).withOpacity(0.6),
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ),
+                                          Text(
+                                            _getEnvironmentName(_luxValue),
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: _getEnvironmentIconColor(
+                                                _luxValue,
+                                              ),
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
                               ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  SizedBox(
-                                    height: 38,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          child: Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            children: [
-                                              Text(
-                                                _hasPhysicalLightSensor
-                                                    ? "Luz real"
-                                                    : "Lux Simulado",
+                              const SizedBox(width: 16),
+
+                              // ÍNDICE UV REAL/ESTIMADO
+                              Expanded(
+                                child: Container(
+                                  height: 148,
+                                  padding: const EdgeInsets.all(16),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white,
+                                    borderRadius: BorderRadius.circular(24),
+                                    boxShadow: const [
+                                      BoxShadow(
+                                        color: Color(0x0A000000),
+                                        blurRadius: 16,
+                                        offset: Offset(0, 4),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      SizedBox(
+                                        height: 38,
+                                        child: Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          children: [
+                                            Expanded(
+                                              child: Text(
+                                                "UV",
                                                 style: GoogleFonts.poppins(
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w600,
@@ -1313,87 +1499,77 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                 maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                               ),
-                                              const SizedBox(height: 2),
-                                              GestureDetector(
-                                                onTap:
-                                                    _showLightSensorInfoDialog,
-                                                child: Icon(
-                                                  Icons.info_outline_rounded,
-                                                  size: 14,
-                                                  color: const Color(
-                                                    0xFF2C3E50,
-                                                  ).withOpacity(0.5),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Icon(
-                                          _getEnvironmentIcon(_luxValue),
-                                          size: 20,
-                                          color: _getEnvironmentIconColor(
-                                            _luxValue,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        alignment: Alignment.centerLeft,
-                                        child: Text.rich(
-                                          TextSpan(
-                                            text: _formatLux(_luxValue),
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 42,
-                                              fontWeight: FontWeight.bold,
-                                              color: const Color(0xFF2C3E50),
                                             ),
-                                            children: [
-                                              TextSpan(
-                                                text: " lx",
-                                                style: GoogleFonts.poppins(
-                                                  fontSize: 18,
-                                                  fontWeight: FontWeight.w600,
-                                                  color: const Color(
-                                                    0xFF2C3E50,
-                                                  ).withOpacity(0.6),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
+                                            const SizedBox(width: 4),
+                                            SvgPicture.asset(
+                                              'assets/icons/heat_24.svg',
+                                              width: 20,
+                                              height: 20,
+                                              colorFilter:
+                                                  const ColorFilter.mode(
+                                                    Color.fromARGB(
+                                                      255,
+                                                      149,
+                                                      62,
+                                                      255,
+                                                    ),
+                                                    BlendMode.srcIn,
+                                                  ),
+                                            ),
+                                          ],
                                         ),
                                       ),
-                                      Text(
-                                        _getEnvironmentName(_luxValue),
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: _getEnvironmentIconColor(
-                                            _luxValue,
+                                      Column(
+                                        crossAxisAlignment:
+                                            CrossAxisAlignment.start,
+                                        children: [
+                                          FittedBox(
+                                            fit: BoxFit.scaleDown,
+                                            alignment: Alignment.centerLeft,
+                                            child: Text(
+                                              _uvIndex.toStringAsFixed(1),
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 42,
+                                                fontWeight: FontWeight.bold,
+                                                color: const Color(0xFF2C3E50),
+                                              ),
+                                            ),
                                           ),
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
+                                          Text(
+                                            _uvIndex <= 2.9
+                                                ? "Bajo"
+                                                : _uvIndex <= 5.9
+                                                ? "Moderado"
+                                                : _uvIndex <= 7.9
+                                                ? "Alto"
+                                                : _uvIndex <= 10.9
+                                                ? "Muy Alto"
+                                                : "Extremo",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 11,
+                                              fontWeight: FontWeight.bold,
+                                              color: _getUvColor(_uvIndex),
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
+                            ],
                           ),
-                          const SizedBox(width: 16),
+                          const SizedBox(height: 16),
 
-                          // ÍNDICE UV REAL/ESTIMADO
-                          Expanded(
-                            child: Container(
-                              height: 148,
-                              padding: const EdgeInsets.all(16),
+                          // DESLIZADOR PARA SIMULAR SENSOR SI NO EXISTE FÍSICO
+                          if (!_hasPhysicalLightSensor)
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
+                              ),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(24),
@@ -1407,239 +1583,142 @@ class _DashboardScreenState extends State<DashboardScreen>
                               ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
                                 children: [
-                                  SizedBox(
-                                    height: 38,
-                                    child: Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            "UV",
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.w600,
-                                              color: const Color(
-                                                0xFF2C3E50,
-                                              ).withOpacity(0.6),
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        SvgPicture.asset(
-                                          'assets/icons/heat_24.svg',
-                                          width: 20,
-                                          height: 20,
-                                          colorFilter: const ColorFilter.mode(
-                                            Color.fromARGB(255, 149, 62, 255),
-                                            BlendMode.srcIn,
-                                          ),
-                                        ),
-                                      ],
+                                  Text(
+                                    "Simular potencia de luz (Deslizador)",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: const Color(
+                                        0xFF2C3E50,
+                                      ).withOpacity(0.7),
                                     ),
                                   ),
-                                  Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
+                                  SliderTheme(
+                                    data: SliderTheme.of(context).copyWith(
+                                      activeTrackColor: const Color(0xFF73C6B6),
+                                      inactiveTrackColor: const Color(
+                                        0xFF73C6B6,
+                                      ).withOpacity(0.2),
+                                      thumbColor: const Color(0xFF73C6B6),
+                                      overlayColor: const Color(
+                                        0xFF73C6B6,
+                                      ).withOpacity(0.12),
+                                    ),
+                                    child: Slider(
+                                      min: 0.0,
+                                      max: 80000.0,
+                                      divisions: 80,
+                                      value: _simulatedSunPower,
+                                      onChanged: (val) {
+                                        setState(() {
+                                          _simulatedSunPower = val;
+                                          _luxValue = val.round();
+                                          // Si no tenemos datos GPS, estimar UV proporcional a los luxes del slider
+                                          if (_locationError) {
+                                            _uvIndex = (val / 8000.0);
+                                            if (_uvIndex > 12.0)
+                                              _uvIndex = 12.0;
+                                          }
+                                        });
+                                      },
+                                    ),
+                                  ),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
-                                      FittedBox(
-                                        fit: BoxFit.scaleDown,
-                                        alignment: Alignment.centerLeft,
-                                        child: Text(
-                                          _uvIndex.toStringAsFixed(1),
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 42,
-                                            fontWeight: FontWeight.bold,
-                                            color: const Color(0xFF2C3E50),
-                                          ),
+                                      Text(
+                                        "Sombra (0 lx)",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 10,
+                                          color: const Color(
+                                            0xFF2C3E50,
+                                          ).withOpacity(0.5),
                                         ),
                                       ),
                                       Text(
-                                        _uvIndex <= 2.9
-                                            ? "Bajo"
-                                            : _uvIndex <= 5.9
-                                            ? "Moderado"
-                                            : _uvIndex <= 7.9
-                                            ? "Alto"
-                                            : _uvIndex <= 10.9
-                                            ? "Muy Alto"
-                                            : "Extremo",
+                                        "Sol Pleno (80K lx)",
                                         style: GoogleFonts.poppins(
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.bold,
-                                          color: _getUvColor(_uvIndex),
+                                          fontSize: 10,
+                                          color: const Color(
+                                            0xFF2C3E50,
+                                          ).withOpacity(0.5),
                                         ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
                                 ],
                               ),
                             ),
-                          ),
+                          const SizedBox(height: 24),
+                          // LÓGICA DE ESTADO DEL BOTÓN PRINCIPAL / DETALLES DE ACCIÓN
+                          if (_limitReachedToday)
+                            _buildLimitReachedCard()
+                          else if (_buttonState == 0)
+                            _buildInitialButton()
+                          else if (_buttonState == 1)
+                            _buildCalculatedButton()
+                          else if (_buttonState == 2)
+                            _buildCountdownTimerCard(),
+                          const SizedBox(height: 20),
                         ],
                       ),
-                      const SizedBox(height: 16),
-
-                      // DESLIZADOR PARA SIMULAR SENSOR SI NO EXISTE FÍSICO
-                      if (!_hasPhysicalLightSensor)
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 12,
-                          ),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(24),
-                            boxShadow: const [
-                              BoxShadow(
-                                color: Color(0x0A000000),
-                                blurRadius: 16,
-                                offset: Offset(0, 4),
-                              ),
-                            ],
-                          ),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                "Simular potencia de luz (Deslizador)",
+                    ),
+                  ),
+                ),
+                // ESPACIO RESERVADO PARA ADS EN LA PARTE INFERIOR
+                Container(
+                  height: 65,
+                  width: double.infinity,
+                  color: Colors.transparent,
+                  child: Center(
+                    child: Container(
+                      margin: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.2),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Center(
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.ads_click_rounded,
+                              color: const Color(0xFF2C3E50).withOpacity(0.6),
+                              size: 16,
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Text(
+                                "Espacio reservado para Publicidad",
                                 style: GoogleFonts.poppins(
                                   fontSize: 12,
-                                  fontWeight: FontWeight.w600,
+                                  fontWeight: FontWeight.w500,
                                   color: const Color(
                                     0xFF2C3E50,
-                                  ).withOpacity(0.7),
+                                  ).withOpacity(0.6),
                                 ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              SliderTheme(
-                                data: SliderTheme.of(context).copyWith(
-                                  activeTrackColor: const Color(0xFF73C6B6),
-                                  inactiveTrackColor: const Color(
-                                    0xFF73C6B6,
-                                  ).withOpacity(0.2),
-                                  thumbColor: const Color(0xFF73C6B6),
-                                  overlayColor: const Color(
-                                    0xFF73C6B6,
-                                  ).withOpacity(0.12),
-                                ),
-                                child: Slider(
-                                  min: 0.0,
-                                  max: 80000.0,
-                                  divisions: 80,
-                                  value: _simulatedSunPower,
-                                  onChanged: (val) {
-                                    setState(() {
-                                      _simulatedSunPower = val;
-                                      _luxValue = val.round();
-                                      // Si no tenemos datos GPS, estimar UV proporcional a los luxes del slider
-                                      if (_locationError) {
-                                        _uvIndex = (val / 8000.0);
-                                        if (_uvIndex > 12.0) _uvIndex = 12.0;
-                                      }
-                                    });
-                                  },
-                                ),
-                              ),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    "Sombra (0 lx)",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 10,
-                                      color: const Color(
-                                        0xFF2C3E50,
-                                      ).withOpacity(0.5),
-                                    ),
-                                  ),
-                                  Text(
-                                    "Sol Pleno (80K lx)",
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 10,
-                                      color: const Color(
-                                        0xFF2C3E50,
-                                      ).withOpacity(0.5),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      const SizedBox(height: 24),
-                      // LÓGICA DE ESTADO DEL BOTÓN PRINCIPAL / DETALLES DE ACCIÓN
-                      if (_limitReachedToday)
-                        _buildLimitReachedCard()
-                      else if (_buttonState == 0)
-                        _buildInitialButton()
-                      else if (_buttonState == 1)
-                        _buildCalculatedButton()
-                      else if (_buttonState == 2)
-                        _buildCountdownTimerCard(),
-                      const SizedBox(height: 20),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // ESPACIO RESERVADO PARA ADS EN LA PARTE INFERIOR
-            Container(
-              height: 65,
-              width: double.infinity,
-              color: Colors.transparent,
-              child: Center(
-                child: Container(
-                  margin: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 8,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: Colors.white.withOpacity(0.3),
-                      width: 1,
-                    ),
-                  ),
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.ads_click_rounded,
-                          color: const Color(0xFF2C3E50).withOpacity(0.6),
-                          size: 16,
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            "Espacio reservado para Publicidad",
-                            style: GoogleFonts.poppins(
-                              fontSize: 12,
-                              fontWeight: FontWeight.w500,
-                              color: const Color(0xFF2C3E50).withOpacity(0.6),
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
+                          ],
                         ),
-                      ],
+                      ),
                     ),
                   ),
                 ),
-              ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
