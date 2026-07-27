@@ -45,7 +45,7 @@ const List<FitzpatrickType> fitzpatrickTypes = [
     index: 1,
     name: "Tipo II",
     description: "Clara. Se quema fácilmente, se broncea mínimamente.",
-    color: Color(0xFFF7ECE1),
+    color: Color(0xFFFFDDC7),
     dose: 250,
   ),
   FitzpatrickType(
@@ -116,6 +116,7 @@ class InitialRouter extends StatefulWidget {
 class _InitialRouterState extends State<InitialRouter> {
   bool _isLoading = true;
   int? _savedSkinType;
+  bool _isEditingSkinType = false;
 
   @override
   void initState() {
@@ -145,11 +146,19 @@ class _InitialRouterState extends State<InitialRouter> {
       );
     }
 
-    if (_savedSkinType == null) {
+    if (_savedSkinType == null || _isEditingSkinType) {
       return OnboardingScreen(
+        initialSelectedIndex: _savedSkinType,
+        showCloseButton: _savedSkinType != null,
         onCompleted: (selectedType) {
           setState(() {
             _savedSkinType = selectedType;
+            _isEditingSkinType = false;
+          });
+        },
+        onClose: () {
+          setState(() {
+            _isEditingSkinType = false;
           });
         },
       );
@@ -157,11 +166,9 @@ class _InitialRouterState extends State<InitialRouter> {
 
     return DashboardScreen(
       selectedSkinTypeIndex: _savedSkinType!,
-      onResetSkinType: () async {
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.remove('skin_type');
+      onResetSkinType: () {
         setState(() {
-          _savedSkinType = null;
+          _isEditingSkinType = true;
         });
       },
     );
@@ -170,9 +177,18 @@ class _InitialRouterState extends State<InitialRouter> {
 
 /// PANTALLA 1: ONBOARDING - Comparador Visual Interactivo de Piel
 class OnboardingScreen extends StatefulWidget {
+  final int? initialSelectedIndex;
+  final bool showCloseButton;
   final Function(int) onCompleted;
+  final VoidCallback? onClose;
 
-  const OnboardingScreen({super.key, required this.onCompleted});
+  const OnboardingScreen({
+    super.key,
+    this.initialSelectedIndex,
+    this.showCloseButton = false,
+    required this.onCompleted,
+    this.onClose,
+  });
 
   @override
   State<OnboardingScreen> createState() => _OnboardingScreenState();
@@ -180,6 +196,12 @@ class OnboardingScreen extends StatefulWidget {
 
 class _OnboardingScreenState extends State<OnboardingScreen> {
   int? _selectedIndex;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedIndex = widget.initialSelectedIndex;
+  }
 
   Future<void> _saveSkinType(int index) async {
     final prefs = await SharedPreferences.getInstance();
@@ -189,178 +211,203 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 16.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: 20),
-              Text(
-                "Sun Exposure Timer",
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: const Color(0xFF73C6B6),
-                  letterSpacing: 2.0,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "Selecciona tu tipo de piel",
-                style: GoogleFonts.poppins(
-                  fontSize: 28,
-                  fontWeight: FontWeight.w700,
-                  color: const Color(0xFF2C3E50),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                "Compara tu piel del antebrazo con las siguientes tarjetas de la escala Fitzpatrick.",
-                style: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: const Color(0xFF2C3E50).withOpacity(0.7),
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 24),
-              Expanded(
-                child: ListView.builder(
-                  itemCount: fitzpatrickTypes.length,
-                  physics: const BouncingScrollPhysics(),
-                  itemBuilder: (context, index) {
-                    final type = fitzpatrickTypes[index];
-                    final isSelected = _selectedIndex == index;
-
-                    // Determinar el color del texto sobre el color de piel
-                    final textColor = type.index >= 4
-                        ? Colors.white
-                        : const Color(0xFF2C3E50);
-                    final subTextColor = type.index >= 4
-                        ? Colors.white70
-                        : const Color(0xFF2C3E50).withOpacity(0.6);
-
-                    return GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _selectedIndex = index;
-                        });
-                      },
-                      child: AnimatedContainer(
-                        duration: const Duration(milliseconds: 250),
-                        margin: const EdgeInsets.only(bottom: 12),
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 20,
-                          vertical: 16,
-                        ),
-                        decoration: BoxDecoration(
-                          color: type.color,
-                          borderRadius: BorderRadius.circular(24),
-                          border: Border.all(
-                            color: isSelected
-                                ? const Color(0xFF73C6B6)
-                                : Colors.transparent,
-                            width: 3.5,
-                          ),
-                          boxShadow: [
-                            BoxShadow(
-                              color: isSelected
-                                  ? const Color(0xFF73C6B6).withOpacity(0.15)
-                                  : const Color(0x0A000000),
-                              blurRadius: 16,
-                              offset: const Offset(0, 8),
-                            ),
-                          ],
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              width: 30,
-                              height: 30,
-                              decoration: BoxDecoration(
-                                color: isSelected
-                                    ? const Color(0xFF73C6B6)
-                                    : Colors.transparent,
-                                border: Border.all(
-                                  color: isSelected
-                                      ? Colors.transparent
-                                      : textColor.withOpacity(0.3),
-                                  width: 2,
-                                ),
-                                shape: BoxShape.circle,
-                              ),
-                              child: isSelected
-                                  ? const Icon(
-                                      Icons.check,
-                                      color: Colors.white,
-                                      size: 18,
-                                    )
-                                  : null,
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    type.name,
-                                    style: GoogleFonts.poppins(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 16,
-                                      color: textColor,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    type.description,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      color: subTextColor,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
+        if (widget.showCloseButton && widget.onClose != null) {
+          widget.onClose!();
+        }
+      },
+      child: Scaffold(
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 24.0,
+              vertical: 16.0,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (widget.showCloseButton)
+                  Align(
+                    alignment: Alignment.topRight,
+                    child: IconButton(
+                      onPressed: widget.onClose,
+                      icon: const Icon(
+                        Icons.close_rounded,
+                        color: Color(0xFF2C3E50),
+                        size: 24,
                       ),
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-              ElevatedButton(
-                onPressed: _selectedIndex == null
-                    ? null
-                    : () => _saveSkinType(_selectedIndex!),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF73C6B6),
-                  foregroundColor: Colors.white,
-                  disabledBackgroundColor: const Color(
-                    0xFF2C3E50,
-                  ).withOpacity(0.1),
-                  disabledForegroundColor: const Color(
-                    0xFF2C3E50,
-                  ).withOpacity(0.3),
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(24),
-                  ),
-                ),
-                child: Text(
-                  "Aceptar",
+                    ),
+                  )
+                else
+                  const SizedBox(height: 20),
+                Text(
+                  "Sun Exposure Timer",
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
+                    color: const Color(0xFF73C6B6),
+                    letterSpacing: 2.0,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  "Selecciona tu tipo de piel",
+                  style: GoogleFonts.poppins(
+                    fontSize: 28,
+                    fontWeight: FontWeight.w700,
+                    color: const Color(0xFF2C3E50),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  "Compara tu piel del antebrazo con las siguientes tarjetas de la escala Fitzpatrick.",
+                  style: GoogleFonts.poppins(
+                    fontSize: 14,
+                    color: const Color(0xFF2C3E50).withOpacity(0.7),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 24),
+                Expanded(
+                  child: ListView.builder(
+                    itemCount: fitzpatrickTypes.length,
+                    physics: const BouncingScrollPhysics(),
+                    itemBuilder: (context, index) {
+                      final type = fitzpatrickTypes[index];
+                      final isSelected = _selectedIndex == index;
+
+                      // Determinar el color del texto sobre el color de piel
+                      final textColor = type.index >= 4
+                          ? Colors.white
+                          : const Color(0xFF2C3E50);
+                      final subTextColor = type.index >= 4
+                          ? Colors.white70
+                          : const Color(0xFF2C3E50).withOpacity(0.6);
+
+                      return GestureDetector(
+                        onTap: () {
+                          setState(() {
+                            _selectedIndex = index;
+                          });
+                        },
+                        child: AnimatedContainer(
+                          duration: const Duration(milliseconds: 250),
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 16,
+                          ),
+                          decoration: BoxDecoration(
+                            color: type.color,
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(
+                              color: isSelected
+                                  ? const Color(0xFF73C6B6)
+                                  : Colors.transparent,
+                              width: 3.5,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: isSelected
+                                    ? const Color(0xFF73C6B6).withOpacity(0.15)
+                                    : const Color(0x0A000000),
+                                blurRadius: 16,
+                                offset: const Offset(0, 8),
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 30,
+                                height: 30,
+                                decoration: BoxDecoration(
+                                  color: isSelected
+                                      ? const Color(0xFF73C6B6)
+                                      : Colors.transparent,
+                                  border: Border.all(
+                                    color: isSelected
+                                        ? Colors.transparent
+                                        : textColor.withOpacity(0.3),
+                                    width: 2,
+                                  ),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: isSelected
+                                    ? const Icon(
+                                        Icons.check,
+                                        color: Colors.white,
+                                        size: 18,
+                                      )
+                                    : null,
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      type.name,
+                                      style: GoogleFonts.poppins(
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 16,
+                                        color: textColor,
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      type.description,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 12,
+                                        color: subTextColor,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
-              ),
-              const SizedBox(height: 12),
-            ],
+                const SizedBox(height: 16),
+                ElevatedButton(
+                  onPressed: _selectedIndex == null
+                      ? null
+                      : () => _saveSkinType(_selectedIndex!),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF73C6B6),
+                    foregroundColor: Colors.white,
+                    disabledBackgroundColor: const Color(
+                      0xFF2C3E50,
+                    ).withOpacity(0.1),
+                    disabledForegroundColor: const Color(
+                      0xFF2C3E50,
+                    ).withOpacity(0.3),
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                  ),
+                  child: Text(
+                    "Aceptar",
+                    style: GoogleFonts.poppins(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+              ],
+            ),
           ),
         ),
       ),
@@ -399,10 +446,11 @@ class _DashboardScreenState extends State<DashboardScreen>
   StreamSubscription<double>? _lightSubscription;
 
   // Lógica del Temporizador (0 = Inicial, 1 = Calculado, 2 = Countdown Activo)
-  int _buttonState = 0;
+  int _buttonState = 1;
   int _calculatedSafeMinutes = 0;
   int _remainingSeconds = 0;
   Timer? _countdownTimer;
+  Timer? _calculationTimer;
   bool _limitReachedToday = false;
   bool _demoMode = false; // Modo demo de 10 segundos
 
@@ -426,11 +474,21 @@ class _DashboardScreenState extends State<DashboardScreen>
     _checkDailyLimit();
     _initLightSensor();
     _fetchLocationAndUv();
+
+    // Calcular inicialmente
+    _calculateRecommendedTime();
+    // Programar cálculo periódico cada 5 segundos
+    _calculationTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      if (_buttonState == 1) {
+        _calculateRecommendedTime();
+      }
+    });
   }
 
   @override
   void dispose() {
     _clockTimer.cancel();
+    _calculationTimer?.cancel();
     _lightSubscription?.cancel();
     _countdownTimer?.cancel();
     _flashTimer?.cancel();
@@ -467,7 +525,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     await prefs.setString('daily_limit_date', today);
     setState(() {
       _limitReachedToday = true;
-      _buttonState = 0;
+      _buttonState = 1;
     });
   }
 
@@ -484,10 +542,12 @@ class _DashboardScreenState extends State<DashboardScreen>
             _hasPhysicalLightSensor = true;
             _luxValue = initialLux.round();
           });
+          _calculateRecommendedTime();
           _lightSubscription = sensor.ambientLightStream.listen((lux) {
             setState(() {
               _luxValue = lux.round();
             });
+            _calculateRecommendedTime();
           });
           return;
         }
@@ -500,6 +560,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       _hasPhysicalLightSensor = false;
       _luxValue = _simulatedSunPower.round();
     });
+    _calculateRecommendedTime();
   }
 
   // Obtiene posición GPS y consulta Open-Meteo
@@ -586,6 +647,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           setState(() {
             _uvIndex = (hourlyUv[closestIndex] as num).toDouble();
           });
+          _calculateRecommendedTime();
           return;
         }
       }
@@ -596,6 +658,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       setState(() {
         _uvIndex = _calculateEstimatedUv();
       });
+      _calculateRecommendedTime();
     }
   }
 
@@ -628,26 +691,66 @@ class _DashboardScreenState extends State<DashboardScreen>
     }
   }
 
+  double _getAttenuationFactor(int lux) {
+    if (lux >= 20000) {
+      return 1.0;
+    } else if (lux >= 1000) {
+      return 0.5;
+    } else {
+      return 0.1;
+    }
+  }
+
+  String _getEnvironmentName(int lux) {
+    if (lux >= 20000) {
+      return "Sol Directo";
+    } else if (lux >= 1000) {
+      return "Sombra / Sombrilla";
+    } else {
+      return "Interior / Sombra Densa";
+    }
+  }
+
+  IconData _getEnvironmentIcon(int lux) {
+    if (lux >= 20000) {
+      return Icons.wb_sunny_rounded;
+    } else if (lux >= 1000) {
+      return Icons.beach_access_rounded;
+    } else {
+      return Icons.house_siding_rounded;
+    }
+  }
+
+  Color _getEnvironmentIconColor(int lux) {
+    if (lux >= 20000) {
+      return const Color(0xFFF7D070);
+    } else {
+      return const Color(0xFF73C6B6);
+    }
+  }
+
   // Cálculo del tiempo recomendado en minutos
   void _calculateRecommendedTime() {
     final currentType = fitzpatrickTypes[widget.selectedSkinTypeIndex];
+    final factorAtenuacion = _getAttenuationFactor(_luxValue);
 
-    // Si el índice UV es cero o muy cercano, la exposición es segura indefinidamente
+    double rawTime;
     if (_uvIndex < 0.5) {
-      setState(() {
-        _calculatedSafeMinutes = 120; // Cap a 2 horas para seguridad general
-        _buttonState = 1;
-      });
-      return;
+      rawTime = 480.0 / factorAtenuacion;
+    } else {
+      rawTime = (currentType.dose / _uvIndex) / factorAtenuacion;
     }
 
-    // Fórmula: Tiempo (min) = Dosis_Fototipo / Indice_UV
-    double rawTime = currentType.dose / _uvIndex;
+    if (rawTime > 480.0) {
+      rawTime = 480.0;
+    }
 
     setState(() {
       _calculatedSafeMinutes = rawTime.round();
       if (_calculatedSafeMinutes < 1) _calculatedSafeMinutes = 1;
-      _buttonState = 1;
+      if (_buttonState != 2) {
+        _buttonState = 1;
+      }
     });
   }
 
@@ -680,7 +783,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   void _cancelCountdown() {
     _countdownTimer?.cancel();
     setState(() {
-      _buttonState = 0;
+      _buttonState = 1;
       _demoMode = false;
     });
   }
@@ -723,7 +826,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       _isFlashing = false;
       _demoMode = false;
       if (wasDemo) {
-        _buttonState = 0;
+        _buttonState = 1;
       }
     });
 
@@ -844,6 +947,69 @@ class _DashboardScreenState extends State<DashboardScreen>
     int minutes = totalSeconds ~/ 60;
     int seconds = totalSeconds % 60;
     return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
+  }
+
+  String _formatSafeTime(int minutes) {
+    if (minutes >= 60) {
+      final hours = minutes ~/ 60;
+      final mins = minutes % 60;
+      return mins > 0 ? "${hours}h $mins min" : "${hours}h";
+    }
+    return "$minutes min";
+  }
+
+  String _formatCountdownTime(int totalSeconds) {
+    if (totalSeconds >= 60) {
+      int minutes = totalSeconds ~/ 60;
+      return _formatSafeTime(minutes);
+    }
+    return "$totalSeconds s";
+  }
+
+  String _formatLux(int lux) {
+    final valueStr = lux.toString();
+    final regExp = RegExp(r'\B(?=(\d{3})+(?!\d))');
+    return valueStr.replaceAllMapped(regExp, (Match match) => ',');
+  }
+
+  void _showLightSensorInfoDialog() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFFBF9F5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: Text(
+            "Información",
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF2C3E50),
+            ),
+          ),
+          content: Text(
+            "El sensor de luz ayuda a estimar si estás a la sombra o al sol directo. Recuerda que la arena y el agua reflejan hasta un 20% de la radiación UV incluso a la sombra.",
+            style: GoogleFonts.poppins(
+              color: const Color(0xFF2C3E50).withOpacity(0.8),
+              fontSize: 14,
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF73C6B6),
+              ),
+              child: Text(
+                "Entendido",
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -1097,13 +1263,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                       ),
                       const SizedBox(height: 16),
 
-                      // SECCIÓN DE SENSORES (Luz Ambiental e Índice UV)
                       Row(
                         children: [
                           // SENSOR LUZ AMBIENTAL
                           Expanded(
                             child: Container(
-                              height: 135,
+                              height: 148,
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -1121,31 +1286,58 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          "Sensor Luz",
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(
-                                              0xFF2C3E50,
-                                            ).withOpacity(0.6),
+                                  SizedBox(
+                                    height: 38,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                _hasPhysicalLightSensor
+                                                    ? "Luz real"
+                                                    : "Lux Simulado",
+                                                style: GoogleFonts.poppins(
+                                                  fontSize: 12,
+                                                  fontWeight: FontWeight.w600,
+                                                  color: const Color(
+                                                    0xFF2C3E50,
+                                                  ).withOpacity(0.6),
+                                                ),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                              const SizedBox(height: 2),
+                                              GestureDetector(
+                                                onTap:
+                                                    _showLightSensorInfoDialog,
+                                                child: Icon(
+                                                  Icons.info_outline_rounded,
+                                                  size: 14,
+                                                  color: const Color(
+                                                    0xFF2C3E50,
+                                                  ).withOpacity(0.5),
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      const Icon(
-                                        Icons.wb_sunny_rounded,
-                                        size: 20,
-                                        color: Color(0xFFF7D070),
-                                      ),
-                                    ],
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          _getEnvironmentIcon(_luxValue),
+                                          size: 20,
+                                          color: _getEnvironmentIconColor(
+                                            _luxValue,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                   Column(
                                     crossAxisAlignment:
@@ -1156,9 +1348,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         alignment: Alignment.centerLeft,
                                         child: Text.rich(
                                           TextSpan(
-                                            text: _luxValue.toString(),
+                                            text: _formatLux(_luxValue),
                                             style: GoogleFonts.poppins(
-                                              fontSize: 40,
+                                              fontSize: 42,
                                               fontWeight: FontWeight.bold,
                                               color: const Color(0xFF2C3E50),
                                             ),
@@ -1178,15 +1370,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         ),
                                       ),
                                       Text(
-                                        _hasPhysicalLightSensor
-                                            ? "Nivel de lux real"
-                                            : "Sensor Simulado",
+                                        _getEnvironmentName(_luxValue),
                                         style: GoogleFonts.poppins(
-                                          fontSize: 10,
-                                          color: const Color(
-                                            0xFF2C3E50,
-                                          ).withOpacity(0.5),
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.bold,
+                                          color: _getEnvironmentIconColor(
+                                            _luxValue,
+                                          ),
                                         ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
@@ -1199,7 +1392,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           // ÍNDICE UV REAL/ESTIMADO
                           Expanded(
                             child: Container(
-                              height: 135,
+                              height: 148,
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
                                 color: Colors.white,
@@ -1217,35 +1410,40 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 mainAxisAlignment:
                                     MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          "UV",
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 11,
-                                            fontWeight: FontWeight.w600,
-                                            color: const Color(
-                                              0xFF2C3E50,
-                                            ).withOpacity(0.6),
+                                  SizedBox(
+                                    height: 38,
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Expanded(
+                                          child: Text(
+                                            "UV",
+                                            style: GoogleFonts.poppins(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w600,
+                                              color: const Color(
+                                                0xFF2C3E50,
+                                              ).withOpacity(0.6),
+                                            ),
+                                            maxLines: 1,
+                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
                                         ),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      SvgPicture.asset(
-                                        'assets/icons/heat_24.svg',
-                                        width: 20,
-                                        height: 20,
-                                        colorFilter: const ColorFilter.mode(
-                                          Color.fromARGB(255, 149, 62, 255),
-                                          BlendMode.srcIn,
+                                        const SizedBox(width: 4),
+                                        SvgPicture.asset(
+                                          'assets/icons/heat_24.svg',
+                                          width: 20,
+                                          height: 20,
+                                          colorFilter: const ColorFilter.mode(
+                                            Color.fromARGB(255, 149, 62, 255),
+                                            BlendMode.srcIn,
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
                                   ),
                                   Column(
                                     crossAxisAlignment:
@@ -1278,6 +1476,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                                           fontWeight: FontWeight.bold,
                                           color: _getUvColor(_uvIndex),
                                         ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
                                     ],
                                   ),
@@ -1596,7 +1796,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 FittedBox(
                   fit: BoxFit.scaleDown,
                   child: Text(
-                    "$_calculatedSafeMinutes min",
+                    _formatSafeTime(_calculatedSafeMinutes),
                     style: GoogleFonts.poppins(
                       fontSize: 34,
                       fontWeight: FontWeight.w800,
@@ -1619,14 +1819,18 @@ class _DashboardScreenState extends State<DashboardScreen>
                         size: 14,
                       ),
                       const SizedBox(width: 4),
-                      Text(
-                        "Volver a calcular",
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white70,
-                          decoration: TextDecoration.underline,
-                          decorationColor: Colors.white70,
+                      Flexible(
+                        child: Text(
+                          "Volver a calcular",
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white70,
+                            decoration: TextDecoration.underline,
+                            decorationColor: Colors.white70,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
@@ -1774,12 +1978,18 @@ class _DashboardScreenState extends State<DashboardScreen>
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Text(
-                        _formatSeconds(_remainingSeconds),
-                        style: GoogleFonts.poppins(
-                          fontSize: 34,
-                          fontWeight: FontWeight.bold,
-                          color: const Color(0xFF2C3E50),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+                        child: FittedBox(
+                          fit: BoxFit.scaleDown,
+                          child: Text(
+                            _formatCountdownTime(_remainingSeconds),
+                            style: GoogleFonts.poppins(
+                              fontSize: 34,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFF2C3E50),
+                            ),
+                          ),
                         ),
                       ),
                       Text(

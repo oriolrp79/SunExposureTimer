@@ -28,20 +28,12 @@ void main() {
     await tester.tap(find.text('Tipo I'));
     await tester.pump();
 
-    // Tap "Comenzar"
-    await tester.tap(find.text('Comenzar'));
+    // Tap "Aceptar"
+    await tester.tap(find.text('Aceptar'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
-    // Verificar que estamos en la pantalla principal y aparece el botón de calcular
-    expect(find.text('Calcular tiempo seguro'), findsOneWidget);
-
-    // Tap "Calcular tiempo seguro"
-    await tester.tap(find.text('Calcular tiempo seguro'));
-    await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
-
-    // Verificar que se muestra el tiempo seguro estimado y el botón de demo
+    // Verificar que se muestra el tiempo seguro estimado automáticamente y el botón de demo
     expect(find.text('Tiempo Seguro Estimado'), findsOneWidget);
     expect(find.text('Demo 10s'), findsOneWidget);
 
@@ -49,8 +41,8 @@ void main() {
     await tester.tap(find.text('Demo 10s'));
     await tester.pump();
 
-    // Verificar que se muestra el contador en 00:10
-    expect(find.text('00:10'), findsOneWidget);
+    // Verificar que se muestra el contador en 10 s
+    expect(find.text('10 s'), findsOneWidget);
 
     // Avanzar el tiempo 10 segundos (1 segundo a la vez para asegurar que el temporizador periódico se dispare)
     for (int i = 0; i < 10; i++) {
@@ -70,6 +62,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     // Verificar que volvemos al estado inicial y no estamos bloqueados
-    expect(find.text('Calcular tiempo seguro'), findsOneWidget);
+    expect(find.text('Tiempo Seguro Estimado'), findsOneWidget);
   });
 }
