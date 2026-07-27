@@ -10,12 +10,14 @@ val newBuildDir: Directory =
         .dir("../../build")
         .get()
 rootProject.layout.buildDirectory.value(newBuildDir)
+rootProject.buildDir = newBuildDir.asFile
 
 subprojects {
     val project = this
     
     val newSubprojectBuildDir: Directory = newBuildDir.dir(project.name)
     project.layout.buildDirectory.value(newSubprojectBuildDir)
+    project.buildDir = newSubprojectBuildDir.asFile
     
     if (project.name != "app") {
         project.afterEvaluate {

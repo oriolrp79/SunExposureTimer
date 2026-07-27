@@ -66,5 +66,9 @@
 		<string>UIInterfaceOrientationLandscapeLeft</string>
 		<string>UIInterfaceOrientationLandscapeRight</string>
 	</array>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Aquesta aplicació necessita accedir a la teva ubicació per obtenir l'índex UV local i calcular el temps recomanat d'exposició al sol.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Aquesta aplicació necessita accedir a la teva ubicació per obtenir l'índex UV local i calcular el temps recomanat d'exposició al sol.</string>
 </dict>
 </plist>

@@ -49,3 +49,7 @@ android/app/build/
 build/
 *.apk
 *.bin
+
+# Clau de producció i credencials d'Android
+*.jks
+key.properties
