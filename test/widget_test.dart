@@ -12,16 +12,16 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    SharedPreferences.setMockInitialValues({});
+    SharedPreferences.setMockInitialValues({'app_language': 'es'});
 
     // Build our app and trigger a frame.
     await tester.pumpWidget(const SunTimerApp());
 
     // Esperar a que se carguen las preferencias y se renderice el onboarding.
-    await tester.pump();
+    await tester.pumpAndSettle();
 
     // Verificar que aparece el nombre de la app o elementos del onboarding.
-    expect(find.text('Sun Exposure Timer'), findsOneWidget);
+    expect(find.text('Temporizador de Exposición Solar'), findsOneWidget);
     expect(find.text('Selecciona tu tipo de piel'), findsOneWidget);
 
     // Seleccionar tipo de piel (Tipo I)

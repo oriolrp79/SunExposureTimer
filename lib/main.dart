@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/foundation.dart';
@@ -78,6 +79,689 @@ const List<FitzpatrickType> fitzpatrickTypes = [
   ),
 ];
 
+final ValueNotifier<String> appLanguage = ValueNotifier<String>('en');
+
+String getSystemLanguageCode() {
+  if (kIsWeb) return 'en';
+  try {
+    final locale = Platform.localeName;
+    if (locale.length >= 2) {
+      final code = locale.substring(0, 2).toLowerCase();
+      final supported = ['en', 'es', 'de', 'fr', 'it', 'pt', 'ca'];
+      if (supported.contains(code)) {
+        return code;
+      }
+    }
+  } catch (e) {
+    debugPrint("Error detecting locale: $e");
+  }
+  return 'en';
+}
+
+class AppTranslations {
+  static const Map<String, Map<String, String>> _translations = {
+    'en': {
+      'app_title': 'Sun Exposure Timer',
+      'select_skin_type': 'Select your skin type',
+      'onboarding_desc':
+          'Your skin type determines your sensitivity to the sun and the safe dose of UV radiation you can receive before sunburn.',
+      'accept': 'Accept',
+      'skin_type_1_name': 'Type I',
+      'skin_type_1_desc': 'Very fair. Always burns, never tans.',
+      'skin_type_2_name': 'Type II',
+      'skin_type_2_desc': 'Fair. Burns easily, tans minimally.',
+      'skin_type_3_name': 'Type III',
+      'skin_type_3_desc': 'Medium. Burns moderately, tans gradually.',
+      'skin_type_4_name': 'Type IV',
+      'skin_type_4_desc': 'Dark. Burns minimally, tans well.',
+      'skin_type_5_name': 'Type V',
+      'skin_type_5_desc': 'Very dark. Rarely burns, tans intensely.',
+      'skin_type_6_name': 'Type VI',
+      'skin_type_6_desc': 'Black. Never burns, tans deeply.',
+      'your_skin_type': 'Your skin type',
+      'safe_dose': 'Safe dose',
+      'change_skin_type': 'Change skin type',
+      'gps_active': 'GPS Active',
+      'simulated': 'Simulated',
+      'location': 'Location',
+      'real_light': 'Real light',
+      'simulated_lux': 'Simulated Lux',
+      'direct_sun': 'Direct sun',
+      'shade_umbrella': 'Shade / Umbrella',
+      'indoor_deep_shade': 'Indoor / Deep shade',
+      'light_sensor_info':
+          'The light sensor helps estimate if you are in the shade or in direct sun. Remember that sand and water reflect up to 20% of UV radiation even in the shade.',
+      'header_info_p1':
+          'It uses the Standard Erythemal Dose (SED) algorithm and the Fitzpatrick skin phototype scale supported by the WHO.',
+      'header_info_p2':
+          'UV radiation data based on global meteorological models from NOAA / ECMWF.',
+      'estimated_safe_time': 'Estimated Safe Time',
+      'start_exposure': 'Start',
+      'daily_limit_reached': 'Daily limit reached',
+      'cancel_exposure': 'Cancel Exposure',
+      'safe_exposure_finished_title': 'Daily limit reached!',
+      'safe_exposure_finished_body':
+          'You have reached your recommended sun limit!',
+      'understood': 'Understood',
+      'settings_title': 'Settings',
+      'select_language': 'Select language',
+      'close': 'Close',
+      'info_dialog_title': 'Information',
+      'ambient_light_title': 'Real light level',
+      'uv_index_title': 'UV Index',
+      'uv_index_desc': 'Based on coordinates & Open-Meteo',
+      'simulating_light_slider': 'Simulate light power (Slider)',
+      'sun_limit_reached_card_body':
+          'You have already reached your recommended safe sun dose for today. Return tomorrow for new monitoring.',
+      'reset_limit_proto': 'Reset limit (Prototype Mode)',
+      'ad_space': 'Reserved Space for Advertising',
+      'shadow_warning': 'Seek shade, wear sunscreen, and stay well hydrated.',
+      'detecting_location': 'Detecting location...',
+      'exposure_timer_title': 'Exposure Timer',
+      'remaining': 'remaining',
+      'uv_low': 'Low',
+      'uv_moderate': 'Moderate',
+      'uv_high': 'High',
+      'uv_very_high': 'Very High',
+      'uv_extreme': 'Extreme',
+      'shade_slider_label': 'Shade (0 lx)',
+      'sun_slider_label': 'Full Sun (80K lx)',
+    },
+    'es': {
+      'app_title': 'Temporizador de Exposición Solar',
+      'select_skin_type': 'Selecciona tu tipo de piel',
+      'onboarding_desc':
+          'El tipo de piel determina tu sensibilidad al sol y la dosis de radiación ultravioleta segura que puedes recibir antes de sufrir eritema (quemadura).',
+      'accept': 'Aceptar',
+      'skin_type_1_name': 'Tipo I',
+      'skin_type_1_desc': 'Muy clara. Siempre se quema, nunca se broncea.',
+      'skin_type_2_name': 'Tipo II',
+      'skin_type_2_desc': 'Clara. Se quema fácilmente, se broncea mínimamente.',
+      'skin_type_3_name': 'Tipo III',
+      'skin_type_3_desc':
+          'Media. Se quema moderadamente, se broncea gradualmente.',
+      'skin_type_4_name': 'Tipo IV',
+      'skin_type_4_desc': 'Oscura. Se quema mínimamente, se broncea bien.',
+      'skin_type_5_name': 'Tipo V',
+      'skin_type_5_desc':
+          'Muy oscura. Raramente se quema, se broncea intensamente.',
+      'skin_type_6_name': 'Tipo VI',
+      'skin_type_6_desc': 'Negra. Nunca se quema, se broncea profundamente.',
+      'your_skin_type': 'Tu tipo de piel',
+      'safe_dose': 'Dosis segura',
+      'change_skin_type': 'Cambiar fototipo',
+      'gps_active': 'GPS Activo',
+      'simulated': 'Simulada',
+      'location': 'Ubicación',
+      'real_light': 'Luz real',
+      'simulated_lux': 'Lux Simulado',
+      'direct_sun': 'Sol directo',
+      'shade_umbrella': 'Sombra / Sombrilla',
+      'indoor_deep_shade': 'Interior / Sombra densa',
+      'light_sensor_info':
+          'El sensor de luz ayuda a estimar si estás a la sombra o al sol directo. Recuerda que la arena y el agua reflejan hasta un 20% de la radiación UV incluso a la sombra.',
+      'header_info_p1':
+          'Utiliza el algoritmo de Dosis Eritemática Estándar (SED) y la escala de fototipos cutáneos de Fitzpatrick respaldada por la OMS.',
+      'header_info_p2':
+          'Datos de radiación UV basados en modelos meteorológicos globales de la NOAA / ECMWF.',
+      'estimated_safe_time': 'Tiempo Seguro Estimado',
+      'start_exposure': 'Iniciar',
+      'daily_limit_reached': 'Límite diario alcanzado',
+      'cancel_exposure': 'Cancelar Exposición',
+      'safe_exposure_finished_title': '¡Límite diario alcanzado!',
+      'safe_exposure_finished_body':
+          '¡Has alcanzado tu límite de sol recomendado!',
+      'understood': 'Entendido',
+      'settings_title': 'Configuración',
+      'select_language': 'Seleccionar idioma',
+      'close': 'Cerrar',
+      'info_dialog_title': 'Información',
+      'ambient_light_title': 'Nivel de lux real',
+      'uv_index_title': 'Índice UV',
+      'uv_index_desc': 'Basado en coordenadas y Open-Meteo',
+      'simulating_light_slider': 'Simular potencia de luz (Deslizador)',
+      'sun_limit_reached_card_body':
+          'Ya has completado tu dosis de sol recomendada para el día de hoy. Vuelve mañana para un nuevo monitoreo seguro.',
+      'reset_limit_proto': 'Reestablecer límite (Modo Prototipo)',
+      'ad_space': 'Espacio reservado para Publicidad',
+      'shadow_warning':
+          'Busca la sombra, ponte protector solar e hidrátate bien.',
+      'detecting_location': 'Detectando ubicación...',
+      'exposure_timer_title': 'Temporizador de Exposición',
+      'remaining': 'restantes',
+      'uv_low': 'Bajo',
+      'uv_moderate': 'Moderado',
+      'uv_high': 'Alto',
+      'uv_very_high': 'Muy Alto',
+      'uv_extreme': 'Extremo',
+      'shade_slider_label': 'Sombra (0 lx)',
+      'sun_slider_label': 'Sol Pleno (80K lx)',
+    },
+    'de': {
+      'app_title': 'Sonnenschonungs-Timer',
+      'select_skin_type': 'Wählen Sie Ihren Hauttyp',
+      'onboarding_desc':
+          'Ihr Hauttyp bestimmt Ihre Empfindlichkeit gegenüber der Sonne und die sichere UV-Dosis, die Sie vor einem Sonnenbrand erhalten können.',
+      'accept': 'Akzeptieren',
+      'skin_type_1_name': 'Typ I',
+      'skin_type_1_desc': 'Sehr hell. Verbrennt immer, bräunt nie.',
+      'skin_type_2_name': 'Typ II',
+      'skin_type_2_desc': 'Hell. Verbrennt leicht, bräunt minimal.',
+      'skin_type_3_name': 'Typ III',
+      'skin_type_3_desc': 'Mittel. Verbrennt mäßig, bräunt allmählich.',
+      'skin_type_4_name': 'Typ IV',
+      'skin_type_4_desc': 'Dunkel. Verbrennt minimal, bräunt gut.',
+      'skin_type_5_name': 'Typ V',
+      'skin_type_5_desc': 'Sehr dunkel. Verbrennt selten, bräunt intensiv.',
+      'skin_type_6_name': 'Typ VI',
+      'skin_type_6_desc': 'Schwarz. Verbrennt nie, bräunt tief.',
+      'your_skin_type': 'Ihr Hauttyp',
+      'safe_dose': 'Sichere Dosis',
+      'change_skin_type': 'Hauttyp ändern',
+      'gps_active': 'GPS Aktiv',
+      'simulated': 'Simuliert',
+      'location': 'Standort',
+      'real_light': 'Echtes Licht',
+      'simulated_lux': 'Simulierter Lux',
+      'direct_sun': 'Direkte Sonne',
+      'shade_umbrella': 'Schatten / Schirm',
+      'indoor_deep_shade': 'Innen / Tiefer Schatten',
+      'light_sensor_info':
+          'Der Lichtsensor hilft abzuschätzen, ob Sie sich im Schatten oder in der direkten Sonne befinden. Denken Sie daran, dass Sand und Wasser selbst im Schatten bis zu 20 % der UV-Strahlung reflektieren.',
+      'header_info_p1':
+          'Es verwendet den Standard-Erythemdosis-Algorithmus (SED) und die von der WHO unterstützte Fitzpatrick-Hautphototypskala.',
+      'header_info_p2':
+          'UV-Strahlungsdaten basierend auf globalen meteorologischen Modellen von NOAA / ECMWF.',
+      'estimated_safe_time': 'Geschätzte sichere Zeit',
+      'start_exposure': 'Starten',
+      'daily_limit_reached': 'Tageslimit erreicht',
+      'cancel_exposure': 'Exposition abbrechen',
+      'safe_exposure_finished_title': 'Sichere Exposition beendet',
+      'safe_exposure_finished_body':
+          'Sie haben Ihr empfohlenes Sonnenlimit erreicht!',
+      'understood': 'Verstanden',
+      'settings_title': 'Einstellungen',
+      'select_language': 'Sprache auswählen',
+      'close': 'Schließen',
+      'info_dialog_title': 'Information',
+      'ambient_light_title': 'Echter Lichtpegel',
+      'uv_index_title': 'UV-Index',
+      'uv_index_desc': 'Basierend auf Koordinaten & Open-Meteo',
+      'simulating_light_slider': 'Lichtstärke simulieren (Schieberegler)',
+      'sun_limit_reached_card_body':
+          'Sie haben Ihre empfohlene sichere Sonnendosis für heute bereits erreicht. Kommen Sie morgen für eine neue Überwachung wieder.',
+      'reset_limit_proto': 'Limit zurücksetzen (Prototyp-Modus)',
+      'ad_space': 'Reservierter Platz für Werbung',
+      'shadow_warning':
+          'Suchen Sie Schatten auf, tragen Sie Sonnencreme auf und trinken Sie ausreichend Wasser.',
+      'detecting_location': 'Standort wird ermittelt...',
+      'exposure_timer_title': 'Expositions-Timer',
+      'remaining': 'verbleibend',
+      'uv_low': 'Niedrig',
+      'uv_moderate': 'Mäßig',
+      'uv_high': 'Hoch',
+      'uv_very_high': 'Sehr hoch',
+      'uv_extreme': 'Extrem',
+      'shade_slider_label': 'Schatten (0 lx)',
+      'sun_slider_label': 'Volle Sonne (80K lx)',
+    },
+    'fr': {
+      'app_title': 'Minuteur d\'Exposition Solaire',
+      'select_skin_type': 'Sélectionnez votre type de peau',
+      'onboarding_desc':
+          'Votre type de peau détermine votre sensibilité au soleil et la dose sûre de rayonnement ultraviolet que vous pouvez recevoir avant d\'attraper un coup de soleil.',
+      'accept': 'Accepter',
+      'skin_type_1_name': 'Type I',
+      'skin_type_1_desc': 'Très claire. Brûle toujours, ne bronze jamais.',
+      'skin_type_2_name': 'Type II',
+      'skin_type_2_desc': 'Claire. Brûle facilement, bronze peu.',
+      'skin_type_3_name': 'Type III',
+      'skin_type_3_desc': 'Moyenne. Brûle modérément, bronze progressivement.',
+      'skin_type_4_name': 'Type IV',
+      'skin_type_4_desc': 'Mate. Brûle peu, bronze bien.',
+      'skin_type_5_name': 'Type V',
+      'skin_type_5_desc': 'Très mate. Brûle rarement, bronze intensément.',
+      'skin_type_6_name': 'Type VI',
+      'skin_type_6_desc': 'Noire. Ne brûle jamais, bronze intensément.',
+      'your_skin_type': 'Votre type de peau',
+      'safe_dose': 'Dose sûre',
+      'change_skin_type': 'Modifier le type de peau',
+      'gps_active': 'GPS Actif',
+      'simulated': 'Simulée',
+      'location': 'Localisation',
+      'real_light': 'Lumière réelle',
+      'simulated_lux': 'Lux simulé',
+      'direct_sun': 'Soleil direct',
+      'shade_umbrella': 'Ombre / Parasol',
+      'indoor_deep_shade': 'Intérieur / Ombre dense',
+      'light_sensor_info':
+          'Le capteur de lumière aide à estimer si vous êtes à l\'ombre ou en plein soleil. N\'oubliez pas que le sable et l\'eau réfléchissent jusqu\'à 20 % des rayons UV, même à l\'ombre.',
+      'header_info_p1':
+          'Il utilise l\'algorithme de Dose Érythémale Standard (SED) et l\'échelle des phototypes cutanés de Fitzpatrick soutenue par l\'OMS.',
+      'header_info_p2':
+          'Données de rayonnement UV basées sur les modèles météorologiques mondiaux de la NOAA / CEPMMT.',
+      'estimated_safe_time': 'Temps de sécurité estimé',
+      'start_exposure': 'Démarrer',
+      'daily_limit_reached': 'Limite quotidienne atteinte',
+      'cancel_exposure': 'Annuler l\'exposition',
+      'safe_exposure_finished_title': 'Exposition sûre terminée',
+      'safe_exposure_finished_body':
+          'Vous avez atteint votre limite d\'exposition recommandée !',
+      'understood': 'Compris',
+      'settings_title': 'Paramètres',
+      'select_language': 'Sélectionner la langue',
+      'close': 'Fermer',
+      'info_dialog_title': 'Information',
+      'ambient_light_title': 'Niveau de lux réel',
+      'uv_index_title': 'Indice UV',
+      'uv_index_desc': 'Basé sur les coordonnées et Open-Meteo',
+      'simulating_light_slider': 'Simuler la puissance de la lumière (Curseur)',
+      'sun_limit_reached_card_body':
+          'Vous avez déjà atteint votre dose de soleil sûre recommandée pour aujourd\'hui. Revenez demain pour un nouveau suivi.',
+      'reset_limit_proto': 'Réinitialiser la limite (Mode Prototype)',
+      'ad_space': 'Espace réservé à la publicité',
+      'shadow_warning':
+          'Recherchez l\'ombre, mettez de la crème solaire et restez bien hydraté.',
+      'detecting_location': 'Détection de l\'emplacement...',
+      'exposure_timer_title': 'Minuteur d\'exposition',
+      'remaining': 'restants',
+      'uv_low': 'Faible',
+      'uv_moderate': 'Modéré',
+      'uv_high': 'Élevé',
+      'uv_very_high': 'Très élevé',
+      'uv_extreme': 'Extrême',
+      'shade_slider_label': 'Ombre (0 lx)',
+      'sun_slider_label': 'Plein Soleil (80K lx)',
+    },
+    'it': {
+      'app_title': 'Timer di Esposizione Solare',
+      'select_skin_type': 'Seleziona il tuo tipo di pelle',
+      'onboarding_desc':
+          'Il tuo tipo di pelle determina la tua sensibilità al sol e la dose sicura di radiazioni ultraviolette que puoi ricevere prima di scottarti.',
+      'accept': 'Accetta',
+      'skin_type_1_name': 'Tipo I',
+      'skin_type_1_desc':
+          'Molto chiara. Si scotta sempre, non si abbronza mai.',
+      'skin_type_2_name': 'Tipo II',
+      'skin_type_2_desc':
+          'Chiara. Si scotta facilmente, si abbronza minimamente.',
+      'skin_type_3_name': 'Tipo III',
+      'skin_type_3_desc':
+          'Media. Si scotta moderatamente, si abbronza gradualmente.',
+      'skin_type_4_name': 'Tipo IV',
+      'skin_type_4_desc': 'Scura. Si scotta minimamente, si abbronza bene.',
+      'skin_type_5_name': 'Tipo V',
+      'skin_type_5_desc':
+          'Molto scura. Raramente si scotta, si abbronza intensamente.',
+      'skin_type_6_name': 'Tipo VI',
+      'skin_type_6_desc': 'Nera. Non si scotta mai, si abbronza intensamente.',
+      'your_skin_type': 'Il tuo tipo di pelle',
+      'safe_dose': 'Dose sicura',
+      'change_skin_type': 'Cambia fototipo',
+      'gps_active': 'GPS Attivo',
+      'simulated': 'Simulata',
+      'location': 'Posizione',
+      'real_light': 'Luce reale',
+      'simulated_lux': 'Lux simulato',
+      'direct_sun': 'Sole directo',
+      'shade_umbrella': 'Ombra / Ombrellone',
+      'indoor_deep_shade': 'Interno / Ombra densa',
+      'light_sensor_info':
+          'Il sensore di luce aiuta a stimare se sei all\'ombra o al sol directo. Ricorda che la sabbia e l\'acqua riflettono fino al 20% delle radiazioni UV anche all\'ombra.',
+      'header_info_p1':
+          'Utilizza l\'algoritmo Standard Erythemal Dose (SED) e la scala dei fototipi cutanei di Fitzpatrick supportata dall\'OMS.',
+      'header_info_p2':
+          'Dati sulla radiazione UV basati sui modelli meteorologici globali di NOAA / ECMWF.',
+      'estimated_safe_time': 'Tempo sicuro stimato',
+      'start_exposure': 'Inizia',
+      'daily_limit_reached': 'Limite giornaliero raggiunto',
+      'cancel_exposure': 'Annulla esposizione',
+      'safe_exposure_finished_title': 'Esposizione sicura terminata',
+      'safe_exposure_finished_body':
+          'Hai raggiunto il tuo limite di sole consigliato!',
+      'understood': 'Capito',
+      'settings_title': 'Impostazioni',
+      'select_language': 'Seleziona lingua',
+      'close': 'Chiudi',
+      'info_dialog_title': 'Informazione',
+      'ambient_light_title': 'Livello di lux reale',
+      'uv_index_title': 'Indice UV',
+      'uv_index_desc': 'Basato su coordinate e Open-Meteo',
+      'simulating_light_slider': 'Simula potenza luce (Cursore)',
+      'sun_limit_reached_card_body':
+          'Hai già completato la tua dose di sole sicura consigliata per oggi. Torna domani per un nuovo monitoraggio.',
+      'reset_limit_proto': 'Reimposta limite (Modalità Prototipo)',
+      'ad_space': 'Spazio riservato alla pubblicità',
+      'shadow_warning':
+          'Cerca l\'ombra, usa la crema solare e rimani ben idratato.',
+      'detecting_location': 'Rilevamento della posizione...',
+      'exposure_timer_title': 'Timer di esposizione',
+      'remaining': 'rimanenti',
+      'uv_low': 'Basso',
+      'uv_moderate': 'Moderato',
+      'uv_high': 'Alto',
+      'uv_very_high': 'Molto alto',
+      'uv_extreme': 'Estremo',
+      'shade_slider_label': 'Ombra (0 lx)',
+      'sun_slider_label': 'Sole Pieno (80K lx)',
+    },
+    'pt': {
+      'app_title': 'Temporizador de Exposição Solar',
+      'select_skin_type': 'Selecione o seu tipo de pele',
+      'onboarding_desc':
+          'O seu tipo de pele determina a sua sensibilidade ao sol e a dose segura de radiação ultravioleta que pode receber antes de sofrer eritema (queimadura).',
+      'accept': 'Aceitar',
+      'skin_type_1_name': 'Tipo I',
+      'skin_type_1_desc': 'Muito clara. Sempre se queima, nunca se bronzeia.',
+      'skin_type_2_name': 'Tipo II',
+      'skin_type_2_desc':
+          'Clara. Queima-se facilmente, bronzeia-se minimamente.',
+      'skin_type_3_name': 'Tipo III',
+      'skin_type_3_desc':
+          'Média. Queima-se moderadamente, bronzeia-se gradualmente.',
+      'skin_type_4_name': 'Tipo IV',
+      'skin_type_4_desc': 'Escura. Queima-se minimamente, bronzeia-se bem.',
+      'skin_type_5_name': 'Tipo V',
+      'skin_type_5_desc':
+          'Muito escura. Raramente se queima, bronzeia-se intensamente.',
+      'skin_type_6_name': 'Tipo VI',
+      'skin_type_6_desc': 'Negra. Nunca se queima, bronzeia-se profundamente.',
+      'your_skin_type': 'O seu tipo de pele',
+      'safe_dose': 'Dose segura',
+      'change_skin_type': 'Alterar fototipo',
+      'gps_active': 'GPS Ativo',
+      'simulated': 'Simulada',
+      'location': 'Localização',
+      'real_light': 'Luz real',
+      'simulated_lux': 'Lux simulado',
+      'direct_sun': 'Sol direto',
+      'shade_umbrella': 'Sombra / Guarda-sol',
+      'indoor_deep_shade': 'Interior / Sombra densa',
+      'light_sensor_info':
+          'O sensor de luz ajuda a estimar se está à sombra ou sob o sol direto. Lembre-se de que a areia e a água refletem até 20% da radiação UV, mesmo à sombra.',
+      'header_info_p1':
+          'Utiliza o algoritmo de Dose Eritemática Padrão (SED) e a escala de fotótipos cutâneos de Fitzpatrick apoiada pela OMS.',
+      'header_info_p2':
+          'Dados de radiação UV baseados em modelos meteorológicos globais da NOAA / ECMWF.',
+      'estimated_safe_time': 'Tempo seguro estimado',
+      'start_exposure': 'Iniciar',
+      'daily_limit_reached': 'Limite diário atingido',
+      'cancel_exposure': 'Cancelar exposição',
+      'safe_exposure_finished_title': 'Exposição segura concluída',
+      'safe_exposure_finished_body':
+          'Você atingiu o seu limite de sol recomendado!',
+      'understood': 'Entendido',
+      'settings_title': 'Configurações',
+      'select_language': 'Selecionar idioma',
+      'close': 'Fechar',
+      'info_dialog_title': 'Informação',
+      'ambient_light_title': 'Nível de lux real',
+      'uv_index_title': 'Indice UV',
+      'uv_index_desc': 'Baseado em coordenadas e Open-Meteo',
+      'simulating_light_slider': 'Simular potência de luz (Deslizador)',
+      'sun_limit_reached_card_body':
+          'Já atingiu a sua dose de sol segura recomendada para hoje. Volte amanhã para uma nova monitorização.',
+      'reset_limit_proto': 'Redefinir limite (Modo Protótipo)',
+      'ad_space': 'Espaço reservado para publicidade',
+      'shadow_warning':
+          'Procure a sombra, use protetor solar e mantenha-se bem hidratado.',
+      'detecting_location': 'Detectando localização...',
+      'exposure_timer_title': 'Temporizador de exposição',
+      'remaining': 'restantes',
+      'uv_low': 'Baixo',
+      'uv_moderate': 'Moderado',
+      'uv_high': 'Alto',
+      'uv_very_high': 'Muito alto',
+      'uv_extreme': 'Extremo',
+      'shade_slider_label': 'Sombra (0 lx)',
+      'sun_slider_label': 'Sol Pleno (80K lx)',
+    },
+    'ca': {
+      'app_title': 'Temporitzador d\'Exposició Solar',
+      'select_skin_type': 'Selecciona el teu tipus de pell',
+      'onboarding_desc':
+          'El tipus de pell determina la teva sensibilitat al sol i la dosi de radiació ultraviolada segura que pots rebre abans de patir eritema (cremada).',
+      'accept': 'Acceptar',
+      'skin_type_1_name': 'Tipus I',
+      'skin_type_1_desc': 'Molt clara. Sempre es crema, mai es bronzeja.',
+      'skin_type_2_name': 'Tipus II',
+      'skin_type_2_desc': 'Clara. Es crema fàcilment, es bronzeja mínimament.',
+      'skin_type_3_name': 'Tipus III',
+      'skin_type_3_desc':
+          'Mitjana. Es crema moderadament, es bronzeja gradualment.',
+      'skin_type_4_name': 'Tipus IV',
+      'skin_type_4_desc': 'Fosca. Es crema mínimament, es bronzeja bé.',
+      'skin_type_5_name': 'Tipus V',
+      'skin_type_5_desc':
+          'Molt fosca. Rarament es crema, es bronzeja intensivament.',
+      'skin_type_6_name': 'Tipus VI',
+      'skin_type_6_desc': 'Negra. Mai es crema, es bronzeja profundament.',
+      'your_skin_type': 'El teu tipus de pell',
+      'safe_dose': 'Dosi segura',
+      'change_skin_type': 'Canviar fototip',
+      'gps_active': 'GPS Actiu',
+      'simulated': 'Simulada',
+      'location': 'Ubicació',
+      'real_light': 'Llum real',
+      'simulated_lux': 'Lux simulat',
+      'direct_sun': 'Sol directe',
+      'shade_umbrella': 'Ombra / Parasol',
+      'indoor_deep_shade': 'Interior / Sombra densa',
+      'light_sensor_info':
+          'El sensor de llum ajuda a estimar si estàs a l\'ombra o al sol directe. Recorda que la sorra i l\'aigua reflecteixen fins a un 20% de la radiació UV fins i tot a l\'ombra.',
+      'header_info_p1':
+          'Utilitza l\'algoritme de Dosi Eritemàtica Estàndard (SED) i l\'escala de fototips cutanis de Fitzpatrick recolzada per l\'OMS.',
+      'header_info_p2':
+          'Dades de radiació UV basades en models meteorològics globals de la NOAA / ECMWF.',
+      'estimated_safe_time': 'Temps segur estimat',
+      'start_exposure': 'Iniciar',
+      'daily_limit_reached': 'Límit diari assolit',
+      'cancel_exposure': 'Cancel·lar exposició',
+      'safe_exposure_finished_title': 'Exposició segura finalitzada',
+      'safe_exposure_finished_body':
+          '¡Has assolit el teu límit de sol recomanat!',
+      'understood': 'Entès',
+      'settings_title': 'Configuració',
+      'select_language': 'Seleccionar idioma',
+      'close': 'Tancar',
+      'info_dialog_title': 'Informació',
+      'ambient_light_title': 'Nivel de lux real',
+      'uv_index_title': 'Índex UV',
+      'uv_index_desc': 'Basat en coordenades i Open-Meteo',
+      'simulating_light_slider': 'Simular potència de llum (Lliscador)',
+      'sun_limit_reached_card_body':
+          'Ja has completat la teva dosi de sol recomanada per a avui. Torna demà per a un nou monitoratge segur.',
+      'reset_limit_proto': 'Restablir límit (Mode Prototip)',
+      'ad_space': 'Espai reservat per a publicitat',
+      'shadow_warning':
+          'Busca l\'ombra, posa\'t protector solar i hidrata\'t bé.',
+      'detecting_location': 'Detectant ubicació...',
+      'exposure_timer_title': 'Temporitzador d\'Exposició',
+      'remaining': 'restants',
+      'uv_low': 'Baix',
+      'uv_moderate': 'Moderat',
+      'uv_high': 'Alt',
+      'uv_very_high': 'Molt Alt',
+      'uv_extreme': 'Extrem',
+      'shade_slider_label': 'Ombra (0 lx)',
+      'sun_slider_label': 'Sol Ple (80K lx)',
+    },
+  };
+
+  static String getText(String lang, String key) {
+    return _translations[lang]?[key] ?? _translations['en']?[key] ?? '';
+  }
+
+  static String getMonthName(int month, String lang) {
+    final months = {
+      'en': [
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ],
+      'es': [
+        "Enero",
+        "Febrero",
+        "Marzo",
+        "Abril",
+        "Mayo",
+        "Junio",
+        "Julio",
+        "Agosto",
+        "Septiembre",
+        "Octubre",
+        "Noviembre",
+        "Diciembre",
+      ],
+      'ca': [
+        "Gener",
+        "Febrer",
+        "Març",
+        "Abril",
+        "Maig",
+        "Juny",
+        "Juliol",
+        "Agost",
+        "Setembre",
+        "Octubre",
+        "Novembre",
+        "Desembre",
+      ],
+      'de': [
+        "Januar",
+        "Februar",
+        "März",
+        "April",
+        "Mai",
+        "Juni",
+        "Juli",
+        "August",
+        "September",
+        "Oktober",
+        "November",
+        "Dezember",
+      ],
+      'fr': [
+        "Janvier",
+        "Février",
+        "Mars",
+        "Avril",
+        "Mai",
+        "Juin",
+        "Juillet",
+        "Août",
+        "Septembre",
+        "Octobre",
+        "Novembre",
+        "Décembre",
+      ],
+      'it': [
+        "Gennaio",
+        "Febbraio",
+        "Marzo",
+        "Aprile",
+        "Maggio",
+        "Giugno",
+        "Luglio",
+        "Agosto",
+        "Settembre",
+        "Ottobre",
+        "Novembre",
+        "Dicembre",
+      ],
+      'pt': [
+        "Janeiro",
+        "Fevereiro",
+        "Março",
+        "Abril",
+        "Maio",
+        "Junho",
+        "Julho",
+        "Agosto",
+        "Setembro",
+        "Outubro",
+        "Novembro",
+        "Dezembro",
+      ],
+    };
+    return (months[lang] ?? months['en']!)[month - 1];
+  }
+
+  static String getSeasonName(String seasonKey, String lang) {
+    final seasons = {
+      'Primavera': {
+        'en': 'Spring',
+        'es': 'Primavera',
+        'ca': 'Primavera',
+        'de': 'Frühling',
+        'fr': 'Printemps',
+        'it': 'Primavera',
+        'pt': 'Primavera',
+      },
+      'Verano': {
+        'en': 'Summer',
+        'es': 'Verano',
+        'ca': 'Estiu',
+        'de': 'Sommer',
+        'fr': 'Été',
+        'it': 'Estate',
+        'pt': 'Verão',
+      },
+      'Otoño': {
+        'en': 'Autumn',
+        'es': 'Otoño',
+        'ca': 'Tardor',
+        'de': 'Herbst',
+        'fr': 'Automne',
+        'it': 'Autunno',
+        'pt': 'Outono',
+      },
+      'Invierno': {
+        'en': 'Winter',
+        'es': 'Invierno',
+        'ca': 'Hivern',
+        'de': 'Winter',
+        'fr': 'Hiver',
+        'it': 'Inverno',
+        'pt': 'Inverno',
+      },
+    };
+    return seasons[seasonKey]?[lang] ?? seasons[seasonKey]?['en'] ?? seasonKey;
+  }
+
+  static String formatDate(DateTime date, String lang) {
+    final monthName = getMonthName(date.month, lang);
+    switch (lang) {
+      case 'en':
+        return "$monthName ${date.day}";
+      case 'de':
+        return "${date.day}. $monthName";
+      case 'fr':
+        return "${date.day} $monthName";
+      case 'it':
+        return "${date.day} $monthName";
+      case 'pt':
+        return "${date.day} de $monthName";
+      case 'ca':
+        final firstChar = monthName.substring(0, 1).toLowerCase();
+        final isVowel = ['a', 'e', 'i', 'o', 'u'].contains(firstChar);
+        return "${date.day} ${isVowel ? "d'" : "de "}$monthName";
+      case 'es':
+      default:
+        return "${date.day} de $monthName";
+    }
+  }
+}
+
 class SunTimerApp extends StatelessWidget {
   const SunTimerApp({super.key});
 
@@ -100,7 +784,12 @@ class SunTimerApp extends StatelessWidget {
         ),
         useMaterial3: true,
       ),
-      home: const InitialRouter(),
+      home: ValueListenableBuilder<String>(
+        valueListenable: appLanguage,
+        builder: (context, lang, child) {
+          return InitialRouter(key: ValueKey(lang));
+        },
+      ),
     );
   }
 }
@@ -126,6 +815,26 @@ class _InitialRouterState extends State<InitialRouter> {
 
   Future<void> _checkPreferences() async {
     final prefs = await SharedPreferences.getInstance();
+
+    // Cargar preferencia de idioma
+    String selectedLang;
+    if (prefs.containsKey('app_language')) {
+      selectedLang = prefs.getString('app_language')!;
+    } else {
+      // Auto-detectar idioma
+      String systemLocale = 'en';
+      try {
+        systemLocale = Localizations.localeOf(context).languageCode;
+      } catch (e) {
+        try {
+          systemLocale = Platform.localeName.substring(0, 2).toLowerCase();
+        } catch (_) {}
+      }
+      final supported = ['en', 'es', 'de', 'fr', 'it', 'pt', 'ca'];
+      selectedLang = supported.contains(systemLocale) ? systemLocale : 'en';
+    }
+    appLanguage.value = selectedLang;
+
     setState(() {
       _savedSkinType = prefs.containsKey('skin_type')
           ? prefs.getInt('skin_type')
@@ -211,6 +920,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final lang = appLanguage.value;
     return PopScope(
       canPop: false,
       onPopInvoked: (didPop) {
@@ -244,7 +954,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 else
                   const SizedBox(height: 20),
                 Text(
-                  "Sun Exposure Timer",
+                  AppTranslations.getText(lang, 'app_title'),
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -255,7 +965,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 8),
                 Text(
-                  "Selecciona tu tipo de piel",
+                  AppTranslations.getText(lang, 'select_skin_type'),
                   style: GoogleFonts.poppins(
                     fontSize: 28,
                     fontWeight: FontWeight.w700,
@@ -265,7 +975,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 ),
                 const SizedBox(height: 12),
                 Text(
-                  "Compara tu piel del antebrazo con las siguientes tarjetas de la escala Fitzpatrick.",
+                  AppTranslations.getText(lang, 'onboarding_desc'),
                   style: GoogleFonts.poppins(
                     fontSize: 14,
                     color: const Color(0xFF2C3E50).withOpacity(0.7),
@@ -352,7 +1062,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      type.name,
+                                      AppTranslations.getText(
+                                        lang,
+                                        'skin_type_${index + 1}_name',
+                                      ),
                                       style: GoogleFonts.poppins(
                                         fontWeight: FontWeight.bold,
                                         fontSize: 16,
@@ -361,7 +1074,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                     ),
                                     const SizedBox(height: 2),
                                     Text(
-                                      type.description,
+                                      AppTranslations.getText(
+                                        lang,
+                                        'skin_type_${index + 1}_desc',
+                                      ),
                                       style: GoogleFonts.poppins(
                                         fontSize: 12,
                                         color: subTextColor,
@@ -398,7 +1114,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     ),
                   ),
                   child: Text(
-                    "Aceptar",
+                    AppTranslations.getText(lang, 'accept'),
                     style: GoogleFonts.poppins(
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
@@ -568,7 +1284,10 @@ class _DashboardScreenState extends State<DashboardScreen>
     setState(() {
       _isFetchingUv = true;
       _locationError = false;
-      _locationName = "Detectando ubicación...";
+      _locationName = AppTranslations.getText(
+        appLanguage.value,
+        'detecting_location',
+      );
     });
 
     try {
@@ -584,7 +1303,8 @@ class _DashboardScreenState extends State<DashboardScreen>
       // Fallback a ubicación simulada (Barcelona)
       setState(() {
         _locationError = true;
-        _locationName = "Barcelona, ES (Simulada)";
+        _locationName =
+            "Barcelona, ES (${AppTranslations.getText(appLanguage.value, 'simulated')})";
       });
       // Consultamos UV para coordenadas de Barcelona
       await _fetchUvIndex(41.3851, 2.1734);
@@ -942,13 +1662,6 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  // Genera un texto para el formato de tiempo en MM:SS
-  String _formatSeconds(int totalSeconds) {
-    int minutes = totalSeconds ~/ 60;
-    int seconds = totalSeconds % 60;
-    return "${minutes.toString().padLeft(2, '0')}:${seconds.toString().padLeft(2, '0')}";
-  }
-
   String _formatSafeTime(int minutes) {
     if (minutes >= 60) {
       final hours = minutes ~/ 60;
@@ -973,6 +1686,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   void _showLightSensorInfoDialog() {
+    final lang = appLanguage.value;
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -982,7 +1696,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             borderRadius: BorderRadius.circular(24),
           ),
           title: Text(
-            "Información",
+            AppTranslations.getText(lang, 'info_dialog_title'),
             style: GoogleFonts.poppins(
               fontWeight: FontWeight.bold,
               color: const Color(0xFF2C3E50),
@@ -993,23 +1707,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                "El sensor de luz ayuda a estimar si estás a la sombra o al sol directo. Recuerda que la arena y el agua reflejan hasta un 20% de la radiación UV incluso a la sombra.",
-                style: GoogleFonts.poppins(
-                  color: const Color(0xFF2C3E50).withOpacity(0.8),
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                "Utiliza el algoritmo de Dosis Eritemática Estándar (SED) y la escala de fototipos cutáneos de Fitzpatrick respaldada por la OMS.",
-                style: GoogleFonts.poppins(
-                  color: const Color(0xFF2C3E50).withOpacity(0.8),
-                  fontSize: 14,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                "Datos de radiación UV basados en modelos meteorológicos globales de la NOAA / ECMWF.",
+                AppTranslations.getText(lang, 'light_sensor_info'),
                 style: GoogleFonts.poppins(
                   color: const Color(0xFF2C3E50).withOpacity(0.8),
                   fontSize: 14,
@@ -1024,7 +1722,162 @@ class _DashboardScreenState extends State<DashboardScreen>
                 foregroundColor: const Color(0xFF73C6B6),
               ),
               child: Text(
-                "Entendido",
+                AppTranslations.getText(lang, 'understood'),
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showHeaderInfoDialog() {
+    final lang = appLanguage.value;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFFBF9F5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: Text(
+            AppTranslations.getText(lang, 'info_dialog_title'),
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF2C3E50),
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                AppTranslations.getText(lang, 'header_info_p1'),
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF2C3E50).withOpacity(0.8),
+                  fontSize: 14,
+                ),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                AppTranslations.getText(lang, 'header_info_p2'),
+                style: GoogleFonts.poppins(
+                  color: const Color(0xFF2C3E50).withOpacity(0.8),
+                  fontSize: 14,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF73C6B6),
+              ),
+              child: Text(
+                AppTranslations.getText(lang, 'understood'),
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  void _showSettingsDialog() {
+    final lang = appLanguage.value;
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          backgroundColor: const Color(0xFFFBF9F5),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(24),
+          ),
+          title: Text(
+            AppTranslations.getText(lang, 'settings_title'),
+            style: GoogleFonts.poppins(
+              fontWeight: FontWeight.bold,
+              color: const Color(0xFF2C3E50),
+            ),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              ListTile(
+                leading: const Icon(
+                  Icons.palette_outlined,
+                  color: Color(0xFF73C6B6),
+                ),
+                title: Text(
+                  AppTranslations.getText(lang, 'change_skin_type'),
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFF2C3E50),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  widget.onResetSkinType();
+                },
+              ),
+              ListTile(
+                leading: const Icon(
+                  Icons.language_outlined,
+                  color: Color(0xFF73C6B6),
+                ),
+                title: Text(
+                  AppTranslations.getText(lang, 'select_language'),
+                  style: GoogleFonts.poppins(
+                    color: const Color(0xFF2C3E50),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                trailing: DropdownButton<String>(
+                  value: lang,
+                  underline: const SizedBox(),
+                  icon: const Icon(
+                    Icons.arrow_drop_down,
+                    color: Color(0xFF73C6B6),
+                  ),
+                  dropdownColor: const Color(0xFFFBF9F5),
+                  borderRadius: BorderRadius.circular(16),
+                  onChanged: (String? newLang) async {
+                    if (newLang != null) {
+                      appLanguage.value = newLang;
+                      final prefs = await SharedPreferences.getInstance();
+                      await prefs.setString('app_language', newLang);
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    }
+                  },
+                  items: const [
+                    DropdownMenuItem(value: 'en', child: Text('English')),
+                    DropdownMenuItem(value: 'es', child: Text('Español')),
+                    DropdownMenuItem(value: 'de', child: Text('Deutsch')),
+                    DropdownMenuItem(value: 'fr', child: Text('Français')),
+                    DropdownMenuItem(value: 'it', child: Text('Italiano')),
+                    DropdownMenuItem(value: 'pt', child: Text('Português')),
+                    DropdownMenuItem(value: 'ca', child: Text('Català')),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              style: TextButton.styleFrom(
+                foregroundColor: const Color(0xFF73C6B6),
+              ),
+              child: Text(
+                AppTranslations.getText(lang, 'close'),
                 style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
               ),
             ),
@@ -1036,10 +1889,11 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   Widget build(BuildContext context) {
+    final lang = appLanguage.value;
     final currentType = fitzpatrickTypes[widget.selectedSkinTypeIndex];
     final date = DateTime.now();
-    final dayString = "${date.day} de ${_getMonthName(date.month)}";
-    final season = _getSeason();
+    final dayString = AppTranslations.formatDate(date, lang);
+    final season = AppTranslations.getSeasonName(_getSeason(), lang);
 
     // Determinar color de fondo con destellos si se activa la alarma
     Color backgroundColor = const Color(0xFFF7D070);
@@ -1091,7 +1945,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "Sun Exposure Timer",
+                                      AppTranslations.getText(
+                                        lang,
+                                        'app_title',
+                                      ),
                                       style: GoogleFonts.poppins(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
@@ -1116,12 +1973,23 @@ class _DashboardScreenState extends State<DashboardScreen>
                                             overflow: TextOverflow.ellipsis,
                                           ),
                                         ),
-                                        const SizedBox(width: 6),
+                                        const SizedBox(width: 8),
                                         GestureDetector(
-                                          onTap: _showLightSensorInfoDialog,
+                                          onTap: _showHeaderInfoDialog,
                                           child: Icon(
                                             Icons.info_outline_rounded,
-                                            size: 16,
+                                            size: 22,
+                                            color: const Color(
+                                              0xFF2C3E50,
+                                            ).withOpacity(0.6),
+                                          ),
+                                        ),
+                                        const SizedBox(width: 8),
+                                        GestureDetector(
+                                          onTap: _showSettingsDialog,
+                                          child: Icon(
+                                            Icons.settings_outlined,
+                                            size: 22,
                                             color: const Color(
                                               0xFF2C3E50,
                                             ).withOpacity(0.6),
@@ -1160,8 +2028,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       const SizedBox(width: 4),
                                       Text(
                                         _locationError
-                                            ? "Simulada"
-                                            : "GPS Activo",
+                                            ? AppTranslations.getText(
+                                                lang,
+                                                'simulated',
+                                              )
+                                            : AppTranslations.getText(
+                                                lang,
+                                                'gps_active',
+                                              ),
                                         style: GoogleFonts.poppins(
                                           fontSize: 11,
                                           color: const Color(
@@ -1217,7 +2091,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        "Tu tipo de piel: ${currentType.name}",
+                                        "${AppTranslations.getText(lang, 'your_skin_type')}: ${AppTranslations.getText(lang, 'skin_type_${widget.selectedSkinTypeIndex + 1}_name')}",
                                         style: GoogleFonts.poppins(
                                           fontSize: 14,
                                           fontWeight: FontWeight.w600,
@@ -1225,7 +2099,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         ),
                                       ),
                                       Text(
-                                        "Dosis segura: ${currentType.dose} J/m²",
+                                        "${AppTranslations.getText(lang, 'safe_dose')}: ${currentType.dose} J/m²",
                                         style: GoogleFonts.poppins(
                                           fontSize: 11,
                                           color: const Color(
@@ -1243,7 +2117,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                                     size: 20,
                                     color: Color(0xFF73C6B6),
                                   ),
-                                  tooltip: "Cambiar fototipo",
+                                  tooltip: AppTranslations.getText(
+                                    lang,
+                                    'change_skin_type',
+                                  ),
                                 ),
                               ],
                             ),
@@ -1278,7 +2155,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        "Coordenadas",
+                                        AppTranslations.getText(
+                                          lang,
+                                          'location',
+                                        ),
                                         style: GoogleFonts.poppins(
                                           fontSize: 11,
                                           color: const Color(
@@ -1362,8 +2242,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                 children: [
                                                   Text(
                                                     _hasPhysicalLightSensor
-                                                        ? "Luz real"
-                                                        : "Lux Simulado",
+                                                        ? AppTranslations.getText(
+                                                            lang,
+                                                            'real_light',
+                                                          )
+                                                        : AppTranslations.getText(
+                                                            lang,
+                                                            'simulated_lux',
+                                                          ),
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 12,
                                                       fontWeight:
@@ -1488,7 +2374,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                                           children: [
                                             Expanded(
                                               child: Text(
-                                                "UV",
+                                                AppTranslations.getText(
+                                                  lang,
+                                                  'uv_index_title',
+                                                ),
                                                 style: GoogleFonts.poppins(
                                                   fontSize: 12,
                                                   fontWeight: FontWeight.w600,
@@ -1537,14 +2426,29 @@ class _DashboardScreenState extends State<DashboardScreen>
                                           ),
                                           Text(
                                             _uvIndex <= 2.9
-                                                ? "Bajo"
+                                                ? AppTranslations.getText(
+                                                    lang,
+                                                    'uv_low',
+                                                  )
                                                 : _uvIndex <= 5.9
-                                                ? "Moderado"
+                                                ? AppTranslations.getText(
+                                                    lang,
+                                                    'uv_moderate',
+                                                  )
                                                 : _uvIndex <= 7.9
-                                                ? "Alto"
+                                                ? AppTranslations.getText(
+                                                    lang,
+                                                    'uv_high',
+                                                  )
                                                 : _uvIndex <= 10.9
-                                                ? "Muy Alto"
-                                                : "Extremo",
+                                                ? AppTranslations.getText(
+                                                    lang,
+                                                    'uv_very_high',
+                                                  )
+                                                : AppTranslations.getText(
+                                                    lang,
+                                                    'uv_extreme',
+                                                  ),
                                             style: GoogleFonts.poppins(
                                               fontSize: 11,
                                               fontWeight: FontWeight.bold,
@@ -1585,7 +2489,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    "Simular potencia de luz (Deslizador)",
+                                    AppTranslations.getText(
+                                      lang,
+                                      'simulating_light_slider',
+                                    ),
                                     style: GoogleFonts.poppins(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
@@ -1617,8 +2524,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                                           // Si no tenemos datos GPS, estimar UV proporcional a los luxes del slider
                                           if (_locationError) {
                                             _uvIndex = (val / 8000.0);
-                                            if (_uvIndex > 12.0)
+                                            if (_uvIndex > 12.0) {
                                               _uvIndex = 12.0;
+                                            }
                                           }
                                         });
                                       },
@@ -1629,7 +2537,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        "Sombra (0 lx)",
+                                        AppTranslations.getText(
+                                          lang,
+                                          'shade_slider_label',
+                                        ),
                                         style: GoogleFonts.poppins(
                                           fontSize: 10,
                                           color: const Color(
@@ -1638,7 +2549,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         ),
                                       ),
                                       Text(
-                                        "Sol Pleno (80K lx)",
+                                        AppTranslations.getText(
+                                          lang,
+                                          'sun_slider_label',
+                                        ),
                                         style: GoogleFonts.poppins(
                                           fontSize: 10,
                                           color: const Color(
@@ -1655,8 +2569,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                           // LÓGICA DE ESTADO DEL BOTÓN PRINCIPAL / DETALLES DE ACCIÓN
                           if (_limitReachedToday)
                             _buildLimitReachedCard()
-                          else if (_buttonState == 0)
-                            _buildInitialButton()
                           else if (_buttonState == 1)
                             _buildCalculatedButton()
                           else if (_buttonState == 2)
@@ -1698,7 +2610,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                             const SizedBox(width: 8),
                             Flexible(
                               child: Text(
-                                "Espacio reservado para Publicidad",
+                                AppTranslations.getText(lang, 'ad_space'),
                                 style: GoogleFonts.poppins(
                                   fontSize: 12,
                                   fontWeight: FontWeight.w500,
@@ -1726,6 +2638,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   // Card que se muestra si el límite fue alcanzado hoy
   Widget _buildLimitReachedCard() {
+    final lang = appLanguage.value;
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -1745,7 +2658,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
           const SizedBox(height: 12),
           Text(
-            "Límite diario alcanzado",
+            AppTranslations.getText(lang, 'daily_limit_reached'),
             style: GoogleFonts.poppins(
               fontSize: 18,
               fontWeight: FontWeight.bold,
@@ -1754,7 +2667,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
           const SizedBox(height: 6),
           Text(
-            "Ya has completado tu dosis de sol recomendada para el día de hoy. Vuelve mañana para un nuevo monitoreo seguro.",
+            AppTranslations.getText(lang, 'sun_limit_reached_card_body'),
             style: GoogleFonts.poppins(
               fontSize: 13,
               color: const Color(0xFF2C3E50).withOpacity(0.7),
@@ -1769,11 +2682,11 @@ class _DashboardScreenState extends State<DashboardScreen>
               await prefs.remove('daily_limit_date');
               setState(() {
                 _limitReachedToday = false;
-                _buttonState = 0;
+                _buttonState = 1;
               });
             },
             child: Text(
-              "Reestablecer límite (Modo Prototipo)",
+              AppTranslations.getText(lang, 'reset_limit_proto'),
               style: GoogleFonts.poppins(
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
@@ -1786,61 +2699,9 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  // ESTADO 0: Botón Inicial para calcular
-  Widget _buildInitialButton() {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: _calculateRecommendedTime,
-          child: Container(
-            height: 150,
-            decoration: BoxDecoration(
-              color: const Color(0xFFFF7659),
-              borderRadius: BorderRadius.circular(28),
-              boxShadow: [
-                BoxShadow(
-                  color: const Color(0xFFFF7659).withOpacity(0.3),
-                  blurRadius: 20,
-                  offset: const Offset(0, 10),
-                ),
-              ],
-            ),
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(
-                    Icons.calculate_outlined,
-                    color: Colors.white,
-                    size: 32,
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    "Calcular tiempo seguro",
-                    style: GoogleFonts.poppins(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                  Text(
-                    "Basado en fototipo y UV actual",
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      color: Colors.white.withOpacity(0.8),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
   // ESTADO 1: Botón de inicio con el tiempo ya calculado
   Widget _buildCalculatedButton() {
+    final lang = appLanguage.value;
     return Container(
       height: 150,
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
@@ -1864,7 +2725,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  "Tiempo Seguro Estimado",
+                  AppTranslations.getText(lang, 'estimated_safe_time'),
                   style: GoogleFonts.poppins(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
@@ -1881,38 +2742,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                       fontWeight: FontWeight.w800,
                       color: Colors.white,
                     ),
-                  ),
-                ),
-                const SizedBox(height: 6),
-                GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _buttonState = 0;
-                    });
-                  },
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.replay_rounded,
-                        color: Colors.white70,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      Flexible(
-                        child: Text(
-                          "Volver a calcular",
-                          style: GoogleFonts.poppins(
-                            fontSize: 11,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white70,
-                            decoration: TextDecoration.underline,
-                            decorationColor: Colors.white70,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
                   ),
                 ),
               ],
@@ -1937,7 +2766,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     ),
                   ),
                   child: Text(
-                    "Iniciar",
+                    AppTranslations.getText(lang, 'start_exposure'),
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -2009,6 +2838,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   // ESTADO 2: Cronómetro circular animado de cuenta atrás
   Widget _buildCountdownTimerCard() {
+    final lang = appLanguage.value;
     int totalDuration = _demoMode ? 10 : _calculatedSafeMinutes * 60;
     double progress = totalDuration > 0
         ? _remainingSeconds / totalDuration
@@ -2030,7 +2860,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       child: Column(
         children: [
           Text(
-            "Temporizador de Exposición",
+            AppTranslations.getText(lang, 'exposure_timer_title'),
             style: GoogleFonts.poppins(
               fontSize: 13,
               fontWeight: FontWeight.w600,
@@ -2072,7 +2902,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                         ),
                       ),
                       Text(
-                        "restantes",
+                        AppTranslations.getText(lang, 'remaining'),
                         style: GoogleFonts.poppins(
                           fontSize: 11,
                           color: const Color(0xFF2C3E50).withOpacity(0.5),
@@ -2101,7 +2931,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text(
-                    "Cancelar Exposición",
+                    AppTranslations.getText(lang, 'cancel_exposure'),
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -2117,25 +2947,6 @@ class _DashboardScreenState extends State<DashboardScreen>
         ],
       ),
     );
-  }
-
-  // Método auxiliar para el nombre del mes
-  String _getMonthName(int month) {
-    const months = [
-      "Enero",
-      "Febrero",
-      "Marzo",
-      "Abril",
-      "Mayo",
-      "Junio",
-      "Julio",
-      "Agosto",
-      "Septiembre",
-      "Octubre",
-      "Noviembre",
-      "Diciembre",
-    ];
-    return months[month - 1];
   }
 
   // Método auxiliar para obtener color según nivel de UV
