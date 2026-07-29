@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
@@ -17,6 +18,22 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
   MobileAds.instance.initialize();
+
+  // Permet que l'aplicació es dibuixi sota les barres del sistema (edge-to-edge) per permetre transparències reals
+  SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      systemNavigationBarColor: Colors.black, // Barra de navegació en negre
+      systemNavigationBarContrastEnforced: false, // OBLIGATORI per a Android 10+
+      systemNavigationBarDividerColor: Colors.transparent,
+      systemNavigationBarIconBrightness: Brightness
+          .light, // Icons de la barra de navegació en blanc (contrastats)
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.dark,
+    ),
+  );
+
   runApp(const SunTimerApp());
 }
 
@@ -2216,90 +2233,150 @@ class _DashboardScreenState extends State<DashboardScreen>
           : const Color(0xFFA8E6CF);
     }
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: const BoxDecoration(
-          image: DecorationImage(
-            image: AssetImage('assets/sand.jpg'),
-            fit: BoxFit.cover,
-          ),
-        ),
-        child: Container(
-          width: double.infinity,
-          height: double.infinity,
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [backgroundColor, backgroundColor.withOpacity(0.0)],
+    return AnnotatedRegion<SystemUiOverlayStyle>(
+      value: const SystemUiOverlayStyle(
+        systemNavigationBarColor: Colors.black, // Barra de navegació en negre
+        systemNavigationBarContrastEnforced: false, // OBLIGATORI per a Android 10+
+        systemNavigationBarDividerColor: Colors.transparent,
+        systemNavigationBarIconBrightness:
+            Brightness.light, // Icons contrastats (blancs)
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Brightness.dark,
+      ),
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: Container(
+          decoration: const BoxDecoration(
+            image: DecorationImage(
+              image: AssetImage('assets/sand.jpg'),
+              fit: BoxFit.cover,
             ),
           ),
-          child: SafeArea(
-            child: Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    physics: const BouncingScrollPhysics(),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24.0,
-                        vertical: 16.0,
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          // HEADER DE LA APLICACIÓN
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      "Sun Exposure Timer",
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: const Color(0xFF2C3E50),
-                                        letterSpacing: 0.5,
+          child: Container(
+            width: double.infinity,
+            height: double.infinity,
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [backgroundColor, backgroundColor.withOpacity(0.0)],
+              ),
+            ),
+            child: SafeArea(
+              bottom: false,
+              child: Column(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      physics: const BouncingScrollPhysics(),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 24.0,
+                          vertical: 16.0,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [
+                            // HEADER DE LA APLICACIÓN
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        "Sun Exposure Timer",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: const Color(0xFF2C3E50),
+                                          letterSpacing: 0.5,
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Row(
-                                      children: [
-                                        Flexible(
-                                          child: Text(
-                                            "$dayString • $season",
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 12,
+                                      Row(
+                                        children: [
+                                          Flexible(
+                                            child: Text(
+                                              "$dayString • $season",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                color: const Color(
+                                                  0xFF2C3E50,
+                                                ).withOpacity(0.6),
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
+                                            ),
+                                          ),
+                                          const SizedBox(width: 8),
+                                          GestureDetector(
+                                            onTap: _showHeaderInfoDialog,
+                                            child: Icon(
+                                              Icons.info_outline_rounded,
+                                              size: 22,
                                               color: const Color(
                                                 0xFF2C3E50,
                                               ).withOpacity(0.6),
                                             ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
                                           ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        GestureDetector(
-                                          onTap: _showHeaderInfoDialog,
-                                          child: Icon(
-                                            Icons.info_outline_rounded,
-                                            size: 22,
-                                            color: const Color(
-                                              0xFF2C3E50,
-                                            ).withOpacity(0.6),
+                                          const SizedBox(width: 8),
+                                          GestureDetector(
+                                            onTap: _showSettingsDialog,
+                                            child: Icon(
+                                              Icons.settings_outlined,
+                                              size: 22,
+                                              color: const Color(
+                                                0xFF2C3E50,
+                                              ).withOpacity(0.6),
+                                            ),
                                           ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                // Indicador de Hora e Info GPS
+                                Column(
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    Text(
+                                      _currentTimeString,
+                                      style: GoogleFonts.poppins(
+                                        fontSize: 22,
+                                        fontWeight: FontWeight.w700,
+                                        color: const Color(0xFF2C3E50),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 2),
+                                    Row(
+                                      children: [
+                                        Icon(
+                                          _locationError
+                                              ? Icons.location_off
+                                              : Icons.location_on,
+                                          size: 14,
+                                          color: _locationError
+                                              ? Colors.orange
+                                              : const Color(0xFF73C6B6),
                                         ),
-                                        const SizedBox(width: 8),
-                                        GestureDetector(
-                                          onTap: _showSettingsDialog,
-                                          child: Icon(
-                                            Icons.settings_outlined,
-                                            size: 22,
+                                        const SizedBox(width: 4),
+                                        Text(
+                                          _locationError
+                                              ? AppTranslations.getText(
+                                                  lang,
+                                                  'simulated',
+                                                )
+                                              : AppTranslations.getText(
+                                                  lang,
+                                                  'gps_active',
+                                                ),
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 11,
                                             color: const Color(
                                               0xFF2C3E50,
                                             ).withOpacity(0.6),
@@ -2309,622 +2386,598 @@ class _DashboardScreenState extends State<DashboardScreen>
                                     ),
                                   ],
                                 ),
+                              ],
+                            ),
+                            const SizedBox(height: 20),
+
+                            // FILA DE FOTOTIPO SELECCIONADO
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 12,
                               ),
-                              const SizedBox(width: 12),
-                              // Indicador de Hora e Info GPS
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  Text(
-                                    _currentTimeString,
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 22,
-                                      fontWeight: FontWeight.w700,
-                                      color: const Color(0xFF2C3E50),
-                                    ),
-                                  ),
-                                  const SizedBox(height: 2),
-                                  Row(
-                                    children: [
-                                      Icon(
-                                        _locationError
-                                            ? Icons.location_off
-                                            : Icons.location_on,
-                                        size: 14,
-                                        color: _locationError
-                                            ? Colors.orange
-                                            : const Color(0xFF73C6B6),
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        _locationError
-                                            ? AppTranslations.getText(
-                                                lang,
-                                                'simulated',
-                                              )
-                                            : AppTranslations.getText(
-                                                lang,
-                                                'gps_active',
-                                              ),
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 11,
-                                          color: const Color(
-                                            0xFF2C3E50,
-                                          ).withOpacity(0.6),
-                                        ),
-                                      ),
-                                    ],
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x0A000000),
+                                    blurRadius: 16,
+                                    offset: Offset(0, 4),
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-
-                          // FILA DE FOTOTIPO SELECCIONADO
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 16,
-                              vertical: 12,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x0A000000),
-                                  blurRadius: 16,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                Container(
-                                  width: 28,
-                                  height: 28,
-                                  decoration: BoxDecoration(
-                                    color: currentType.color,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: const Color(
-                                        0xFF2C3E50,
-                                      ).withOpacity(0.2),
-                                      width: 2,
+                              child: Row(
+                                children: [
+                                  Container(
+                                    width: 28,
+                                    height: 28,
+                                    decoration: BoxDecoration(
+                                      color: currentType.color,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: const Color(
+                                          0xFF2C3E50,
+                                        ).withOpacity(0.2),
+                                        width: 2,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "${AppTranslations.getText(lang, 'your_skin_type')}: ${AppTranslations.getText(lang, 'skin_type_${widget.selectedSkinTypeIndex + 1}_name')}",
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF2C3E50),
-                                        ),
-                                      ),
-                                      Text(
-                                        "${AppTranslations.getText(lang, 'safe_dose')}: ${currentType.dose} J/m²",
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 11,
-                                          color: const Color(
-                                            0xFF2C3E50,
-                                          ).withOpacity(0.6),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: widget.onResetSkinType,
-                                  icon: const Icon(
-                                    Icons.edit_outlined,
-                                    size: 20,
-                                    color: Color(0xFF73C6B6),
-                                  ),
-                                  tooltip: AppTranslations.getText(
-                                    lang,
-                                    'change_skin_type',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          // COORDINADAS CARD
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: Colors.white,
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: const [
-                                BoxShadow(
-                                  color: Color(0x0A000000),
-                                  blurRadius: 16,
-                                  offset: Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.map_outlined,
-                                  color: Color(0xFF73C6B6),
-                                  size: 24,
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        AppTranslations.getText(
-                                          lang,
-                                          'location',
-                                        ),
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 11,
-                                          color: const Color(
-                                            0xFF2C3E50,
-                                          ).withOpacity(0.6),
-                                        ),
-                                      ),
-                                      Text(
-                                        _locationName,
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w600,
-                                          color: const Color(0xFF2C3E50),
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                IconButton(
-                                  onPressed: _fetchLocationAndUv,
-                                  icon: _isFetchingUv
-                                      ? const SizedBox(
-                                          width: 18,
-                                          height: 18,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            valueColor: AlwaysStoppedAnimation(
-                                              Color(0xFF73C6B6),
-                                            ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "${AppTranslations.getText(lang, 'your_skin_type')}: ${AppTranslations.getText(lang, 'skin_type_${widget.selectedSkinTypeIndex + 1}_name')}",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFF2C3E50),
                                           ),
-                                        )
-                                      : const Icon(
-                                          Icons.refresh_rounded,
-                                          size: 20,
-                                          color: Color(0xFF73C6B6),
                                         ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-
-                          Row(
-                            children: [
-                              // SENSOR LUZ AMBIENTAL
-                              Expanded(
-                                child: Container(
-                                  height: 148,
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: _hasPhysicalLightSensor
-                                        ? Colors.white
-                                        : const Color(
-                                            0xFFEAEDED,
-                                          ), // Grisáceo / disabled background
-                                    borderRadius: BorderRadius.circular(24),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Color(0x0A000000),
-                                        blurRadius: 16,
-                                        offset: Offset(0, 4),
-                                      ),
-                                    ],
+                                        Text(
+                                          "${AppTranslations.getText(lang, 'safe_dose')}: ${currentType.dose} J/m²",
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 11,
+                                            color: const Color(
+                                              0xFF2C3E50,
+                                            ).withOpacity(0.6),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
                                   ),
-                                  child: _hasPhysicalLightSensor
-                                      ? Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            SizedBox(
-                                              height: 38,
-                                              child: Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
+                                  IconButton(
+                                    onPressed: widget.onResetSkinType,
+                                    icon: const Icon(
+                                      Icons.edit_outlined,
+                                      size: 20,
+                                      color: Color(0xFF73C6B6),
+                                    ),
+                                    tooltip: AppTranslations.getText(
+                                      lang,
+                                      'change_skin_type',
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            // COORDINADAS CARD
+                            Container(
+                              padding: const EdgeInsets.all(16),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(24),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0x0A000000),
+                                    blurRadius: 16,
+                                    offset: Offset(0, 4),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                children: [
+                                  const Icon(
+                                    Icons.map_outlined,
+                                    color: Color(0xFF73C6B6),
+                                    size: 24,
+                                  ),
+                                  const SizedBox(width: 12),
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          AppTranslations.getText(
+                                            lang,
+                                            'location',
+                                          ),
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 11,
+                                            color: const Color(
+                                              0xFF2C3E50,
+                                            ).withOpacity(0.6),
+                                          ),
+                                        ),
+                                        Text(
+                                          _locationName,
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.w600,
+                                            color: const Color(0xFF2C3E50),
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  IconButton(
+                                    onPressed: _fetchLocationAndUv,
+                                    icon: _isFetchingUv
+                                        ? const SizedBox(
+                                            width: 18,
+                                            height: 18,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              valueColor:
+                                                  AlwaysStoppedAnimation(
+                                                    Color(0xFF73C6B6),
+                                                  ),
+                                            ),
+                                          )
+                                        : const Icon(
+                                            Icons.refresh_rounded,
+                                            size: 20,
+                                            color: Color(0xFF73C6B6),
+                                          ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: 16),
+
+                            Row(
+                              children: [
+                                // SENSOR LUZ AMBIENTAL
+                                Expanded(
+                                  child: Container(
+                                    height: 148,
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: _hasPhysicalLightSensor
+                                          ? Colors.white
+                                          : const Color(
+                                              0xFFEAEDED,
+                                            ), // Grisáceo / disabled background
+                                      borderRadius: BorderRadius.circular(24),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Color(0x0A000000),
+                                          blurRadius: 16,
+                                          offset: Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: _hasPhysicalLightSensor
+                                        ? Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              SizedBox(
+                                                height: 38,
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Expanded(
+                                                      child: Column(
+                                                        crossAxisAlignment:
+                                                            CrossAxisAlignment
+                                                                .start,
+                                                        children: [
+                                                          Text(
+                                                            AppTranslations.getText(
+                                                              lang,
+                                                              'real_light',
+                                                            ),
+                                                            style: GoogleFonts.poppins(
+                                                              fontSize: 12,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color:
+                                                                  const Color(
+                                                                    0xFF2C3E50,
+                                                                  ).withOpacity(
+                                                                    0.6,
+                                                                  ),
+                                                            ),
+                                                            maxLines: 1,
+                                                            overflow:
+                                                                TextOverflow
+                                                                    .ellipsis,
+                                                          ),
+                                                          const SizedBox(
+                                                            height: 2,
+                                                          ),
+                                                          GestureDetector(
+                                                            onTap:
+                                                                _showLightSensorInfoDialog,
+                                                            child: Icon(
+                                                              Icons
+                                                                  .info_outline_rounded,
+                                                              size: 14,
+                                                              color:
+                                                                  const Color(
+                                                                    0xFF2C3E50,
+                                                                  ).withOpacity(
+                                                                    0.5,
+                                                                  ),
+                                                            ),
+                                                          ),
+                                                        ],
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    Icon(
+                                                      _getEnvironmentIcon(
+                                                        _luxValue,
+                                                      ),
+                                                      size: 20,
+                                                      color:
+                                                          _getEnvironmentIconColor(
+                                                            _luxValue,
+                                                          ),
+                                                    ),
+                                                  ],
+                                                ),
+                                              ),
+                                              Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  Expanded(
-                                                    child: Column(
-                                                      crossAxisAlignment:
-                                                          CrossAxisAlignment
-                                                              .start,
-                                                      children: [
-                                                        Text(
-                                                          AppTranslations.getText(
-                                                            lang,
-                                                            'real_light',
-                                                          ),
-                                                          style: GoogleFonts.poppins(
-                                                            fontSize: 12,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                            color: const Color(
-                                                              0xFF2C3E50,
-                                                            ).withOpacity(0.6),
-                                                          ),
-                                                          maxLines: 1,
-                                                          overflow: TextOverflow
-                                                              .ellipsis,
-                                                        ),
-                                                        const SizedBox(
-                                                          height: 2,
-                                                        ),
-                                                        GestureDetector(
-                                                          onTap:
-                                                              _showLightSensorInfoDialog,
-                                                          child: Icon(
-                                                            Icons
-                                                                .info_outline_rounded,
-                                                            size: 14,
-                                                            color: const Color(
-                                                              0xFF2C3E50,
-                                                            ).withOpacity(0.5),
-                                                          ),
-                                                        ),
-                                                      ],
-                                                    ),
-                                                  ),
-                                                  const SizedBox(width: 4),
-                                                  Icon(
-                                                    _getEnvironmentIcon(
-                                                      _luxValue,
-                                                    ),
-                                                    size: 20,
-                                                    color:
-                                                        _getEnvironmentIconColor(
+                                                  FittedBox(
+                                                    fit: BoxFit.scaleDown,
+                                                    alignment:
+                                                        Alignment.centerLeft,
+                                                    child: Text.rich(
+                                                      TextSpan(
+                                                        text: _formatLux(
                                                           _luxValue,
                                                         ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                            Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                FittedBox(
-                                                  fit: BoxFit.scaleDown,
-                                                  alignment:
-                                                      Alignment.centerLeft,
-                                                  child: Text.rich(
-                                                    TextSpan(
-                                                      text: _formatLux(
-                                                        _luxValue,
-                                                      ),
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                            fontSize: 42,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: const Color(
-                                                              0xFF2C3E50,
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                              fontSize: 42,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .bold,
+                                                              color:
+                                                                  const Color(
+                                                                    0xFF2C3E50,
+                                                                  ),
+                                                            ),
+                                                        children: [
+                                                          TextSpan(
+                                                            text: " lx",
+                                                            style: GoogleFonts.poppins(
+                                                              fontSize: 18,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color:
+                                                                  const Color(
+                                                                    0xFF2C3E50,
+                                                                  ).withOpacity(
+                                                                    0.6,
+                                                                  ),
                                                             ),
                                                           ),
-                                                      children: [
-                                                        TextSpan(
-                                                          text: " lx",
-                                                          style: GoogleFonts.poppins(
-                                                            fontSize: 18,
-                                                            fontWeight:
-                                                                FontWeight.w600,
-                                                            color: const Color(
-                                                              0xFF2C3E50,
-                                                            ).withOpacity(0.6),
-                                                          ),
-                                                        ),
-                                                      ],
+                                                        ],
+                                                      ),
                                                     ),
                                                   ),
-                                                ),
-                                                Text(
-                                                  _getEnvironmentName(
-                                                    _luxValue,
-                                                  ),
-                                                  style: GoogleFonts.poppins(
-                                                    fontSize: 11,
-                                                    fontWeight: FontWeight.bold,
-                                                    color:
-                                                        _getEnvironmentIconColor(
-                                                          _luxValue,
-                                                        ),
-                                                  ),
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                ),
-                                              ],
-                                            ),
-                                          ],
-                                        )
-                                      : Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
-                                          children: [
-                                            Row(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment
-                                                      .spaceBetween,
-                                              children: [
-                                                Expanded(
-                                                  child: Text(
-                                                    AppTranslations.getText(
-                                                      lang,
-                                                      'real_light',
+                                                  Text(
+                                                    _getEnvironmentName(
+                                                      _luxValue,
                                                     ),
                                                     style: GoogleFonts.poppins(
-                                                      fontSize: 12,
+                                                      fontSize: 11,
                                                       fontWeight:
                                                           FontWeight.bold,
-                                                      color: const Color(
-                                                        0xFF2C3E50,
-                                                      ).withOpacity(0.5),
+                                                      color:
+                                                          _getEnvironmentIconColor(
+                                                            _luxValue,
+                                                          ),
                                                     ),
                                                     maxLines: 1,
                                                     overflow:
                                                         TextOverflow.ellipsis,
                                                   ),
+                                                ],
+                                              ),
+                                            ],
+                                          )
+                                        : Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            children: [
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      AppTranslations.getText(
+                                                        lang,
+                                                        'real_light',
+                                                      ),
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                              0xFF2C3E50,
+                                                            ).withOpacity(0.5),
+                                                          ),
+                                                      maxLines: 1,
+                                                      overflow:
+                                                          TextOverflow.ellipsis,
+                                                    ),
+                                                  ),
+                                                  Icon(
+                                                    Icons
+                                                        .lightbulb_outline_rounded,
+                                                    color: const Color(
+                                                      0xFF2C3E50,
+                                                    ).withOpacity(0.3),
+                                                    size: 18,
+                                                  ),
+                                                ],
+                                              ),
+                                              Expanded(
+                                                child: Center(
+                                                  child: Text(
+                                                    AppTranslations.getText(
+                                                      lang,
+                                                      'no_light_sensor_msg',
+                                                    ),
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 9.5,
+                                                      fontWeight:
+                                                          FontWeight.w500,
+                                                      color: const Color(
+                                                        0xFF2C3E50,
+                                                      ).withOpacity(0.6),
+                                                    ),
+                                                    textAlign: TextAlign.center,
+                                                  ),
                                                 ),
-                                                Icon(
-                                                  Icons
-                                                      .lightbulb_outline_rounded,
-                                                  color: const Color(
-                                                    0xFF2C3E50,
-                                                  ).withOpacity(0.3),
-                                                  size: 18,
-                                                ),
-                                              ],
-                                            ),
-                                            Expanded(
-                                              child: Center(
+                                              ),
+                                            ],
+                                          ),
+                                  ),
+                                ),
+                                const SizedBox(width: 16),
+
+                                // ÍNDICE UV REAL/ESTIMADO
+                                Expanded(
+                                  child: Container(
+                                    height: 148,
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.white,
+                                      borderRadius: BorderRadius.circular(24),
+                                      boxShadow: const [
+                                        BoxShadow(
+                                          color: Color(0x0A000000),
+                                          blurRadius: 16,
+                                          offset: Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Column(
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        SizedBox(
+                                          height: 38,
+                                          child: Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Expanded(
                                                 child: Text(
                                                   AppTranslations.getText(
                                                     lang,
-                                                    'no_light_sensor_msg',
+                                                    'uv_index_title',
                                                   ),
                                                   style: GoogleFonts.poppins(
-                                                    fontSize: 9.5,
-                                                    fontWeight: FontWeight.w500,
+                                                    fontSize: 12,
+                                                    fontWeight: FontWeight.w600,
                                                     color: const Color(
                                                       0xFF2C3E50,
                                                     ).withOpacity(0.6),
                                                   ),
-                                                  textAlign: TextAlign.center,
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ),
-                                            ),
-                                          ],
+                                              const SizedBox(width: 4),
+                                              SvgPicture.asset(
+                                                'assets/icons/heat_24.svg',
+                                                width: 20,
+                                                height: 20,
+                                                colorFilter:
+                                                    const ColorFilter.mode(
+                                                      Color.fromARGB(
+                                                        255,
+                                                        149,
+                                                        62,
+                                                        255,
+                                                      ),
+                                                      BlendMode.srcIn,
+                                                    ),
+                                              ),
+                                            ],
+                                          ),
                                         ),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-
-                              // ÍNDICE UV REAL/ESTIMADO
-                              Expanded(
-                                child: Container(
-                                  height: 148,
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(24),
-                                    boxShadow: const [
-                                      BoxShadow(
-                                        color: Color(0x0A000000),
-                                        blurRadius: 16,
-                                        offset: Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      SizedBox(
-                                        height: 38,
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                                        Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
                                           children: [
-                                            Expanded(
+                                            FittedBox(
+                                              fit: BoxFit.scaleDown,
+                                              alignment: Alignment.centerLeft,
                                               child: Text(
-                                                AppTranslations.getText(
-                                                  lang,
-                                                  'uv_index_title',
-                                                ),
+                                                _uvIndex.toStringAsFixed(1),
                                                 style: GoogleFonts.poppins(
-                                                  fontSize: 12,
-                                                  fontWeight: FontWeight.w600,
+                                                  fontSize: 42,
+                                                  fontWeight: FontWeight.bold,
                                                   color: const Color(
                                                     0xFF2C3E50,
-                                                  ).withOpacity(0.6),
+                                                  ),
                                                 ),
-                                                maxLines: 1,
-                                                overflow: TextOverflow.ellipsis,
                                               ),
                                             ),
-                                            const SizedBox(width: 4),
-                                            SvgPicture.asset(
-                                              'assets/icons/heat_24.svg',
-                                              width: 20,
-                                              height: 20,
-                                              colorFilter:
-                                                  const ColorFilter.mode(
-                                                    Color.fromARGB(
-                                                      255,
-                                                      149,
-                                                      62,
-                                                      255,
+                                            Text(
+                                              _uvIndex <= 2.9
+                                                  ? AppTranslations.getText(
+                                                      lang,
+                                                      'uv_low',
+                                                    )
+                                                  : _uvIndex <= 5.9
+                                                  ? AppTranslations.getText(
+                                                      lang,
+                                                      'uv_moderate',
+                                                    )
+                                                  : _uvIndex <= 7.9
+                                                  ? AppTranslations.getText(
+                                                      lang,
+                                                      'uv_high',
+                                                    )
+                                                  : _uvIndex <= 10.9
+                                                  ? AppTranslations.getText(
+                                                      lang,
+                                                      'uv_very_high',
+                                                    )
+                                                  : AppTranslations.getText(
+                                                      lang,
+                                                      'uv_extreme',
                                                     ),
-                                                    BlendMode.srcIn,
-                                                  ),
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 11,
+                                                fontWeight: FontWeight.bold,
+                                                color: _getUvColor(_uvIndex),
+                                              ),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                             ),
                                           ],
                                         ),
-                                      ),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerLeft,
-                                            child: Text(
-                                              _uvIndex.toStringAsFixed(1),
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 42,
-                                                fontWeight: FontWeight.bold,
-                                                color: const Color(0xFF2C3E50),
-                                              ),
-                                            ),
-                                          ),
-                                          Text(
-                                            _uvIndex <= 2.9
-                                                ? AppTranslations.getText(
-                                                    lang,
-                                                    'uv_low',
-                                                  )
-                                                : _uvIndex <= 5.9
-                                                ? AppTranslations.getText(
-                                                    lang,
-                                                    'uv_moderate',
-                                                  )
-                                                : _uvIndex <= 7.9
-                                                ? AppTranslations.getText(
-                                                    lang,
-                                                    'uv_high',
-                                                  )
-                                                : _uvIndex <= 10.9
-                                                ? AppTranslations.getText(
-                                                    lang,
-                                                    'uv_very_high',
-                                                  )
-                                                : AppTranslations.getText(
-                                                    lang,
-                                                    'uv_extreme',
-                                                  ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 24),
+                            // LÓGICA DE ESTADO DEL BOTÓN PRINCIPAL / DETALLES DE ACCIÓN
+                            if (_limitReachedToday)
+                              _buildLimitReachedCard()
+                            else if (_buttonState == 1)
+                              _buildCalculatedButton()
+                            else if (_buttonState == 2)
+                              _buildCountdownTimerCard(),
+                            const SizedBox(height: 20),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                  // ESPACIO RESERVADO PARA ADS EN LA PARTE INFERIOR
+                  Container(
+                    color: Colors.black.withOpacity(0.7), // Capa negra translúcida que va de l'espai d'ads fins al final de la pantalla
+                    child: SafeArea(
+                      top: false,
+                      bottom: true,
+                      child: _isBannerAdReady && _bannerAd != null
+                          ? Container(
+                              alignment: Alignment.center,
+                              width: _bannerAd!.size.width.toDouble(),
+                              height: _bannerAd!.size.height.toDouble(),
+                              child: AdWidget(ad: _bannerAd!),
+                            )
+                          : Container(
+                              height: 65,
+                              width: double.infinity,
+                              color: Colors.transparent,
+                              child: Center(
+                                child: Container(
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 24,
+                                    vertical: 8,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(16),
+                                    border: Border.all(
+                                      color: Colors.white.withOpacity(0.2),
+                                      width: 1,
+                                    ),
+                                  ),
+                                  child: Center(
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.ads_click_rounded,
+                                          color: Colors.white.withOpacity(0.6),
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Flexible(
+                                          child: Text(
+                                            AppTranslations.getText(lang, 'ad_space'),
                                             style: GoogleFonts.poppins(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                              color: _getUvColor(_uvIndex),
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.w500,
+                                              color: Colors.white.withOpacity(0.6),
                                             ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
                                           ),
-                                        ],
-                                      ),
-                                    ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                 ),
                               ),
-                            ],
-                          ),
-                          const SizedBox(height: 24),
-                          // LÓGICA DE ESTADO DEL BOTÓN PRINCIPAL / DETALLES DE ACCIÓN
-                          if (_limitReachedToday)
-                            _buildLimitReachedCard()
-                          else if (_buttonState == 1)
-                            _buildCalculatedButton()
-                          else if (_buttonState == 2)
-                            _buildCountdownTimerCard(),
-                          const SizedBox(height: 20),
-                        ],
-                      ),
+                            ),
                     ),
                   ),
-                ),
-                // ESPACIO RESERVADO PARA ADS EN LA PARTE INFERIOR
-                if (_isBannerAdReady && _bannerAd != null)
-                  SafeArea(
-                    child: Container(
-                      alignment: Alignment.center,
-                      width: _bannerAd!.size.width.toDouble(),
-                      height: _bannerAd!.size.height.toDouble(),
-                      child: AdWidget(ad: _bannerAd!),
-                    ),
-                  )
-                else
-                  Container(
-                    height: 65,
-                    width: double.infinity,
-                    color: Colors.transparent,
-                    child: Center(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(
-                          horizontal: 24,
-                          vertical: 8,
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(
-                            color: Colors.white.withOpacity(0.3),
-                            width: 1,
-                          ),
-                        ),
-                        child: Center(
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.ads_click_rounded,
-                                color: const Color(0xFF2C3E50).withOpacity(0.6),
-                                size: 16,
-                              ),
-                              const SizedBox(width: 8),
-                              Flexible(
-                                child: Text(
-                                  AppTranslations.getText(lang, 'ad_space'),
-                                  style: GoogleFonts.poppins(
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                    color: const Color(
-                                      0xFF2C3E50,
-                                    ).withOpacity(0.6),
-                                  ),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
