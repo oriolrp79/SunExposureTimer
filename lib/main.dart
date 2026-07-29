@@ -98,7 +98,9 @@ String getSystemLanguageCode() {
   return 'en';
 }
 
-final ValueNotifier<String> appLanguage = ValueNotifier<String>(getSystemLanguageCode());
+final ValueNotifier<String> appLanguage = ValueNotifier<String>(
+  getSystemLanguageCode(),
+);
 
 class AppTranslations {
   static const Map<String, Map<String, String>> _translations = {
@@ -174,10 +176,12 @@ class AppTranslations {
       'update_downloaded': 'Update downloaded. Restart the app to apply it.',
       'install_now': 'Install',
       'update_error_title': 'Update Check Failed',
-      'update_error_msg': 'We could not check for updates. Would you like to visit the Google Play Store to check manually?',
+      'update_error_msg':
+          'We could not check for updates. Would you like to visit the Google Play Store to check manually?',
       'open_play_store': 'Open Play Store',
       'cancel': 'Cancel',
-      'no_light_sensor_msg': 'Device without light sensor. No attenuators are applied in the sun exposure calculation.',
+      'no_light_sensor_msg':
+          'Device without light sensor. No attenuators are applied in the sun exposure calculation.',
     },
     'es': {
       'app_title': 'Temporizador de Exposición Solar',
@@ -251,13 +255,16 @@ class AppTranslations {
       'check_for_updates': 'Buscar actualizaciones',
       'checking_for_updates': 'Buscando actualizaciones...',
       'app_up_to_date': 'La aplicación ya está actualizada',
-      'update_downloaded': 'Actualización descargada. Reinicia la aplicación para aplicarla.',
+      'update_downloaded':
+          'Actualización descargada. Reinicia la aplicación para aplicarla.',
       'install_now': 'Instalar',
       'update_error_title': 'Error de actualización',
-      'update_error_msg': 'No se pudo buscar actualizaciones. ¿Deseas visitar Google Play Store para comprobarlo manualmente?',
+      'update_error_msg':
+          'No se pudo buscar actualizaciones. ¿Deseas visitar Google Play Store para comprobarlo manualmente?',
       'open_play_store': 'Abrir Play Store',
       'cancel': 'Cancelar',
-      'no_light_sensor_msg': 'Dispositivo sin sensor de luz. No se aplican atenuadores en el cálculo de exposición solar.',
+      'no_light_sensor_msg':
+          'Dispositivo sin sensor de luz. No se aplican atenuadores en el cálculo de exposición solar.',
     },
     'de': {
       'app_title': 'Sonnenschonungs-Timer',
@@ -329,13 +336,16 @@ class AppTranslations {
       'check_for_updates': 'Auf Updates prüfen',
       'checking_for_updates': 'Auf Updates wird geprüft...',
       'app_up_to_date': 'Die App ist auf dem neuesten Stand',
-      'update_downloaded': 'Update heruntergeladen. Starten Sie die App neu, um es anzuwenden.',
+      'update_downloaded':
+          'Update heruntergeladen. Starten Sie die App neu, um es anzuwenden.',
       'install_now': 'Installieren',
       'update_error_title': 'Update-Prüfung fehlgeschlagen',
-      'update_error_msg': 'Es konnte nicht nach Updates gesucht werden. Möchten Sie den Google Play Store besuchen, um manuell zu suchen?',
+      'update_error_msg':
+          'Es konnte nicht nach Updates gesucht werden. Möchten Sie den Google Play Store besuchen, um manuell zu suchen?',
       'open_play_store': 'Play Store öffnen',
       'cancel': 'Abbrechen',
-      'no_light_sensor_msg': 'Gerät ohne Lichtsensor. Für die Berechnung der Sonnenexposition werden keine Abschwächer angewendet.',
+      'no_light_sensor_msg':
+          'Gerät ohne Lichtsensor. Für die Berechnung der Sonnenexposition werden keine Abschwächer angewendet.',
     },
     'fr': {
       'app_title': 'Minuteur d\'Exposition Solaire',
@@ -407,13 +417,16 @@ class AppTranslations {
       'check_for_updates': 'Vérifier les mises à jour',
       'checking_for_updates': 'Vérification des mises à jour...',
       'app_up_to_date': 'L\'application est à jour',
-      'update_downloaded': 'Mise à jour téléchargée. Redémarrez l\'application pour l\'appliquer.',
+      'update_downloaded':
+          'Mise à jour téléchargée. Redémarrez l\'application pour l\'appliquer.',
       'install_now': 'Installer',
       'update_error_title': 'Échec de la vérification',
-      'update_error_msg': 'Impossible de vérifier les mises à jour. Souhaitez-vous visiter le Google Play Store pour vérifier manuellement ?',
+      'update_error_msg':
+          'Impossible de vérifier les mises à jour. Souhaitez-vous visiter le Google Play Store pour vérifier manuellement ?',
       'open_play_store': 'Ouvrir le Play Store',
       'cancel': 'Annuler',
-      'no_light_sensor_msg': 'Appareil sans capteur de lumière. Aucun atténuateur n\'est appliqué dans le calcul de l\'exposition solaire.',
+      'no_light_sensor_msg':
+          'Appareil sans capteur de lumière. Aucun atténuateur n\'est appliqué dans le calcul de l\'exposition solaire.',
     },
     'it': {
       'app_title': 'Timer di Esposizione Solare',
@@ -489,13 +502,16 @@ class AppTranslations {
       'check_for_updates': 'Controlla aggiornamenti',
       'checking_for_updates': 'Verifica aggiornamenti in corso...',
       'app_up_to_date': 'L\'applicazione è aggiornata',
-      'update_downloaded': 'Aggiornamento scaricato. Riavvia l\'applicazione per applicarlo.',
+      'update_downloaded':
+          'Aggiornamento scaricato. Riavvia l\'applicazione per applicarlo.',
       'install_now': 'Installa',
       'update_error_title': 'Verifica aggiornamenti fallita',
-      'update_error_msg': 'Impossibile verificare gli aggiornamenti. Vuoi visitare Google Play Store per verificare manualmente?',
+      'update_error_msg':
+          'Impossibile verificare gli aggiornamenti. Vuoi visitare Google Play Store per verificare manualmente?',
       'open_play_store': 'Apri Play Store',
       'cancel': 'Annulla',
-      'no_light_sensor_msg': 'Dispositivo senza sensore di luce. Non vengono applicati attenuatori nel calcolo dell\'esposizione solare.',
+      'no_light_sensor_msg':
+          'Dispositivo senza sensore di luce. Non vengono applicati attenuatori nel calcolo dell\'esposizione solare.',
     },
     'pt': {
       'app_title': 'Temporizador de Exposição Solar',
@@ -570,13 +586,16 @@ class AppTranslations {
       'check_for_updates': 'Verificar atualizações',
       'checking_for_updates': 'Verificando atualizações...',
       'app_up_to_date': 'O aplicativo está atualizado',
-      'update_downloaded': 'Atualização baixada. Reinicie o aplicativo para aplicá-la.',
+      'update_downloaded':
+          'Atualização baixada. Reinicie o aplicativo para aplicá-la.',
       'install_now': 'Instalar',
       'update_error_title': 'Falha na verificação',
-      'update_error_msg': 'Não foi possível verificar atualizações. Deseja visitar a Google Play Store para verificar manualmente?',
+      'update_error_msg':
+          'Não foi possível verificar atualizações. Deseja visitar a Google Play Store para verificar manualmente?',
       'open_play_store': 'Abrir Play Store',
       'cancel': 'Cancelar',
-      'no_light_sensor_msg': 'Dispositivo sem sensor de luz. Não são aplicados atenuadores no cálculo da exposição solar.',
+      'no_light_sensor_msg':
+          'Dispositivo sem sensor de luz. Não são aplicados atenuadores no cálculo da exposição solar.',
     },
     'ca': {
       'app_title': 'Temporitzador d\'Exposició Solar',
@@ -650,13 +669,16 @@ class AppTranslations {
       'check_for_updates': 'Comprovar actualitzacions',
       'checking_for_updates': 'Comprovant actualitzacions...',
       'app_up_to_date': 'L\'aplicació ja està actualitzada',
-      'update_downloaded': 'Actualització descarregada. Reinicia l\'aplicació per aplicar-la.',
+      'update_downloaded':
+          'Actualització descarregada. Reinicia l\'aplicació per aplicar-la.',
       'install_now': 'Instal·lar',
       'update_error_title': 'Error d\'actualització',
-      'update_error_msg': 'No s\'ha pogut buscar actualitzacions. Vols visitar Google Play Store per comprovar-ho manualment?',
+      'update_error_msg':
+          'No s\'ha pogut buscar actualitzacions. Vols visitar Google Play Store per comprovar-ho manualment?',
       'open_play_store': 'Obrir Play Store',
       'cancel': 'Cancel·lar',
-      'no_light_sensor_msg': 'Dispositiu sense sensor de llum. No s\'apliquen atenuadors en el càlcul d\'exposició solar.',
+      'no_light_sensor_msg':
+          'Dispositiu sense sensor de llum. No s\'apliquen atenuadors en el càlcul d\'exposició solar.',
     },
   };
 
@@ -1017,7 +1039,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 else
                   const SizedBox(height: 20),
                 Text(
-                  AppTranslations.getText(lang, 'app_title'),
+                  "Sun exposure timer",
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1536,7 +1558,9 @@ class _DashboardScreenState extends State<DashboardScreen>
   // Cálculo del tiempo recomendado en minutos
   void _calculateRecommendedTime() {
     final currentType = fitzpatrickTypes[widget.selectedSkinTypeIndex];
-    final factorAtenuacion = _hasPhysicalLightSensor ? _getAttenuationFactor(_luxValue) : 1.0;
+    final factorAtenuacion = _hasPhysicalLightSensor
+        ? _getAttenuationFactor(_luxValue)
+        : 1.0;
 
     double rawTime;
     if (_uvIndex < 0.5) {
@@ -1892,10 +1916,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             mainAxisSize: MainAxisSize.min,
             children: [
               ListTile(
-                leading: const Icon(
-                  Icons.palette_outlined,
-                  color: Color(0xFF73C6B6),
-                ),
+                leading: const Icon(Icons.contrast, color: Color(0xFF73C6B6)),
                 title: Text(
                   AppTranslations.getText(lang, 'change_skin_type'),
                   style: GoogleFonts.poppins(
@@ -2000,13 +2021,16 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   void _initUpdateListener() {
-    _updateSubscription = InAppUpdate.installUpdateListener.listen((status) {
-      if (status == InstallStatus.downloaded) {
-        _showUpdateDownloadedSnackBar();
-      }
-    }, onError: (e) {
-      debugPrint("Error in update listener: $e");
-    });
+    _updateSubscription = InAppUpdate.installUpdateListener.listen(
+      (status) {
+        if (status == InstallStatus.downloaded) {
+          _showUpdateDownloadedSnackBar();
+        }
+      },
+      onError: (e) {
+        debugPrint("Error in update listener: $e");
+      },
+    );
   }
 
   void _showUpdateDownloadedSnackBar() {
@@ -2170,10 +2194,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      AppTranslations.getText(
-                                        lang,
-                                        'app_title',
-                                      ),
+                                      "Sun exposure timer",
                                       style: GoogleFonts.poppins(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
@@ -2438,7 +2459,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   decoration: BoxDecoration(
                                     color: _hasPhysicalLightSensor
                                         ? Colors.white
-                                        : const Color(0xFFEAEDED), // Grisáceo / disabled background
+                                        : const Color(
+                                            0xFFEAEDED,
+                                          ), // Grisáceo / disabled background
                                     borderRadius: BorderRadius.circular(24),
                                     boxShadow: const [
                                       BoxShadow(
@@ -2471,13 +2494,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                               .start,
                                                       children: [
                                                         Text(
-                                                          AppTranslations
-                                                              .getText(
+                                                          AppTranslations.getText(
                                                             lang,
                                                             'real_light',
                                                           ),
-                                                          style: GoogleFonts
-                                                              .poppins(
+                                                          style: GoogleFonts.poppins(
                                                             fontSize: 12,
                                                             fontWeight:
                                                                 FontWeight.w600,
@@ -2490,7 +2511,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                               .ellipsis,
                                                         ),
                                                         const SizedBox(
-                                                            height: 2),
+                                                          height: 2,
+                                                        ),
                                                         GestureDetector(
                                                           onTap:
                                                               _showLightSensorInfoDialog,
@@ -2509,12 +2531,13 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                   const SizedBox(width: 4),
                                                   Icon(
                                                     _getEnvironmentIcon(
-                                                        _luxValue),
+                                                      _luxValue,
+                                                    ),
                                                     size: 20,
                                                     color:
                                                         _getEnvironmentIconColor(
-                                                      _luxValue,
-                                                    ),
+                                                          _luxValue,
+                                                        ),
                                                   ),
                                                 ],
                                               ),
@@ -2530,21 +2553,21 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                   child: Text.rich(
                                                     TextSpan(
                                                       text: _formatLux(
-                                                          _luxValue),
-                                                      style: GoogleFonts
-                                                          .poppins(
-                                                        fontSize: 42,
-                                                        fontWeight:
-                                                            FontWeight.bold,
-                                                        color: const Color(
-                                                          0xFF2C3E50,
-                                                        ),
+                                                        _luxValue,
                                                       ),
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                            fontSize: 42,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                              0xFF2C3E50,
+                                                            ),
+                                                          ),
                                                       children: [
                                                         TextSpan(
                                                           text: " lx",
-                                                          style: GoogleFonts
-                                                              .poppins(
+                                                          style: GoogleFonts.poppins(
                                                             fontSize: 18,
                                                             fontWeight:
                                                                 FontWeight.w600,
@@ -2559,14 +2582,15 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                 ),
                                                 Text(
                                                   _getEnvironmentName(
-                                                      _luxValue),
+                                                    _luxValue,
+                                                  ),
                                                   style: GoogleFonts.poppins(
                                                     fontSize: 11,
                                                     fontWeight: FontWeight.bold,
                                                     color:
                                                         _getEnvironmentIconColor(
-                                                      _luxValue,
-                                                    ),
+                                                          _luxValue,
+                                                        ),
                                                   ),
                                                   maxLines: 1,
                                                   overflow:
@@ -2602,15 +2626,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                       ).withOpacity(0.5),
                                                     ),
                                                     maxLines: 1,
-                                                    overflow: TextOverflow
-                                                        .ellipsis,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
                                                   ),
                                                 ),
                                                 Icon(
                                                   Icons
                                                       .lightbulb_outline_rounded,
-                                                  color: const Color(0xFF2C3E50)
-                                                      .withOpacity(0.3),
+                                                  color: const Color(
+                                                    0xFF2C3E50,
+                                                  ).withOpacity(0.3),
                                                   size: 18,
                                                 ),
                                               ],
@@ -2921,13 +2946,23 @@ class _DashboardScreenState extends State<DashboardScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  AppTranslations.getText(lang, 'estimated_safe_time'),
-                  style: GoogleFonts.poppins(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.white.withOpacity(0.85),
-                  ),
+                Row(
+                  children: [
+                    const Icon(Icons.sunny, color: Color(0xFFF7D070), size: 30),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        AppTranslations.getText(lang, 'estimated_safe_time'),
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                          color: Colors.white.withOpacity(0.9),
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 4),
                 FittedBox(
