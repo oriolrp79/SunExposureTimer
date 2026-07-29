@@ -10,6 +10,8 @@ import 'package:ambient_light/ambient_light.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:in_app_update/in_app_update.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -79,8 +81,6 @@ const List<FitzpatrickType> fitzpatrickTypes = [
   ),
 ];
 
-final ValueNotifier<String> appLanguage = ValueNotifier<String>('en');
-
 String getSystemLanguageCode() {
   if (kIsWeb) return 'en';
   try {
@@ -97,6 +97,8 @@ String getSystemLanguageCode() {
   }
   return 'en';
 }
+
+final ValueNotifier<String> appLanguage = ValueNotifier<String>(getSystemLanguageCode());
 
 class AppTranslations {
   static const Map<String, Map<String, String>> _translations = {
@@ -135,7 +137,7 @@ class AppTranslations {
           'It uses the Standard Erythemal Dose (SED) algorithm and the Fitzpatrick skin phototype scale supported by the WHO.',
       'header_info_p2':
           'UV radiation data based on global meteorological models from NOAA / ECMWF.',
-      'estimated_safe_time': 'Estimated Safe Time',
+      'estimated_safe_time': 'Estimated Safe Sun Exposure Time',
       'start_exposure': 'Start',
       'daily_limit_reached': 'Daily limit reached',
       'cancel_exposure': 'Cancel Exposure',
@@ -166,6 +168,16 @@ class AppTranslations {
       'uv_extreme': 'Extreme',
       'shade_slider_label': 'Shade (0 lx)',
       'sun_slider_label': 'Full Sun (80K lx)',
+      'check_for_updates': 'Check for updates',
+      'checking_for_updates': 'Checking for updates...',
+      'app_up_to_date': 'App is up to date',
+      'update_downloaded': 'Update downloaded. Restart the app to apply it.',
+      'install_now': 'Install',
+      'update_error_title': 'Update Check Failed',
+      'update_error_msg': 'We could not check for updates. Would you like to visit the Google Play Store to check manually?',
+      'open_play_store': 'Open Play Store',
+      'cancel': 'Cancel',
+      'no_light_sensor_msg': 'Device without light sensor. No attenuators are applied in the sun exposure calculation.',
     },
     'es': {
       'app_title': 'Temporizador de Exposición Solar',
@@ -204,7 +216,7 @@ class AppTranslations {
           'Utiliza el algoritmo de Dosis Eritemática Estándar (SED) y la escala de fototipos cutáneos de Fitzpatrick respaldada por la OMS.',
       'header_info_p2':
           'Datos de radiación UV basados en modelos meteorológicos globales de la NOAA / ECMWF.',
-      'estimated_safe_time': 'Tiempo Seguro Estimado',
+      'estimated_safe_time': 'Tiempo seguro estimado de exposición solar',
       'start_exposure': 'Iniciar',
       'daily_limit_reached': 'Límite diario alcanzado',
       'cancel_exposure': 'Cancelar Exposición',
@@ -236,6 +248,16 @@ class AppTranslations {
       'uv_extreme': 'Extremo',
       'shade_slider_label': 'Sombra (0 lx)',
       'sun_slider_label': 'Sol Pleno (80K lx)',
+      'check_for_updates': 'Buscar actualizaciones',
+      'checking_for_updates': 'Buscando actualizaciones...',
+      'app_up_to_date': 'La aplicación ya está actualizada',
+      'update_downloaded': 'Actualización descargada. Reinicia la aplicación para aplicarla.',
+      'install_now': 'Instalar',
+      'update_error_title': 'Error de actualización',
+      'update_error_msg': 'No se pudo buscar actualizaciones. ¿Deseas visitar Google Play Store para comprobarlo manualmente?',
+      'open_play_store': 'Abrir Play Store',
+      'cancel': 'Cancelar',
+      'no_light_sensor_msg': 'Dispositivo sin sensor de luz. No se aplican atenuadores en el cálculo de exposición solar.',
     },
     'de': {
       'app_title': 'Sonnenschonungs-Timer',
@@ -272,7 +294,7 @@ class AppTranslations {
           'Es verwendet den Standard-Erythemdosis-Algorithmus (SED) und die von der WHO unterstützte Fitzpatrick-Hautphototypskala.',
       'header_info_p2':
           'UV-Strahlungsdaten basierend auf globalen meteorologischen Modellen von NOAA / ECMWF.',
-      'estimated_safe_time': 'Geschätzte sichere Zeit',
+      'estimated_safe_time': 'Geschätzte sichere Sonnenexpositionszeit',
       'start_exposure': 'Starten',
       'daily_limit_reached': 'Tageslimit erreicht',
       'cancel_exposure': 'Exposition abbrechen',
@@ -304,6 +326,16 @@ class AppTranslations {
       'uv_extreme': 'Extrem',
       'shade_slider_label': 'Schatten (0 lx)',
       'sun_slider_label': 'Volle Sonne (80K lx)',
+      'check_for_updates': 'Auf Updates prüfen',
+      'checking_for_updates': 'Auf Updates wird geprüft...',
+      'app_up_to_date': 'Die App ist auf dem neuesten Stand',
+      'update_downloaded': 'Update heruntergeladen. Starten Sie die App neu, um es anzuwenden.',
+      'install_now': 'Installieren',
+      'update_error_title': 'Update-Prüfung fehlgeschlagen',
+      'update_error_msg': 'Es konnte nicht nach Updates gesucht werden. Möchten Sie den Google Play Store besuchen, um manuell zu suchen?',
+      'open_play_store': 'Play Store öffnen',
+      'cancel': 'Abbrechen',
+      'no_light_sensor_msg': 'Gerät ohne Lichtsensor. Für die Berechnung der Sonnenexposition werden keine Abschwächer angewendet.',
     },
     'fr': {
       'app_title': 'Minuteur d\'Exposition Solaire',
@@ -340,7 +372,7 @@ class AppTranslations {
           'Il utilise l\'algorithme de Dose Érythémale Standard (SED) et l\'échelle des phototypes cutanés de Fitzpatrick soutenue par l\'OMS.',
       'header_info_p2':
           'Données de rayonnement UV basées sur les modèles météorologiques mondiaux de la NOAA / CEPMMT.',
-      'estimated_safe_time': 'Temps de sécurité estimé',
+      'estimated_safe_time': 'Temps d\'exposition solaire sûr estimé',
       'start_exposure': 'Démarrer',
       'daily_limit_reached': 'Limite quotidienne atteinte',
       'cancel_exposure': 'Annuler l\'exposition',
@@ -372,6 +404,16 @@ class AppTranslations {
       'uv_extreme': 'Extrême',
       'shade_slider_label': 'Ombre (0 lx)',
       'sun_slider_label': 'Plein Soleil (80K lx)',
+      'check_for_updates': 'Vérifier les mises à jour',
+      'checking_for_updates': 'Vérification des mises à jour...',
+      'app_up_to_date': 'L\'application est à jour',
+      'update_downloaded': 'Mise à jour téléchargée. Redémarrez l\'application pour l\'appliquer.',
+      'install_now': 'Installer',
+      'update_error_title': 'Échec de la vérification',
+      'update_error_msg': 'Impossible de vérifier les mises à jour. Souhaitez-vous visiter le Google Play Store pour vérifier manuellement ?',
+      'open_play_store': 'Ouvrir le Play Store',
+      'cancel': 'Annuler',
+      'no_light_sensor_msg': 'Appareil sans capteur de lumière. Aucun atténuateur n\'est appliqué dans le calcul de l\'exposition solaire.',
     },
     'it': {
       'app_title': 'Timer di Esposizione Solare',
@@ -412,7 +454,7 @@ class AppTranslations {
           'Utilizza l\'algoritmo Standard Erythemal Dose (SED) e la scala dei fototipi cutanei di Fitzpatrick supportata dall\'OMS.',
       'header_info_p2':
           'Dati sulla radiazione UV basati sui modelli meteorologici globali di NOAA / ECMWF.',
-      'estimated_safe_time': 'Tempo sicuro stimato',
+      'estimated_safe_time': 'Tempo di esposizione solare sicuro stimato',
       'start_exposure': 'Inizia',
       'daily_limit_reached': 'Limite giornaliero raggiunto',
       'cancel_exposure': 'Annulla esposizione',
@@ -444,6 +486,16 @@ class AppTranslations {
       'uv_extreme': 'Estremo',
       'shade_slider_label': 'Ombra (0 lx)',
       'sun_slider_label': 'Sole Pieno (80K lx)',
+      'check_for_updates': 'Controlla aggiornamenti',
+      'checking_for_updates': 'Verifica aggiornamenti in corso...',
+      'app_up_to_date': 'L\'applicazione è aggiornata',
+      'update_downloaded': 'Aggiornamento scaricato. Riavvia l\'applicazione per applicarlo.',
+      'install_now': 'Installa',
+      'update_error_title': 'Verifica aggiornamenti fallita',
+      'update_error_msg': 'Impossibile verificare gli aggiornamenti. Vuoi visitare Google Play Store per verificare manualmente?',
+      'open_play_store': 'Apri Play Store',
+      'cancel': 'Annulla',
+      'no_light_sensor_msg': 'Dispositivo senza sensore di luce. Non vengono applicati attenuatori nel calcolo dell\'esposizione solare.',
     },
     'pt': {
       'app_title': 'Temporizador de Exposição Solar',
@@ -483,7 +535,7 @@ class AppTranslations {
           'Utiliza o algoritmo de Dose Eritemática Padrão (SED) e a escala de fotótipos cutâneos de Fitzpatrick apoiada pela OMS.',
       'header_info_p2':
           'Dados de radiação UV baseados em modelos meteorológicos globais da NOAA / ECMWF.',
-      'estimated_safe_time': 'Tempo seguro estimado',
+      'estimated_safe_time': 'Tempo seguro estimado de exposição solar',
       'start_exposure': 'Iniciar',
       'daily_limit_reached': 'Limite diário atingido',
       'cancel_exposure': 'Cancelar exposição',
@@ -515,6 +567,16 @@ class AppTranslations {
       'uv_extreme': 'Extremo',
       'shade_slider_label': 'Sombra (0 lx)',
       'sun_slider_label': 'Sol Pleno (80K lx)',
+      'check_for_updates': 'Verificar atualizações',
+      'checking_for_updates': 'Verificando atualizações...',
+      'app_up_to_date': 'O aplicativo está atualizado',
+      'update_downloaded': 'Atualização baixada. Reinicie o aplicativo para aplicá-la.',
+      'install_now': 'Instalar',
+      'update_error_title': 'Falha na verificação',
+      'update_error_msg': 'Não foi possível verificar atualizações. Deseja visitar a Google Play Store para verificar manualmente?',
+      'open_play_store': 'Abrir Play Store',
+      'cancel': 'Cancelar',
+      'no_light_sensor_msg': 'Dispositivo sem sensor de luz. Não são aplicados atenuadores no cálculo da exposição solar.',
     },
     'ca': {
       'app_title': 'Temporitzador d\'Exposició Solar',
@@ -553,7 +615,7 @@ class AppTranslations {
           'Utilitza l\'algoritme de Dosi Eritemàtica Estàndard (SED) i l\'escala de fototips cutanis de Fitzpatrick recolzada per l\'OMS.',
       'header_info_p2':
           'Dades de radiació UV basades en models meteorològics globals de la NOAA / ECMWF.',
-      'estimated_safe_time': 'Temps segur estimat',
+      'estimated_safe_time': 'Temps segur estimat d\'exposició solar',
       'start_exposure': 'Iniciar',
       'daily_limit_reached': 'Límit diari assolit',
       'cancel_exposure': 'Cancel·lar exposició',
@@ -585,6 +647,16 @@ class AppTranslations {
       'uv_extreme': 'Extrem',
       'shade_slider_label': 'Ombra (0 lx)',
       'sun_slider_label': 'Sol Ple (80K lx)',
+      'check_for_updates': 'Comprovar actualitzacions',
+      'checking_for_updates': 'Comprovant actualitzacions...',
+      'app_up_to_date': 'L\'aplicació ja està actualitzada',
+      'update_downloaded': 'Actualització descarregada. Reinicia l\'aplicació per aplicar-la.',
+      'install_now': 'Instal·lar',
+      'update_error_title': 'Error d\'actualització',
+      'update_error_msg': 'No s\'ha pogut buscar actualitzacions. Vols visitar Google Play Store per comprovar-ho manualment?',
+      'open_play_store': 'Obrir Play Store',
+      'cancel': 'Cancel·lar',
+      'no_light_sensor_msg': 'Dispositiu sense sensor de llum. No s\'apliquen atenuadors en el càlcul d\'exposició solar.',
     },
   };
 
@@ -787,7 +859,7 @@ class SunTimerApp extends StatelessWidget {
       home: ValueListenableBuilder<String>(
         valueListenable: appLanguage,
         builder: (context, lang, child) {
-          return InitialRouter(key: ValueKey(lang));
+          return const InitialRouter();
         },
       ),
     );
@@ -822,16 +894,7 @@ class _InitialRouterState extends State<InitialRouter> {
       selectedLang = prefs.getString('app_language')!;
     } else {
       // Auto-detectar idioma
-      String systemLocale = 'en';
-      try {
-        systemLocale = Localizations.localeOf(context).languageCode;
-      } catch (e) {
-        try {
-          systemLocale = Platform.localeName.substring(0, 2).toLowerCase();
-        } catch (_) {}
-      }
-      final supported = ['en', 'es', 'de', 'fr', 'it', 'pt', 'ca'];
-      selectedLang = supported.contains(systemLocale) ? systemLocale : 'en';
+      selectedLang = getSystemLanguageCode();
     }
     appLanguage.value = selectedLang;
 
@@ -1158,8 +1221,8 @@ class _DashboardScreenState extends State<DashboardScreen>
   // Sensor de Luz
   bool _hasPhysicalLightSensor = false;
   int _luxValue = 0;
-  double _simulatedSunPower = 15000.0; // Valor simulado inicial (en lux)
   StreamSubscription<double>? _lightSubscription;
+  StreamSubscription<InstallStatus>? _updateSubscription;
 
   // Lógica del Temporizador (0 = Inicial, 1 = Calculado, 2 = Countdown Activo)
   int _buttonState = 1;
@@ -1182,6 +1245,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   void initState() {
     super.initState();
+    appLanguage.addListener(_onLanguageChanged);
     _updateClock();
     _clockTimer = Timer.periodic(
       const Duration(seconds: 1),
@@ -1190,6 +1254,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     _checkDailyLimit();
     _initLightSensor();
     _fetchLocationAndUv();
+    _initUpdateListener();
 
     // Calcular inicialmente
     _calculateRecommendedTime();
@@ -1203,12 +1268,30 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   void dispose() {
+    appLanguage.removeListener(_onLanguageChanged);
     _clockTimer.cancel();
     _calculationTimer?.cancel();
     _lightSubscription?.cancel();
+    _updateSubscription?.cancel();
     _countdownTimer?.cancel();
     _flashTimer?.cancel();
     super.dispose();
+  }
+
+  void _onLanguageChanged() {
+    if (mounted) {
+      setState(() {
+        if (_isFetchingUv) {
+          _locationName = AppTranslations.getText(
+            appLanguage.value,
+            'detecting_location',
+          );
+        } else if (_locationError) {
+          _locationName =
+              "Barcelona, ES (${AppTranslations.getText(appLanguage.value, 'simulated')})";
+        }
+      });
+    }
   }
 
   void _updateClock() {
@@ -1263,7 +1346,6 @@ class _DashboardScreenState extends State<DashboardScreen>
             setState(() {
               _luxValue = lux.round();
             });
-            _calculateRecommendedTime();
           });
           return;
         }
@@ -1271,10 +1353,10 @@ class _DashboardScreenState extends State<DashboardScreen>
         debugPrint("Error inicializando sensor de luz: $e");
       }
     }
-    // Si no está disponible, el valor se toma de la simulación interactiva
+    // Si no está disponible
     setState(() {
       _hasPhysicalLightSensor = false;
-      _luxValue = _simulatedSunPower.round();
+      _luxValue = 0;
     });
     _calculateRecommendedTime();
   }
@@ -1412,12 +1494,14 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   double _getAttenuationFactor(int lux) {
-    if (lux >= 20000) {
-      return 1.0;
-    } else if (lux >= 1000) {
-      return 0.5;
-    } else {
+    if (lux <= 0) {
       return 0.1;
+    } else if (lux < 1000) {
+      return 0.1 + 0.4 * (lux / 1000.0);
+    } else if (lux < 20000) {
+      return 0.5 + 0.5 * ((lux - 1000.0) / 19000.0);
+    } else {
+      return 1.0;
     }
   }
 
@@ -1452,7 +1536,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   // Cálculo del tiempo recomendado en minutos
   void _calculateRecommendedTime() {
     final currentType = fitzpatrickTypes[widget.selectedSkinTypeIndex];
-    final factorAtenuacion = _getAttenuationFactor(_luxValue);
+    final factorAtenuacion = _hasPhysicalLightSensor ? _getAttenuationFactor(_luxValue) : 1.0;
 
     double rawTime;
     if (_uvIndex < 0.5) {
@@ -1825,48 +1909,76 @@ class _DashboardScreenState extends State<DashboardScreen>
                   widget.onResetSkinType();
                 },
               ),
+              const Divider(color: Color(0xFFE5E8E8), height: 1, thickness: 1),
               ListTile(
+                titleAlignment: ListTileTitleAlignment.top,
                 leading: const Icon(
                   Icons.language_outlined,
                   color: Color(0xFF73C6B6),
                 ),
+                title: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      AppTranslations.getText(lang, 'select_language'),
+                      style: GoogleFonts.poppins(
+                        color: const Color(0xFF2C3E50),
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    DropdownButton<String>(
+                      value: lang,
+                      underline: const SizedBox(),
+                      icon: const Icon(
+                        Icons.arrow_drop_down,
+                        color: Color(0xFF73C6B6),
+                      ),
+                      dropdownColor: const Color(0xFFFBF9F5),
+                      borderRadius: BorderRadius.circular(16),
+                      onChanged: (String? newLang) async {
+                        if (newLang != null) {
+                          appLanguage.value = newLang;
+                          final prefs = await SharedPreferences.getInstance();
+                          await prefs.setString('app_language', newLang);
+                          if (context.mounted) {
+                            Navigator.of(context).pop();
+                          }
+                        }
+                      },
+                      items: const [
+                        DropdownMenuItem(value: 'en', child: Text('English')),
+                        DropdownMenuItem(value: 'es', child: Text('Español')),
+                        DropdownMenuItem(value: 'de', child: Text('Deutsch')),
+                        DropdownMenuItem(value: 'fr', child: Text('Français')),
+                        DropdownMenuItem(value: 'it', child: Text('Italiano')),
+                        DropdownMenuItem(value: 'pt', child: Text('Português')),
+                        DropdownMenuItem(value: 'ca', child: Text('Català')),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Divider(color: Color(0xFFE5E8E8), height: 1, thickness: 1),
+              ListTile(
+                leading: const Icon(
+                  Icons.system_update_outlined,
+                  color: Color(0xFF73C6B6),
+                ),
                 title: Text(
-                  AppTranslations.getText(lang, 'select_language'),
+                  AppTranslations.getText(lang, 'check_for_updates'),
                   style: GoogleFonts.poppins(
                     color: const Color(0xFF2C3E50),
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
-                trailing: DropdownButton<String>(
-                  value: lang,
-                  underline: const SizedBox(),
-                  icon: const Icon(
-                    Icons.arrow_drop_down,
-                    color: Color(0xFF73C6B6),
-                  ),
-                  dropdownColor: const Color(0xFFFBF9F5),
-                  borderRadius: BorderRadius.circular(16),
-                  onChanged: (String? newLang) async {
-                    if (newLang != null) {
-                      appLanguage.value = newLang;
-                      final prefs = await SharedPreferences.getInstance();
-                      await prefs.setString('app_language', newLang);
-                      if (context.mounted) {
-                        Navigator.of(context).pop();
-                      }
-                    }
-                  },
-                  items: const [
-                    DropdownMenuItem(value: 'en', child: Text('English')),
-                    DropdownMenuItem(value: 'es', child: Text('Español')),
-                    DropdownMenuItem(value: 'de', child: Text('Deutsch')),
-                    DropdownMenuItem(value: 'fr', child: Text('Français')),
-                    DropdownMenuItem(value: 'it', child: Text('Italiano')),
-                    DropdownMenuItem(value: 'pt', child: Text('Português')),
-                    DropdownMenuItem(value: 'ca', child: Text('Català')),
-                  ],
-                ),
+                onTap: () {
+                  Navigator.of(context).pop();
+                  _checkForUpdates(lang);
+                },
               ),
             ],
           ),
@@ -1885,6 +1997,119 @@ class _DashboardScreenState extends State<DashboardScreen>
         );
       },
     );
+  }
+
+  void _initUpdateListener() {
+    _updateSubscription = InAppUpdate.installUpdateListener.listen((status) {
+      if (status == InstallStatus.downloaded) {
+        _showUpdateDownloadedSnackBar();
+      }
+    }, onError: (e) {
+      debugPrint("Error in update listener: $e");
+    });
+  }
+
+  void _showUpdateDownloadedSnackBar() {
+    if (!mounted) return;
+    final lang = appLanguage.value;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          AppTranslations.getText(lang, 'update_downloaded'),
+          style: GoogleFonts.poppins(),
+        ),
+        duration: const Duration(days: 365),
+        action: SnackBarAction(
+          label: AppTranslations.getText(lang, 'install_now'),
+          textColor: const Color(0xFF73C6B6),
+          onPressed: () async {
+            try {
+              await InAppUpdate.completeFlexibleUpdate();
+            } catch (e) {
+              debugPrint("Error completing flexible update: $e");
+              if (mounted) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      'Failed to complete update installation.',
+                      style: GoogleFonts.poppins(),
+                    ),
+                  ),
+                );
+              }
+            }
+          },
+        ),
+      ),
+    );
+  }
+
+  Future<void> _checkForUpdates(String lang) async {
+    if (!mounted) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          AppTranslations.getText(lang, 'checking_for_updates'),
+          style: GoogleFonts.poppins(),
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+
+    try {
+      final info = await InAppUpdate.checkForUpdate();
+
+      if (info.installStatus == InstallStatus.downloaded) {
+        _showUpdateDownloadedSnackBar();
+        return;
+      }
+
+      if (info.updateAvailability == UpdateAvailability.updateAvailable) {
+        final result = await InAppUpdate.startFlexibleUpdate();
+        if (result == AppUpdateResult.success) {
+          // El usuario aceptó la actualización y comenzó a descargarse en segundo plano.
+          // El listener registrado _updateSubscription capturará el estado descargado (downloaded).
+        } else {
+          debugPrint("Flexible update flow result: $result");
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                AppTranslations.getText(lang, 'app_up_to_date'),
+                style: GoogleFonts.poppins(),
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint("InAppUpdate failed, redirecting to Google Play Store: $e");
+      final Uri playStoreUri = Uri.parse(
+        'https://play.google.com/store/apps/details?id=com.suntimer.app',
+      );
+      try {
+        if (await canLaunchUrl(playStoreUri)) {
+          await launchUrl(playStoreUri, mode: LaunchMode.externalApplication);
+        } else {
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                content: Text(
+                  'Could not open Google Play Store',
+                  style: GoogleFonts.poppins(),
+                ),
+              ),
+            );
+          }
+        }
+      } catch (launchError) {
+        debugPrint("Could not launch Play Store URL: $launchError");
+      }
+    }
   }
 
   @override
@@ -2211,7 +2436,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   height: 148,
                                   padding: const EdgeInsets.all(16),
                                   decoration: BoxDecoration(
-                                    color: Colors.white,
+                                    color: _hasPhysicalLightSensor
+                                        ? Colors.white
+                                        : const Color(0xFFEAEDED), // Grisáceo / disabled background
                                     borderRadius: BorderRadius.circular(24),
                                     boxShadow: const [
                                       BoxShadow(
@@ -2221,123 +2448,193 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       ),
                                     ],
                                   ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      SizedBox(
-                                        height: 38,
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.spaceBetween,
+                                  child: _hasPhysicalLightSensor
+                                      ? Column(
                                           crossAxisAlignment:
                                               CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
                                           children: [
-                                            Expanded(
-                                              child: Column(
+                                            SizedBox(
+                                              height: 38,
+                                              child: Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
                                                 children: [
-                                                  Text(
-                                                    _hasPhysicalLightSensor
-                                                        ? AppTranslations.getText(
+                                                  Expanded(
+                                                    child: Column(
+                                                      crossAxisAlignment:
+                                                          CrossAxisAlignment
+                                                              .start,
+                                                      children: [
+                                                        Text(
+                                                          AppTranslations
+                                                              .getText(
                                                             lang,
                                                             'real_light',
-                                                          )
-                                                        : AppTranslations.getText(
-                                                            lang,
-                                                            'simulated_lux',
                                                           ),
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 12,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: const Color(
+                                                              0xFF2C3E50,
+                                                            ).withOpacity(0.6),
+                                                          ),
+                                                          maxLines: 1,
+                                                          overflow: TextOverflow
+                                                              .ellipsis,
+                                                        ),
+                                                        const SizedBox(
+                                                            height: 2),
+                                                        GestureDetector(
+                                                          onTap:
+                                                              _showLightSensorInfoDialog,
+                                                          child: Icon(
+                                                            Icons
+                                                                .info_outline_rounded,
+                                                            size: 14,
+                                                            color: const Color(
+                                                              0xFF2C3E50,
+                                                            ).withOpacity(0.5),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                  const SizedBox(width: 4),
+                                                  Icon(
+                                                    _getEnvironmentIcon(
+                                                        _luxValue),
+                                                    size: 20,
+                                                    color:
+                                                        _getEnvironmentIconColor(
+                                                      _luxValue,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                            Column(
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
+                                              children: [
+                                                FittedBox(
+                                                  fit: BoxFit.scaleDown,
+                                                  alignment:
+                                                      Alignment.centerLeft,
+                                                  child: Text.rich(
+                                                    TextSpan(
+                                                      text: _formatLux(
+                                                          _luxValue),
+                                                      style: GoogleFonts
+                                                          .poppins(
+                                                        fontSize: 42,
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        color: const Color(
+                                                          0xFF2C3E50,
+                                                        ),
+                                                      ),
+                                                      children: [
+                                                        TextSpan(
+                                                          text: " lx",
+                                                          style: GoogleFonts
+                                                              .poppins(
+                                                            fontSize: 18,
+                                                            fontWeight:
+                                                                FontWeight.w600,
+                                                            color: const Color(
+                                                              0xFF2C3E50,
+                                                            ).withOpacity(0.6),
+                                                          ),
+                                                        ),
+                                                      ],
+                                                    ),
+                                                  ),
+                                                ),
+                                                Text(
+                                                  _getEnvironmentName(
+                                                      _luxValue),
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 11,
+                                                    fontWeight: FontWeight.bold,
+                                                    color:
+                                                        _getEnvironmentIconColor(
+                                                      _luxValue,
+                                                    ),
+                                                  ),
+                                                  maxLines: 1,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
+                                                ),
+                                              ],
+                                            ),
+                                          ],
+                                        )
+                                      : Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment
+                                                      .spaceBetween,
+                                              children: [
+                                                Expanded(
+                                                  child: Text(
+                                                    AppTranslations.getText(
+                                                      lang,
+                                                      'real_light',
+                                                    ),
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 12,
                                                       fontWeight:
-                                                          FontWeight.w600,
-                                                      color: const Color(
-                                                        0xFF2C3E50,
-                                                      ).withOpacity(0.6),
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                  const SizedBox(height: 2),
-                                                  GestureDetector(
-                                                    onTap:
-                                                        _showLightSensorInfoDialog,
-                                                    child: Icon(
-                                                      Icons
-                                                          .info_outline_rounded,
-                                                      size: 14,
+                                                          FontWeight.bold,
                                                       color: const Color(
                                                         0xFF2C3E50,
                                                       ).withOpacity(0.5),
                                                     ),
+                                                    maxLines: 1,
+                                                    overflow: TextOverflow
+                                                        .ellipsis,
                                                   ),
-                                                ],
-                                              ),
+                                                ),
+                                                Icon(
+                                                  Icons
+                                                      .lightbulb_outline_rounded,
+                                                  color: const Color(0xFF2C3E50)
+                                                      .withOpacity(0.3),
+                                                  size: 18,
+                                                ),
+                                              ],
                                             ),
-                                            const SizedBox(width: 4),
-                                            Icon(
-                                              _getEnvironmentIcon(_luxValue),
-                                              size: 20,
-                                              color: _getEnvironmentIconColor(
-                                                _luxValue,
+                                            Expanded(
+                                              child: Center(
+                                                child: Text(
+                                                  AppTranslations.getText(
+                                                    lang,
+                                                    'no_light_sensor_msg',
+                                                  ),
+                                                  style: GoogleFonts.poppins(
+                                                    fontSize: 9.5,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: const Color(
+                                                      0xFF2C3E50,
+                                                    ).withOpacity(0.6),
+                                                  ),
+                                                  textAlign: TextAlign.center,
+                                                ),
                                               ),
                                             ),
                                           ],
                                         ),
-                                      ),
-                                      Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          FittedBox(
-                                            fit: BoxFit.scaleDown,
-                                            alignment: Alignment.centerLeft,
-                                            child: Text.rich(
-                                              TextSpan(
-                                                text: _formatLux(_luxValue),
-                                                style: GoogleFonts.poppins(
-                                                  fontSize: 42,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: const Color(
-                                                    0xFF2C3E50,
-                                                  ),
-                                                ),
-                                                children: [
-                                                  TextSpan(
-                                                    text: " lx",
-                                                    style: GoogleFonts.poppins(
-                                                      fontSize: 18,
-                                                      fontWeight:
-                                                          FontWeight.w600,
-                                                      color: const Color(
-                                                        0xFF2C3E50,
-                                                      ).withOpacity(0.6),
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                            ),
-                                          ),
-                                          Text(
-                                            _getEnvironmentName(_luxValue),
-                                            style: GoogleFonts.poppins(
-                                              fontSize: 11,
-                                              fontWeight: FontWeight.bold,
-                                              color: _getEnvironmentIconColor(
-                                                _luxValue,
-                                              ),
-                                            ),
-                                            maxLines: 1,
-                                            overflow: TextOverflow.ellipsis,
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
                                 ),
                               ),
                               const SizedBox(width: 16),
@@ -2465,106 +2762,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                               ),
                             ],
                           ),
-                          const SizedBox(height: 16),
-
-                          // DESLIZADOR PARA SIMULAR SENSOR SI NO EXISTE FÍSICO
-                          if (!_hasPhysicalLightSensor)
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0x0A000000),
-                                    blurRadius: 16,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    AppTranslations.getText(
-                                      lang,
-                                      'simulating_light_slider',
-                                    ),
-                                    style: GoogleFonts.poppins(
-                                      fontSize: 12,
-                                      fontWeight: FontWeight.w600,
-                                      color: const Color(
-                                        0xFF2C3E50,
-                                      ).withOpacity(0.7),
-                                    ),
-                                  ),
-                                  SliderTheme(
-                                    data: SliderTheme.of(context).copyWith(
-                                      activeTrackColor: const Color(0xFF73C6B6),
-                                      inactiveTrackColor: const Color(
-                                        0xFF73C6B6,
-                                      ).withOpacity(0.2),
-                                      thumbColor: const Color(0xFF73C6B6),
-                                      overlayColor: const Color(
-                                        0xFF73C6B6,
-                                      ).withOpacity(0.12),
-                                    ),
-                                    child: Slider(
-                                      min: 0.0,
-                                      max: 80000.0,
-                                      divisions: 80,
-                                      value: _simulatedSunPower,
-                                      onChanged: (val) {
-                                        setState(() {
-                                          _simulatedSunPower = val;
-                                          _luxValue = val.round();
-                                          // Si no tenemos datos GPS, estimar UV proporcional a los luxes del slider
-                                          if (_locationError) {
-                                            _uvIndex = (val / 8000.0);
-                                            if (_uvIndex > 12.0) {
-                                              _uvIndex = 12.0;
-                                            }
-                                          }
-                                        });
-                                      },
-                                    ),
-                                  ),
-                                  Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Text(
-                                        AppTranslations.getText(
-                                          lang,
-                                          'shade_slider_label',
-                                        ),
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 10,
-                                          color: const Color(
-                                            0xFF2C3E50,
-                                          ).withOpacity(0.5),
-                                        ),
-                                      ),
-                                      Text(
-                                        AppTranslations.getText(
-                                          lang,
-                                          'sun_slider_label',
-                                        ),
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 10,
-                                          color: const Color(
-                                            0xFF2C3E50,
-                                          ).withOpacity(0.5),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
                           const SizedBox(height: 24),
                           // LÓGICA DE ESTADO DEL BOTÓN PRINCIPAL / DETALLES DE ACCIÓN
                           if (_limitReachedToday)
