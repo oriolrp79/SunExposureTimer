@@ -12,9 +12,11 @@ import 'package:flutter_ringtone_player/flutter_ringtone_player.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  MobileAds.instance.initialize();
   runApp(const SunTimerApp());
 }
 
@@ -1039,7 +1041,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 else
                   const SizedBox(height: 20),
                 Text(
-                  "Sun exposure timer",
+                  "Sun Exposure Timer",
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1246,6 +1248,11 @@ class _DashboardScreenState extends State<DashboardScreen>
   StreamSubscription<double>? _lightSubscription;
   StreamSubscription<InstallStatus>? _updateSubscription;
 
+  // Banner publicitario (Google AdMob)
+  BannerAd? _bannerAd;
+  bool _isBannerAdReady = false;
+  double? _adWidth;
+
   // Lógica del Temporizador (0 = Inicial, 1 = Calculado, 2 = Countdown Activo)
   int _buttonState = 1;
   int _calculatedSafeMinutes = 0;
@@ -1289,6 +1296,62 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _loadBannerAd();
+  }
+
+  void _loadBannerAd() async {
+    final double width = MediaQuery.of(context).size.width;
+    if (_adWidth == width) {
+      return;
+    }
+
+    if (_bannerAd != null) {
+      await _bannerAd!.dispose();
+      _bannerAd = null;
+      setState(() {
+        _isBannerAdReady = false;
+      });
+    }
+
+    _adWidth = width;
+
+    final size = await AdSize.getCurrentOrientationAnchoredAdaptiveBannerAdSize(
+      width.truncate(),
+    );
+
+    if (size == null) {
+      debugPrint('Unable to get adaptive banner size.');
+      return;
+    }
+
+    _bannerAd = BannerAd(
+      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+      size: size,
+      request: const AdRequest(),
+      listener: BannerAdListener(
+        onAdLoaded: (ad) {
+          debugPrint('BannerAd loaded successfully.');
+          setState(() {
+            _bannerAd = ad as BannerAd;
+            _isBannerAdReady = true;
+          });
+        },
+        onAdFailedToLoad: (ad, error) {
+          debugPrint('BannerAd failed to load: $error');
+          ad.dispose();
+          setState(() {
+            _isBannerAdReady = false;
+          });
+        },
+      ),
+    );
+
+    _bannerAd!.load();
+  }
+
+  @override
   void dispose() {
     appLanguage.removeListener(_onLanguageChanged);
     _clockTimer.cancel();
@@ -1297,6 +1360,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     _updateSubscription?.cancel();
     _countdownTimer?.cancel();
     _flashTimer?.cancel();
+    _bannerAd?.dispose();
     super.dispose();
   }
 
@@ -2194,7 +2258,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      "Sun exposure timer",
+                                      "Sun Exposure Timer",
                                       style: GoogleFonts.poppins(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
@@ -2802,54 +2866,64 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ),
                 ),
                 // ESPACIO RESERVADO PARA ADS EN LA PARTE INFERIOR
-                Container(
-                  height: 65,
-                  width: double.infinity,
-                  color: Colors.transparent,
-                  child: Center(
+                if (_isBannerAdReady && _bannerAd != null)
+                  SafeArea(
                     child: Container(
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 8,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.2),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.3),
-                          width: 1,
+                      alignment: Alignment.center,
+                      width: _bannerAd!.size.width.toDouble(),
+                      height: _bannerAd!.size.height.toDouble(),
+                      child: AdWidget(ad: _bannerAd!),
+                    ),
+                  )
+                else
+                  Container(
+                    height: 65,
+                    width: double.infinity,
+                    color: Colors.transparent,
+                    child: Center(
+                      child: Container(
+                        margin: const EdgeInsets.symmetric(
+                          horizontal: 24,
+                          vertical: 8,
                         ),
-                      ),
-                      child: Center(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.ads_click_rounded,
-                              color: const Color(0xFF2C3E50).withOpacity(0.6),
-                              size: 16,
-                            ),
-                            const SizedBox(width: 8),
-                            Flexible(
-                              child: Text(
-                                AppTranslations.getText(lang, 'ad_space'),
-                                style: GoogleFonts.poppins(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.w500,
-                                  color: const Color(
-                                    0xFF2C3E50,
-                                  ).withOpacity(0.6),
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(16),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.3),
+                            width: 1,
+                          ),
+                        ),
+                        child: Center(
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.ads_click_rounded,
+                                color: const Color(0xFF2C3E50).withOpacity(0.6),
+                                size: 16,
                               ),
-                            ),
-                          ],
+                              const SizedBox(width: 8),
+                              Flexible(
+                                child: Text(
+                                  AppTranslations.getText(lang, 'ad_space'),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w500,
+                                    color: const Color(
+                                      0xFF2C3E50,
+                                    ).withOpacity(0.6),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
