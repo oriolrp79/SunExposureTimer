@@ -14,6 +14,9 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:in_app_update/in_app_update.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:google_mobile_ads/google_mobile_ads.dart';
+import 'package:connectivity_plus/connectivity_plus.dart';
+import 'search_city_bottom_sheet.dart';
+import 'services/ip_location_service.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -25,7 +28,8 @@ void main() {
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       systemNavigationBarColor: Colors.black, // Barra de navegació en negre
-      systemNavigationBarContrastEnforced: false, // OBLIGATORI per a Android 10+
+      systemNavigationBarContrastEnforced:
+          false, // OBLIGATORI per a Android 10+
       systemNavigationBarDividerColor: Colors.transparent,
       systemNavigationBarIconBrightness: Brightness
           .light, // Icons de la barra de navegació en blanc (contrastats)
@@ -141,11 +145,13 @@ class AppTranslations {
       'skin_type_5_desc': 'Very dark. Rarely burns, tans intensely.',
       'skin_type_6_name': 'Type VI',
       'skin_type_6_desc': 'Black. Never burns, tans deeply.',
-      'your_skin_type': 'Your skin type',
+      'your_skin_type': 'Your skin',
       'safe_dose': 'Safe dose',
       'change_skin_type': 'Change skin type',
       'gps_active': 'GPS Active',
-      'simulated': 'Simulated',
+      'simulated': 'GPS Inactive',
+      'location_unavailable': 'Location unavailable',
+      'search_your_city': 'Search your city',
       'location': 'Location',
       'real_light': 'Real light',
       'simulated_lux': 'Simulated Lux',
@@ -159,7 +165,7 @@ class AppTranslations {
       'header_info_p2':
           'UV radiation data based on global meteorological models from NOAA / ECMWF.',
       'estimated_safe_time': 'Estimated Safe Sun Exposure Time',
-      'start_exposure': 'Start',
+      'start_exposure': 'Start Alarm',
       'daily_limit_reached': 'Daily limit reached',
       'cancel_exposure': 'Cancel Exposure',
       'safe_exposure_finished_title': 'Daily limit reached!',
@@ -201,6 +207,13 @@ class AppTranslations {
       'cancel': 'Cancel',
       'no_light_sensor_msg':
           'Device without light sensor. No attenuators are applied in the sun exposure calculation.',
+      'manage_gps': 'GPS Management',
+      'disclaimer_title': 'Legal & Health Disclaimer',
+      'disclaimer_point1':
+          '• The app offers indicative estimates and does not replace medical advice.',
+      'disclaimer_point2': '• The use of the app is at the user\'s own risk.',
+      'disclaimer_point3':
+          '• For any doubts or sensitive skin, you must consult a dermatologist.',
     },
     'es': {
       'app_title': 'Temporizador de Exposición Solar',
@@ -222,11 +235,13 @@ class AppTranslations {
           'Muy oscura. Raramente se quema, se broncea intensamente.',
       'skin_type_6_name': 'Tipo VI',
       'skin_type_6_desc': 'Negra. Nunca se quema, se broncea profundamente.',
-      'your_skin_type': 'Tu tipo de piel',
+      'your_skin_type': 'Tu piel',
       'safe_dose': 'Dosis segura',
       'change_skin_type': 'Cambiar fototipo',
       'gps_active': 'GPS Activo',
-      'simulated': 'Simulada',
+      'simulated': 'GPS Inactivo',
+      'location_unavailable': 'Ubicación no disponible',
+      'search_your_city': 'Busca tu ciudad',
       'location': 'Ubicación',
       'real_light': 'Luz real',
       'simulated_lux': 'Lux Simulado',
@@ -239,8 +254,8 @@ class AppTranslations {
           'Utiliza el algoritmo de Dosis Eritemática Estándar (SED) y la escala de fototipos cutáneos de Fitzpatrick respaldada por la OMS.',
       'header_info_p2':
           'Datos de radiación UV basados en modelos meteorológicos globales de la NOAA / ECMWF.',
-      'estimated_safe_time': 'Tiempo seguro estimado de exposición solar',
-      'start_exposure': 'Iniciar',
+      'estimated_safe_time': 'Tiempo seguro de exposición solar',
+      'start_exposure': 'Iniciar Alarma',
       'daily_limit_reached': 'Límite diario alcanzado',
       'cancel_exposure': 'Cancelar Exposición',
       'safe_exposure_finished_title': '¡Límite diario alcanzado!',
@@ -284,6 +299,14 @@ class AppTranslations {
       'cancel': 'Cancelar',
       'no_light_sensor_msg':
           'Dispositivo sin sensor de luz. No se aplican atenuadores en el cálculo de exposición solar.',
+      'manage_gps': 'Gestión de GPS',
+      'disclaimer_title': 'Aviso Legal y de Salud',
+      'disclaimer_point1':
+          '• La aplicación ofrece estimaciones orientativas y no reemplaza el consejo médico.',
+      'disclaimer_point2':
+          '• El uso de la aplicación es bajo la propia responsabilidad del usuario.',
+      'disclaimer_point3':
+          '• Ante dudas o pieles sensibles, se debe consultar con un dermatólogo.',
     },
     'de': {
       'app_title': 'Sonnenschonungs-Timer',
@@ -303,11 +326,13 @@ class AppTranslations {
       'skin_type_5_desc': 'Sehr dunkel. Verbrennt selten, bräunt intensiv.',
       'skin_type_6_name': 'Typ VI',
       'skin_type_6_desc': 'Schwarz. Verbrennt nie, bräunt tief.',
-      'your_skin_type': 'Ihr Hauttyp',
+      'your_skin_type': 'Deine Haut',
       'safe_dose': 'Sichere Dosis',
       'change_skin_type': 'Hauttyp ändern',
       'gps_active': 'GPS Aktiv',
-      'simulated': 'Simuliert',
+      'simulated': 'GPS Inaktiv',
+      'location_unavailable': 'Standort nicht verfügbar',
+      'search_your_city': 'Suche deine Stadt',
       'location': 'Standort',
       'real_light': 'Echtes Licht',
       'simulated_lux': 'Simulierter Lux',
@@ -321,7 +346,7 @@ class AppTranslations {
       'header_info_p2':
           'UV-Strahlungsdaten basierend auf globalen meteorologischen Modellen von NOAA / ECMWF.',
       'estimated_safe_time': 'Geschätzte sichere Sonnenexpositionszeit',
-      'start_exposure': 'Starten',
+      'start_exposure': 'Alarm starten',
       'daily_limit_reached': 'Tageslimit erreicht',
       'cancel_exposure': 'Exposition abbrechen',
       'safe_exposure_finished_title': 'Sichere Exposition beendet',
@@ -365,6 +390,14 @@ class AppTranslations {
       'cancel': 'Abbrechen',
       'no_light_sensor_msg':
           'Gerät ohne Lichtsensor. Für die Berechnung der Sonnenexposition werden keine Abschwächer angewendet.',
+      'manage_gps': 'GPS-Verwaltung',
+      'disclaimer_title': 'Rechtlicher & gesundheitlicher Haftungsausschluss',
+      'disclaimer_point1':
+          '• Die App bietet Richtwerte und ersetzt keine ärztliche Beratung.',
+      'disclaimer_point2':
+          '• Die Nutzung der App erfolgt auf eigene Verantwortung des Nutzers.',
+      'disclaimer_point3':
+          '• Bei Fragen oder empfindlicher Haut wenden Sie sich an einen Dermatologen.',
     },
     'fr': {
       'app_title': 'Minuteur d\'Exposition Solaire',
@@ -384,11 +417,13 @@ class AppTranslations {
       'skin_type_5_desc': 'Très mate. Brûle rarement, bronze intensément.',
       'skin_type_6_name': 'Type VI',
       'skin_type_6_desc': 'Noire. Ne brûle jamais, bronze intensément.',
-      'your_skin_type': 'Votre type de peau',
+      'your_skin_type': 'Votre peau',
       'safe_dose': 'Dose sûre',
       'change_skin_type': 'Modifier le type de peau',
       'gps_active': 'GPS Actif',
-      'simulated': 'Simulée',
+      'simulated': 'GPS Inactif',
+      'location_unavailable': 'Localisation indisponible',
+      'search_your_city': 'Recherchez votre ville',
       'location': 'Localisation',
       'real_light': 'Lumière réelle',
       'simulated_lux': 'Lux simulé',
@@ -402,7 +437,7 @@ class AppTranslations {
       'header_info_p2':
           'Données de rayonnement UV basées sur les modèles météorologiques mondiaux de la NOAA / CEPMMT.',
       'estimated_safe_time': 'Temps d\'exposition solaire sûr estimé',
-      'start_exposure': 'Démarrer',
+      'start_exposure': 'Démarrer l\'alarme',
       'daily_limit_reached': 'Limite quotidienne atteinte',
       'cancel_exposure': 'Annuler l\'exposition',
       'safe_exposure_finished_title': 'Exposition sûre terminée',
@@ -446,6 +481,14 @@ class AppTranslations {
       'cancel': 'Annuler',
       'no_light_sensor_msg':
           'Appareil sans capteur de lumière. Aucun atténuateur n\'est appliqué dans le calcul de l\'exposition solaire.',
+      'manage_gps': 'Gestion du GPS',
+      'disclaimer_title': 'Clause de Non-Responsabilité Légale et Médicale',
+      'disclaimer_point1':
+          '• L\'application fournit des estimations indicatives et ne remplace pas un avis médical.',
+      'disclaimer_point2':
+          '• L\'utilisation de l\'application est sous la seule responsabilité de l\'utilisateur.',
+      'disclaimer_point3':
+          '• En cas de doute ou de peau sensible, veuillez consulter un dermatologue.',
     },
     'it': {
       'app_title': 'Timer di Esposizione Solare',
@@ -469,11 +512,13 @@ class AppTranslations {
           'Molto scura. Raramente si scotta, si abbronza intensamente.',
       'skin_type_6_name': 'Tipo VI',
       'skin_type_6_desc': 'Nera. Non si scotta mai, si abbronza intensamente.',
-      'your_skin_type': 'Il tuo tipo di pelle',
+      'your_skin_type': 'La tua pelle',
       'safe_dose': 'Dose sicura',
       'change_skin_type': 'Cambia fototipo',
       'gps_active': 'GPS Attivo',
-      'simulated': 'Simulata',
+      'simulated': 'GPS Inattivo',
+      'location_unavailable': 'Posizione non disponibile',
+      'search_your_city': 'Cerca la tua città',
       'location': 'Posizione',
       'real_light': 'Luce reale',
       'simulated_lux': 'Lux simulato',
@@ -487,7 +532,7 @@ class AppTranslations {
       'header_info_p2':
           'Dati sulla radiazione UV basati sui modelli meteorologici globali di NOAA / ECMWF.',
       'estimated_safe_time': 'Tempo di esposizione solare sicuro stimato',
-      'start_exposure': 'Inizia',
+      'start_exposure': 'Avvia allarme',
       'daily_limit_reached': 'Limite giornaliero raggiunto',
       'cancel_exposure': 'Annulla esposizione',
       'safe_exposure_finished_title': 'Esposizione sicura terminata',
@@ -531,6 +576,14 @@ class AppTranslations {
       'cancel': 'Annulla',
       'no_light_sensor_msg':
           'Dispositivo senza sensore di luce. Non vengono applicati attenuatori nel calcolo dell\'esposizione solare.',
+      'manage_gps': 'Gestione GPS',
+      'disclaimer_title': 'Avviso Legale e della Salute',
+      'disclaimer_point1':
+          '• L\'applicazione offre stime indicative e non sostituisce il parere medico.',
+      'disclaimer_point2':
+          '• L\'uso dell\'applicazione è a proprio rischio e pericolo dell\'utente.',
+      'disclaimer_point3':
+          '• In caso di dubbi o pelle sensibile, consultare un dermatologo.',
     },
     'pt': {
       'app_title': 'Temporizador de Exposição Solar',
@@ -553,11 +606,13 @@ class AppTranslations {
           'Muito escura. Raramente se queima, bronzeia-se intensamente.',
       'skin_type_6_name': 'Tipo VI',
       'skin_type_6_desc': 'Negra. Nunca se queima, bronzeia-se profundamente.',
-      'your_skin_type': 'O seu tipo de pele',
+      'your_skin_type': 'Sua pele',
       'safe_dose': 'Dose segura',
       'change_skin_type': 'Alterar fototipo',
-      'gps_active': 'GPS Ativo',
-      'simulated': 'Simulada',
+      'gps_active': 'GPS Activo',
+      'simulated': 'GPS Inativo',
+      'location_unavailable': 'Localização indisponível',
+      'search_your_city': 'Pesquise sua cidade',
       'location': 'Localização',
       'real_light': 'Luz real',
       'simulated_lux': 'Lux simulado',
@@ -571,7 +626,7 @@ class AppTranslations {
       'header_info_p2':
           'Dados de radiação UV baseados em modelos meteorológicos globais da NOAA / ECMWF.',
       'estimated_safe_time': 'Tempo seguro estimado de exposição solar',
-      'start_exposure': 'Iniciar',
+      'start_exposure': 'Iniciar Alarme',
       'daily_limit_reached': 'Limite diário atingido',
       'cancel_exposure': 'Cancelar exposição',
       'safe_exposure_finished_title': 'Exposição segura concluída',
@@ -615,6 +670,14 @@ class AppTranslations {
       'cancel': 'Cancelar',
       'no_light_sensor_msg':
           'Dispositivo sem sensor de luz. Não são aplicados atenuadores no cálculo da exposição solar.',
+      'manage_gps': 'Gestão de GPS',
+      'disclaimer_title': 'Aviso Legal e de Saúde',
+      'disclaimer_point1':
+          '• O aplicativo fornece estimativas orientativas e não substitui o conselho médico.',
+      'disclaimer_point2':
+          '• O uso do aplicativo é de inteira responsabilidade do usuário.',
+      'disclaimer_point3':
+          '• Em caso de dúvidas ou pele sensível, consulte um dermatologista.',
     },
     'ca': {
       'app_title': 'Temporitzador d\'Exposició Solar',
@@ -636,11 +699,13 @@ class AppTranslations {
           'Molt fosca. Rarament es crema, es bronzeja intensivament.',
       'skin_type_6_name': 'Tipus VI',
       'skin_type_6_desc': 'Negra. Mai es crema, es bronzeja profundament.',
-      'your_skin_type': 'El teu tipus de pell',
+      'your_skin_type': 'La teva pell',
       'safe_dose': 'Dosi segura',
       'change_skin_type': 'Canviar fototip',
       'gps_active': 'GPS Actiu',
-      'simulated': 'Simulada',
+      'simulated': 'GPS Inactiu',
+      'location_unavailable': 'Ubicació no disponible',
+      'search_your_city': 'Cerca la teva ciutat',
       'location': 'Ubicació',
       'real_light': 'Llum real',
       'simulated_lux': 'Lux simulat',
@@ -654,7 +719,7 @@ class AppTranslations {
       'header_info_p2':
           'Dades de radiació UV basades en models meteorològics globals de la NOAA / ECMWF.',
       'estimated_safe_time': 'Temps segur estimat d\'exposició solar',
-      'start_exposure': 'Iniciar',
+      'start_exposure': 'Iniciar Alarma',
       'daily_limit_reached': 'Límit diari assolit',
       'cancel_exposure': 'Cancel·lar exposició',
       'safe_exposure_finished_title': 'Exposició segura finalitzada',
@@ -698,6 +763,14 @@ class AppTranslations {
       'cancel': 'Cancel·lar',
       'no_light_sensor_msg':
           'Dispositiu sense sensor de llum. No s\'apliquen atenuadors en el càlcul d\'exposició solar.',
+      'manage_gps': 'Gestió de GPS',
+      'disclaimer_title': 'Avís Legal i de Salut',
+      'disclaimer_point1':
+          '• L\'aplicació ofereix estimacions orientatives i no substitueix consells mèdics.',
+      'disclaimer_point2':
+          '• L\'ús de l\'aplicació és sota la pròpia responsabilitat de l\'usuari.',
+      'disclaimer_point3':
+          '• Davant de dubtes o pells sensibles, cal consultar un dermatóleg.',
     },
   };
 
@@ -1258,6 +1331,12 @@ class _DashboardScreenState extends State<DashboardScreen>
   bool _locationError = false;
   double _uvIndex = 0.0;
   bool _isFetchingUv = false;
+  bool _isGpsActive = false;
+  StreamSubscription<List<ConnectivityResult>>? _connectivitySubscription;
+  bool _isOffline = false;
+  Timer? _networkCheckTimer;
+  bool _uvAvailable = true;
+  bool _gpsPermissionDenied = false;
 
   // Sensor de Luz
   bool _hasPhysicalLightSensor = false;
@@ -1299,23 +1378,46 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
     _checkDailyLimit();
     _initLightSensor();
+
+    // Detecció de connectivitat inicial i subscripció reactiva en temps real
+    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
+      List<ConnectivityResult> results,
+    ) {
+      _updateConnectivityState(results);
+    });
+
+    // Heartbeat periòdic cada 3 segons per a una comprovació de connectivitat robusta
+    _networkCheckTimer = Timer.periodic(const Duration(seconds: 3), (
+      timer,
+    ) async {
+      try {
+        final List<ConnectivityResult> results = await Connectivity()
+            .checkConnectivity();
+        _updateConnectivityState(results);
+      } catch (e) {
+        debugPrint("Error checking connectivity heartbeat: $e");
+      }
+    });
+
     _fetchLocationAndUv();
     _initUpdateListener();
 
     // Calcular inicialmente
     _calculateRecommendedTime();
-    // Programar cálculo periódico cada 5 segundos
-    _calculationTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
-      if (_buttonState == 1) {
-        _calculateRecommendedTime();
-      }
-    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
     _loadBannerAd();
+  }
+
+  @override
+  void didUpdateWidget(DashboardScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.selectedSkinTypeIndex != widget.selectedSkinTypeIndex) {
+      _calculateRecommendedTime();
+    }
   }
 
   void _loadBannerAd() async {
@@ -1378,6 +1480,8 @@ class _DashboardScreenState extends State<DashboardScreen>
     _countdownTimer?.cancel();
     _flashTimer?.cancel();
     _bannerAd?.dispose();
+    _connectivitySubscription?.cancel();
+    _networkCheckTimer?.cancel();
     super.dispose();
   }
 
@@ -1390,8 +1494,10 @@ class _DashboardScreenState extends State<DashboardScreen>
             'detecting_location',
           );
         } else if (_locationError) {
-          _locationName =
-              "Barcelona, ES (${AppTranslations.getText(appLanguage.value, 'simulated')})";
+          _locationName = AppTranslations.getText(
+            appLanguage.value,
+            'location_unavailable',
+          );
         }
       });
     }
@@ -1445,6 +1551,17 @@ class _DashboardScreenState extends State<DashboardScreen>
             _luxValue = initialLux.round();
           });
           _calculateRecommendedTime();
+
+          // Programar càlcul periòdic cada 2 segons
+          _calculationTimer?.cancel();
+          _calculationTimer = Timer.periodic(const Duration(seconds: 2), (
+            timer,
+          ) {
+            if (_buttonState == 1) {
+              _calculateRecommendedTime();
+            }
+          });
+
           _lightSubscription = sensor.ambientLightStream.listen((lux) {
             setState(() {
               _luxValue = lux.round();
@@ -1466,9 +1583,30 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   // Obtiene posición GPS y consulta Open-Meteo
   Future<void> _fetchLocationAndUv() async {
+    try {
+      final List<ConnectivityResult> connectivityResults = await Connectivity()
+          .checkConnectivity();
+      final bool isCurrentlyOffline =
+          connectivityResults.isEmpty ||
+          connectivityResults.contains(ConnectivityResult.none) ||
+          (!connectivityResults.contains(ConnectivityResult.mobile) &&
+              !connectivityResults.contains(ConnectivityResult.wifi) &&
+              !connectivityResults.contains(ConnectivityResult.ethernet));
+      bool hasInternet = !isCurrentlyOffline;
+      if (hasInternet) {
+        hasInternet = await _hasRealInternet();
+      }
+      setState(() {
+        _isOffline = !hasInternet;
+      });
+    } catch (e) {
+      debugPrint("Error checking connectivity: $e");
+    }
+
     setState(() {
       _isFetchingUv = true;
       _locationError = false;
+      _uvAvailable = !_isOffline;
       _locationName = AppTranslations.getText(
         appLanguage.value,
         'detecting_location',
@@ -1479,24 +1617,185 @@ class _DashboardScreenState extends State<DashboardScreen>
       Position position = await _determinePosition();
       setState(() {
         _currentPosition = position;
+        _isGpsActive = true;
+        _locationError = false;
         _locationName =
             "Lat: ${position.latitude.toStringAsFixed(4)}, Lon: ${position.longitude.toStringAsFixed(4)}";
       });
-      await _fetchUvIndex(position.latitude, position.longitude);
+      if (_isOffline) {
+        setState(() {
+          _uvAvailable = false;
+        });
+      } else {
+        await _fetchUvIndex(position.latitude, position.longitude);
+      }
     } catch (e) {
-      debugPrint("Error de localización: $e");
-      // Fallback a ubicación simulada (Barcelona)
+      debugPrint("Error de localización GPS: $e");
       setState(() {
-        _locationError = true;
-        _locationName =
-            "Barcelona, ES (${AppTranslations.getText(appLanguage.value, 'simulated')})";
+        _isGpsActive = false;
       });
-      // Consultamos UV para coordenadas de Barcelona
-      await _fetchUvIndex(41.3851, 2.1734);
+
+      final prefs = await SharedPreferences.getInstance();
+      final String? manualCity = prefs.getString('manual_city');
+      final double? manualLat = prefs.getDouble('manual_lat');
+      final double? manualLon = prefs.getDouble('manual_lon');
+
+      if (manualCity != null && manualLat != null && manualLon != null) {
+        setState(() {
+          _locationError = false;
+          _locationName = "$manualCity (manual)";
+          _currentPosition = Position(
+            latitude: manualLat,
+            longitude: manualLon,
+            timestamp: DateTime.now(),
+            accuracy: 0.0,
+            altitude: 0.0,
+            heading: 0.0,
+            speed: 0.0,
+            speedAccuracy: 0.0,
+            altitudeAccuracy: 0.0,
+            headingAccuracy: 0.0,
+          );
+        });
+        if (_isOffline) {
+          setState(() {
+            _uvAvailable = false;
+          });
+        } else {
+          await _fetchUvIndex(manualLat, manualLon);
+        }
+      } else {
+        if (_isOffline) {
+          setState(() {
+            _locationError = true;
+            _uvAvailable = false;
+            _locationName = AppTranslations.getText(
+              appLanguage.value,
+              'location_unavailable',
+            );
+          });
+          return;
+        }
+
+        final ipLoc = await IpLocationService.fetchIpLocation();
+        if (ipLoc != null) {
+          String networkSuffix;
+          switch (appLanguage.value) {
+            case 'ca':
+              networkSuffix = '(xarxa)';
+              break;
+            case 'es':
+              networkSuffix = '(red)';
+              break;
+            case 'en':
+            default:
+              networkSuffix = '(network)';
+              break;
+          }
+          setState(() {
+            _locationError = false;
+            _locationName = "${ipLoc.city} $networkSuffix";
+            _currentPosition = Position(
+              latitude: ipLoc.latitude,
+              longitude: ipLoc.longitude,
+              timestamp: DateTime.now(),
+              accuracy: 0.0,
+              altitude: 0.0,
+              heading: 0.0,
+              speed: 0.0,
+              speedAccuracy: 0.0,
+              altitudeAccuracy: 0.0,
+              headingAccuracy: 0.0,
+            );
+          });
+          await _fetchUvIndex(ipLoc.latitude, ipLoc.longitude);
+        } else {
+          setState(() {
+            _locationError = true;
+            _uvAvailable = false;
+            _locationName = AppTranslations.getText(
+              appLanguage.value,
+              'location_unavailable',
+            );
+          });
+        }
+      }
     } finally {
       setState(() {
         _isFetchingUv = false;
       });
+    }
+  }
+
+  void _updateConnectivityState(List<ConnectivityResult> results) async {
+    final bool isCurrentlyOffline =
+        results.isEmpty ||
+        results.contains(ConnectivityResult.none) ||
+        (!results.contains(ConnectivityResult.mobile) &&
+            !results.contains(ConnectivityResult.wifi) &&
+            !results.contains(ConnectivityResult.ethernet));
+
+    debugPrint("📡 [CONNECTIVITY] Resultats rebuts: $results");
+    debugPrint(
+      "📡 [CONNECTIVITY] Càlcul Offline: $isCurrentlyOffline | GPS Actiu: $_isGpsActive",
+    );
+
+    bool hasInternet = !isCurrentlyOffline;
+    if (hasInternet) {
+      hasInternet = await _hasRealInternet();
+      debugPrint("📡 [CONNECTIVITY] Comprovació de xarxa real: $hasInternet");
+    }
+
+    final bool finalOfflineState = !hasInternet;
+
+    if (mounted) {
+      final bool wasOffline = _isOffline;
+      setState(() {
+        _isOffline = finalOfflineState;
+        if (_isOffline) {
+          _uvAvailable = false;
+        } else {
+          _uvAvailable = true;
+        }
+      });
+
+      if (_isOffline && !_isGpsActive) {
+        final prefs = await SharedPreferences.getInstance();
+        final String? manualCity = prefs.getString('manual_city');
+        if (manualCity != null && mounted) {
+          setState(() {
+            _locationError = false;
+            _locationName = "$manualCity (manual)";
+          });
+        } else if (mounted) {
+          setState(() {
+            _locationError = true;
+            _locationName = AppTranslations.getText(
+              appLanguage.value,
+              'location_unavailable',
+            );
+          });
+        }
+      }
+
+      // Si tornem a estar online, recarreguem automàticament
+      if (wasOffline && !_isOffline) {
+        _fetchLocationAndUv();
+      }
+    }
+  }
+
+  Future<bool> _hasRealInternet() async {
+    if (kDebugMode && Platform.environment.containsKey('FLUTTER_TEST')) {
+      return true;
+    }
+    try {
+      final result = await InternetAddress.lookup(
+        'google.com',
+      ).timeout(const Duration(seconds: 2));
+      return result.isNotEmpty && result[0].rawAddress.isNotEmpty;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -1525,6 +1824,41 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
+  Future<void> _openSearchCityBottomSheet() async {
+    final SelectedCity? result = await showModalBottomSheet<SelectedCity>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const SearchCityBottomSheet(),
+    );
+
+    if (result != null) {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('manual_city', result.name);
+      await prefs.setDouble('manual_lat', result.latitude);
+      await prefs.setDouble('manual_lon', result.longitude);
+
+      setState(() {
+        _locationError = false;
+        _isGpsActive = false;
+        _locationName = "${result.name} (manual)";
+        _currentPosition = Position(
+          latitude: result.latitude,
+          longitude: result.longitude,
+          timestamp: DateTime.now(),
+          accuracy: 0.0,
+          altitude: 0.0,
+          heading: 0.0,
+          speed: 0.0,
+          speedAccuracy: 0.0,
+          altitudeAccuracy: 0.0,
+          headingAccuracy: 0.0,
+        );
+      });
+      await _fetchUvIndex(result.latitude, result.longitude);
+    }
+  }
+
   // Petición a Open-Meteo API
   Future<void> _fetchUvIndex(double lat, double lon) async {
     final url =
@@ -1551,6 +1885,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           }
           setState(() {
             _uvIndex = (hourlyUv[closestIndex] as num).toDouble();
+            _uvAvailable = true;
           });
           _calculateRecommendedTime();
           return;
@@ -1562,6 +1897,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       // Asignar un UV por defecto según la hora/luz para que no falle el prototipo
       setState(() {
         _uvIndex = _calculateEstimatedUv();
+        _uvAvailable = false;
       });
       _calculateRecommendedTime();
     }
@@ -1957,6 +2293,67 @@ class _DashboardScreenState extends State<DashboardScreen>
                   fontSize: 14,
                 ),
               ),
+              const SizedBox(height: 16),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFE74C3C).withOpacity(0.06),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: const Color(0xFFE74C3C).withOpacity(0.15),
+                    width: 1,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.health_and_safety_outlined,
+                          color: Color(0xFFE74C3C),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            AppTranslations.getText(lang, 'disclaimer_title'),
+                            style: GoogleFonts.poppins(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: const Color(0xFFC0392B),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      AppTranslations.getText(lang, 'disclaimer_point1'),
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: const Color(0xFF2C3E50).withOpacity(0.9),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      AppTranslations.getText(lang, 'disclaimer_point2'),
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: const Color(0xFF2C3E50).withOpacity(0.9),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      AppTranslations.getText(lang, 'disclaimer_point3'),
+                      style: GoogleFonts.poppins(
+                        fontSize: 11,
+                        color: const Color(0xFF2C3E50).withOpacity(0.9),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
           actions: [
@@ -2063,6 +2460,73 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ],
                 ),
               ),
+              if (!_isGpsActive) ...[
+                const Divider(
+                  color: Color(0xFFE5E8E8),
+                  height: 1,
+                  thickness: 1,
+                ),
+                ListTile(
+                  leading: const Icon(
+                    Icons.gps_fixed,
+                    color: Color(0xFF73C6B6),
+                  ),
+                  title: Text(
+                    AppTranslations.getText(lang, 'manage_gps'),
+                    style: GoogleFonts.poppins(
+                      color: const Color(0xFF2C3E50),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  onTap: () async {
+                    try {
+                      // 1. Comprovar si el servei de GPS del dispositiu està encès
+                      bool serviceEnabled =
+                          await Geolocator.isLocationServiceEnabled();
+                      if (!serviceEnabled) {
+                        await Geolocator.openLocationSettings();
+                        if (context.mounted) {
+                          Navigator.of(context).pop();
+                        }
+                        return;
+                      }
+
+                      // 2. Executar la petició del diàleg del sistema
+                      LocationPermission permission =
+                          await Geolocator.requestPermission();
+
+                      // 3. Si l'estat és deniedForever, obrir ajustos de l'app
+                      if (permission == LocationPermission.deniedForever) {
+                        await Geolocator.openAppSettings();
+                      } else if (permission == LocationPermission.whileInUse ||
+                          permission == LocationPermission.always) {
+                        setState(() {
+                          _gpsPermissionDenied = false;
+                        });
+                        _fetchLocationAndUv();
+                      } else {
+                        setState(() {
+                          _gpsPermissionDenied = true;
+                        });
+                      }
+
+                      // 4. Després de fer l'acció corresponent, tancar el menú de Settings
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                    } catch (e) {
+                      debugPrint("Error requesting GPS permission: $e");
+                      if (context.mounted) {
+                        Navigator.of(context).pop();
+                      }
+                      setState(() {
+                        _gpsPermissionDenied = true;
+                      });
+                    }
+                  },
+                ),
+              ],
               const Divider(color: Color(0xFFE5E8E8), height: 1, thickness: 1),
               ListTile(
                 leading: const Icon(
@@ -2236,7 +2700,8 @@ class _DashboardScreenState extends State<DashboardScreen>
     return AnnotatedRegion<SystemUiOverlayStyle>(
       value: const SystemUiOverlayStyle(
         systemNavigationBarColor: Colors.black, // Barra de navegació en negre
-        systemNavigationBarContrastEnforced: false, // OBLIGATORI per a Android 10+
+        systemNavigationBarContrastEnforced:
+            false, // OBLIGATORI per a Android 10+
         systemNavigationBarDividerColor: Colors.transparent,
         systemNavigationBarIconBrightness:
             Brightness.light, // Icons contrastats (blancs)
@@ -2506,11 +2971,20 @@ class _DashboardScreenState extends State<DashboardScreen>
                                           ),
                                         ),
                                         Text(
-                                          _locationName,
+                                          _locationError
+                                              ? AppTranslations.getText(
+                                                  lang,
+                                                  _isOffline
+                                                      ? 'location_unavailable'
+                                                      : 'search_your_city',
+                                                )
+                                              : _locationName,
                                           style: GoogleFonts.poppins(
                                             fontSize: 14,
                                             fontWeight: FontWeight.w600,
-                                            color: const Color(0xFF2C3E50),
+                                            color: _locationError
+                                                ? Colors.redAccent
+                                                : const Color(0xFF2C3E50),
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -2518,25 +2992,83 @@ class _DashboardScreenState extends State<DashboardScreen>
                                       ],
                                     ),
                                   ),
-                                  IconButton(
-                                    onPressed: _fetchLocationAndUv,
-                                    icon: _isFetchingUv
-                                        ? const SizedBox(
-                                            width: 18,
-                                            height: 18,
-                                            child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              valueColor:
-                                                  AlwaysStoppedAnimation(
-                                                    Color(0xFF73C6B6),
-                                                  ),
-                                            ),
-                                          )
-                                        : const Icon(
-                                            Icons.refresh_rounded,
+                                  Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      if (!_isGpsActive) ...[
+                                        IconButton(
+                                          onPressed: _openSearchCityBottomSheet,
+                                          icon: const Icon(
+                                            Icons.search_rounded,
                                             size: 20,
                                             color: Color(0xFF73C6B6),
                                           ),
+                                        ),
+                                      ],
+                                      if (_isGpsActive ||
+                                          (!_isOffline &&
+                                              !_gpsPermissionDenied)) ...[
+                                        IconButton(
+                                          onPressed: () async {
+                                            if (!_isGpsActive) {
+                                              setState(() {
+                                                _isFetchingUv = true;
+                                              });
+                                              try {
+                                                LocationPermission permission =
+                                                    await Geolocator.requestPermission();
+                                                if (permission ==
+                                                        LocationPermission
+                                                            .whileInUse ||
+                                                    permission ==
+                                                        LocationPermission
+                                                            .always) {
+                                                  setState(() {
+                                                    _gpsPermissionDenied =
+                                                        false;
+                                                  });
+                                                  await _fetchLocationAndUv();
+                                                } else {
+                                                  setState(() {
+                                                    _gpsPermissionDenied = true;
+                                                  });
+                                                }
+                                              } catch (e) {
+                                                debugPrint(
+                                                  "Error requesting GPS permission on refresh: $e",
+                                                );
+                                                setState(() {
+                                                  _gpsPermissionDenied = true;
+                                                });
+                                              } finally {
+                                                setState(() {
+                                                  _isFetchingUv = false;
+                                                });
+                                              }
+                                            } else {
+                                              _fetchLocationAndUv();
+                                            }
+                                          },
+                                          icon: _isFetchingUv
+                                              ? const SizedBox(
+                                                  width: 18,
+                                                  height: 18,
+                                                  child: CircularProgressIndicator(
+                                                    strokeWidth: 2,
+                                                    valueColor:
+                                                        AlwaysStoppedAnimation(
+                                                          Color(0xFF73C6B6),
+                                                        ),
+                                                  ),
+                                                )
+                                              : const Icon(
+                                                  Icons.refresh_rounded,
+                                                  size: 20,
+                                                  color: Color(0xFF73C6B6),
+                                                ),
+                                        ),
+                                      ],
+                                    ],
                                   ),
                                 ],
                               ),
@@ -2781,7 +3313,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                                     height: 148,
                                     padding: const EdgeInsets.all(16),
                                     decoration: BoxDecoration(
-                                      color: Colors.white,
+                                      color:
+                                          (_locationError ||
+                                              _isOffline ||
+                                              !_uvAvailable)
+                                          ? const Color(0xFFEAEDED)
+                                          : Colors.white,
                                       borderRadius: BorderRadius.circular(24),
                                       boxShadow: const [
                                         BoxShadow(
@@ -2791,112 +3328,145 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         ),
                                       ],
                                     ),
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        SizedBox(
-                                          height: 38,
-                                          child: Row(
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
+                                    child:
+                                        (_locationError ||
+                                            _isOffline ||
+                                            !_uvAvailable)
+                                        ? Center(
+                                            child: Text(
+                                              "Índex UV no disponible",
+                                              style: GoogleFonts.poppins(
+                                                fontSize: 12,
+                                                fontWeight: FontWeight.w600,
+                                                color: const Color(
+                                                  0xFF2C3E50,
+                                                ).withOpacity(0.6),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          )
+                                        : Column(
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.spaceBetween,
                                             children: [
-                                              Expanded(
-                                                child: Text(
-                                                  AppTranslations.getText(
-                                                    lang,
-                                                    'uv_index_title',
-                                                  ),
-                                                  style: GoogleFonts.poppins(
-                                                    fontSize: 12,
-                                                    fontWeight: FontWeight.w600,
-                                                    color: const Color(
-                                                      0xFF2C3E50,
-                                                    ).withOpacity(0.6),
-                                                  ),
-                                                  maxLines: 1,
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
+                                              SizedBox(
+                                                height: 38,
+                                                child: Row(
+                                                  mainAxisAlignment:
+                                                      MainAxisAlignment
+                                                          .spaceBetween,
+                                                  crossAxisAlignment:
+                                                      CrossAxisAlignment.start,
+                                                  children: [
+                                                    Expanded(
+                                                      child: Text(
+                                                        AppTranslations.getText(
+                                                          lang,
+                                                          'uv_index_title',
+                                                        ),
+                                                        style:
+                                                            GoogleFonts.poppins(
+                                                              fontSize: 12,
+                                                              fontWeight:
+                                                                  FontWeight
+                                                                      .w600,
+                                                              color:
+                                                                  const Color(
+                                                                    0xFF2C3E50,
+                                                                  ).withOpacity(
+                                                                    0.6,
+                                                                  ),
+                                                            ),
+                                                        maxLines: 1,
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                      ),
+                                                    ),
+                                                    const SizedBox(width: 4),
+                                                    SvgPicture.asset(
+                                                      'assets/icons/heat_24.svg',
+                                                      width: 20,
+                                                      height: 20,
+                                                      colorFilter:
+                                                          const ColorFilter.mode(
+                                                            Color.fromARGB(
+                                                              255,
+                                                              149,
+                                                              62,
+                                                              255,
+                                                            ),
+                                                            BlendMode.srcIn,
+                                                          ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
-                                              const SizedBox(width: 4),
-                                              SvgPicture.asset(
-                                                'assets/icons/heat_24.svg',
-                                                width: 20,
-                                                height: 20,
-                                                colorFilter:
-                                                    const ColorFilter.mode(
-                                                      Color.fromARGB(
-                                                        255,
-                                                        149,
-                                                        62,
-                                                        255,
+                                              Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  FittedBox(
+                                                    fit: BoxFit.scaleDown,
+                                                    alignment:
+                                                        Alignment.centerLeft,
+                                                    child: Text(
+                                                      _uvIndex.toStringAsFixed(
+                                                        1,
                                                       ),
-                                                      BlendMode.srcIn,
+                                                      style:
+                                                          GoogleFonts.poppins(
+                                                            fontSize: 42,
+                                                            fontWeight:
+                                                                FontWeight.bold,
+                                                            color: const Color(
+                                                              0xFF2C3E50,
+                                                            ),
+                                                          ),
                                                     ),
+                                                  ),
+                                                  Text(
+                                                    _uvIndex <= 2.9
+                                                        ? AppTranslations.getText(
+                                                            lang,
+                                                            'uv_low',
+                                                          )
+                                                        : _uvIndex <= 5.9
+                                                        ? AppTranslations.getText(
+                                                            lang,
+                                                            'uv_moderate',
+                                                          )
+                                                        : _uvIndex <= 7.9
+                                                        ? AppTranslations.getText(
+                                                            lang,
+                                                            'uv_high',
+                                                          )
+                                                        : _uvIndex <= 10.9
+                                                        ? AppTranslations.getText(
+                                                            lang,
+                                                            'uv_very_high',
+                                                          )
+                                                        : AppTranslations.getText(
+                                                            lang,
+                                                            'uv_extreme',
+                                                          ),
+                                                    style: GoogleFonts.poppins(
+                                                      fontSize: 11,
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                      color: _getUvColor(
+                                                        _uvIndex,
+                                                      ),
+                                                    ),
+                                                    maxLines: 1,
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                  ),
+                                                ],
                                               ),
                                             ],
                                           ),
-                                        ),
-                                        Column(
-                                          crossAxisAlignment:
-                                              CrossAxisAlignment.start,
-                                          children: [
-                                            FittedBox(
-                                              fit: BoxFit.scaleDown,
-                                              alignment: Alignment.centerLeft,
-                                              child: Text(
-                                                _uvIndex.toStringAsFixed(1),
-                                                style: GoogleFonts.poppins(
-                                                  fontSize: 42,
-                                                  fontWeight: FontWeight.bold,
-                                                  color: const Color(
-                                                    0xFF2C3E50,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                            Text(
-                                              _uvIndex <= 2.9
-                                                  ? AppTranslations.getText(
-                                                      lang,
-                                                      'uv_low',
-                                                    )
-                                                  : _uvIndex <= 5.9
-                                                  ? AppTranslations.getText(
-                                                      lang,
-                                                      'uv_moderate',
-                                                    )
-                                                  : _uvIndex <= 7.9
-                                                  ? AppTranslations.getText(
-                                                      lang,
-                                                      'uv_high',
-                                                    )
-                                                  : _uvIndex <= 10.9
-                                                  ? AppTranslations.getText(
-                                                      lang,
-                                                      'uv_very_high',
-                                                    )
-                                                  : AppTranslations.getText(
-                                                      lang,
-                                                      'uv_extreme',
-                                                    ),
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 11,
-                                                fontWeight: FontWeight.bold,
-                                                color: _getUvColor(_uvIndex),
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ],
-                                        ),
-                                      ],
-                                    ),
                                   ),
                                 ),
                               ],
@@ -2917,7 +3487,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ),
                   // ESPACIO RESERVADO PARA ADS EN LA PARTE INFERIOR
                   Container(
-                    color: Colors.black.withOpacity(0.7), // Capa negra translúcida que va de l'espai d'ads fins al final de la pantalla
+                    color: Colors.black.withOpacity(
+                      0.7,
+                    ), // Capa negra translúcida que va de l'espai d'ads fins al final de la pantalla
                     child: SafeArea(
                       top: false,
                       bottom: true,
@@ -2948,7 +3520,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   ),
                                   child: Center(
                                     child: Row(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Icon(
                                           Icons.ads_click_rounded,
@@ -2958,11 +3531,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         const SizedBox(width: 8),
                                         Flexible(
                                           child: Text(
-                                            AppTranslations.getText(lang, 'ad_space'),
+                                            AppTranslations.getText(
+                                              lang,
+                                              'ad_space',
+                                            ),
                                             style: GoogleFonts.poppins(
                                               fontSize: 12,
                                               fontWeight: FontWeight.w500,
-                                              color: Colors.white.withOpacity(0.6),
+                                              color: Colors.white.withOpacity(
+                                                0.6,
+                                              ),
                                             ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
@@ -3114,7 +3692,9 @@ class _DashboardScreenState extends State<DashboardScreen>
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 ElevatedButton(
-                  onPressed: _startCountdown,
+                  onPressed: (_locationError || _isOffline || !_uvAvailable)
+                      ? null
+                      : _startCountdown,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
                     foregroundColor: const Color(0xFF73C6B6),
@@ -3123,6 +3703,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
+                    alignment: Alignment.center,
                   ),
                   child: Text(
                     AppTranslations.getText(lang, 'start_exposure'),
@@ -3130,25 +3711,34 @@ class _DashboardScreenState extends State<DashboardScreen>
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
                 const SizedBox(height: 8),
                 GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      _demoMode = true;
-                    });
-                    _startCountdown();
-                  },
+                  onTap: (_locationError || _isOffline || !_uvAvailable)
+                      ? null
+                      : () {
+                          setState(() {
+                            _demoMode = true;
+                          });
+                          _startCountdown();
+                        },
                   child: Container(
                     padding: const EdgeInsets.symmetric(
                       horizontal: 8,
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
+                      color: (_locationError || _isOffline || !_uvAvailable)
+                          ? Colors.white.withOpacity(0.05)
+                          : Colors.white.withOpacity(0.15),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.2)),
+                      border: Border.all(
+                        color: (_locationError || _isOffline || !_uvAvailable)
+                            ? Colors.white.withOpacity(0.1)
+                            : Colors.white.withOpacity(0.2),
+                      ),
                     ),
                     child: Center(
                       child: Text(
@@ -3156,7 +3746,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                         style: GoogleFonts.poppins(
                           fontSize: 10,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: (_locationError || _isOffline || !_uvAvailable)
+                              ? Colors.white.withOpacity(0.4)
+                              : Colors.white,
                         ),
                       ),
                     ),

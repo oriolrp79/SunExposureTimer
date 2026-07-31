@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:sun_timer/main.dart';
 
@@ -12,7 +12,30 @@ void main() {
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    SharedPreferences.setMockInitialValues({'app_language': 'es'});
+    const connectivityChannel = MethodChannel('dev.fluttercommunity.plus/connectivity');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockMethodCallHandler(connectivityChannel, (MethodCall methodCall) async {
+      if (methodCall.method == 'check' || methodCall.method == 'checkConnectivity') {
+        return ['wifi'];
+      }
+      return null;
+    });
+
+    const statusChannel = EventChannel('dev.fluttercommunity.plus/connectivity_status');
+    TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
+        .setMockStreamHandler(statusChannel, MockStreamHandler.inline(
+      onListen: (arguments, events) {
+        events.success(['wifi']);
+      },
+      onCancel: (arguments) {},
+    ));
+
+    SharedPreferences.setMockInitialValues({
+      'app_language': 'es',
+      'manual_city': 'Madrid',
+      'manual_lat': 40.4167,
+      'manual_lon': -3.7037,
+    });
 
     // Build our app and trigger a frame.
     await tester.pumpWidget(const SunTimerApp());
@@ -21,7 +44,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // Verificar que aparece el nombre de la app o elementos del onboarding.
-    expect(find.text('Temporizador de Exposición Solar'), findsOneWidget);
+    expect(find.text('Sun Exposure Timer'), findsOneWidget);
     expect(find.text('Selecciona tu tipo de piel'), findsOneWidget);
 
     // Seleccionar tipo de piel (Tipo I)
@@ -34,7 +57,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     // Verificar que se muestra el tiempo seguro estimado automáticamente y el botón de demo
-    expect(find.text('Tiempo Seguro Estimado'), findsOneWidget);
+    expect(find.text('Tiempo seguro de exposición solar'), findsOneWidget);
     expect(find.text('Demo 10s'), findsOneWidget);
 
     // Tap "Demo 10s" para iniciar la cuenta atrás de demo de 10 segundos
@@ -62,6 +85,6 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     // Verificar que volvemos al estado inicial y no estamos bloqueados
-    expect(find.text('Tiempo Seguro Estimado'), findsOneWidget);
+    expect(find.text('Tiempo seguro de exposición solar'), findsOneWidget);
   });
 }
