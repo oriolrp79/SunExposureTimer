@@ -128,8 +128,10 @@ final ValueNotifier<String> appLanguage = ValueNotifier<String>(
 class AppTranslations {
   static const Map<String, Map<String, String>> _translations = {
     'en': {
-      'app_title': 'Sun Exposure Timer',
+      'app_title':
+          'Sun Exposure Timer', // NOTRANSLATE: The app title must always remain in English ("Sun Exposure Timer")
       'select_skin_type': 'Select your skin type',
+      'silence_alarm': 'Mute Alarm',
       'onboarding_desc':
           'Your skin type determines your sensitivity to the sun and the safe dose of UV radiation you can receive before sunburn.',
       'accept': 'Accept',
@@ -216,8 +218,10 @@ class AppTranslations {
           '• For any doubts or sensitive skin, you must consult a dermatologist.',
     },
     'es': {
-      'app_title': 'Temporizador de Exposición Solar',
+      'app_title':
+          'Sun Exposure Timer', // NOTRANSLATE: The app title must always remain in English ("Sun Exposure Timer")
       'select_skin_type': 'Selecciona tu tipo de piel',
+      'silence_alarm': 'Silenciar Alarma',
       'onboarding_desc':
           'El tipo de piel determina tu sensibilidad al sol y la dosis de radiación ultravioleta segura que puedes recibir antes de sufrir eritema (quemadura).',
       'accept': 'Aceptar',
@@ -309,8 +313,10 @@ class AppTranslations {
           '• Ante dudas o pieles sensibles, se debe consultar con un dermatólogo.',
     },
     'de': {
-      'app_title': 'Sonnenschonungs-Timer',
+      'app_title':
+          'Sun Exposure Timer', // NOTRANSLATE: The app title must always remain in English ("Sun Exposure Timer")
       'select_skin_type': 'Wählen Sie Ihren Hauttyp',
+      'silence_alarm': 'Alarm stummschalten',
       'onboarding_desc':
           'Ihr Hauttyp bestimmt Ihre Empfindlichkeit gegenüber der Sonne und die sichere UV-Dosis, die Sie vor einem Sonnenbrand erhalten können.',
       'accept': 'Akzeptieren',
@@ -400,8 +406,10 @@ class AppTranslations {
           '• Bei Fragen oder empfindlicher Haut wenden Sie sich an einen Dermatologen.',
     },
     'fr': {
-      'app_title': 'Minuteur d\'Exposition Solaire',
+      'app_title':
+          'Sun Exposure Timer', // NOTRANSLATE: The app title must always remain in English ("Sun Exposure Timer")
       'select_skin_type': 'Sélectionnez votre type de peau',
+      'silence_alarm': 'Couper l\'alarme',
       'onboarding_desc':
           'Votre type de peau détermine votre sensibilité au soleil et la dose sûre de rayonnement ultraviolet que vous pouvez recevoir avant d\'attraper un coup de soleil.',
       'accept': 'Accepter',
@@ -491,8 +499,10 @@ class AppTranslations {
           '• En cas de doute ou de peau sensible, veuillez consulter un dermatologue.',
     },
     'it': {
-      'app_title': 'Timer di Esposizione Solare',
+      'app_title':
+          'Sun Exposure Timer', // NOTRANSLATE: The app title must always remain in English ("Sun Exposure Timer")
       'select_skin_type': 'Seleziona il tuo tipo di pelle',
+      'silence_alarm': 'Silenzia sveglia',
       'onboarding_desc':
           'Il tuo tipo di pelle determina la tua sensibilità al sol e la dose sicura di radiazioni ultraviolette que puoi ricevere prima di scottarti.',
       'accept': 'Accetta',
@@ -586,8 +596,10 @@ class AppTranslations {
           '• In caso di dubbi o pelle sensibile, consultare un dermatologo.',
     },
     'pt': {
-      'app_title': 'Temporizador de Exposição Solar',
+      'app_title':
+          'Sun Exposure Timer', // NOTRANSLATE: The app title must always remain in English ("Sun Exposure Timer")
       'select_skin_type': 'Selecione o seu tipo de pele',
+      'silence_alarm': 'Silenciar Alarme',
       'onboarding_desc':
           'O seu tipo de pele determina a sua sensibilidade ao sol e a dose segura de radiação ultravioleta que pode receber antes de sofrer eritema (queimadura).',
       'accept': 'Aceitar',
@@ -680,8 +692,10 @@ class AppTranslations {
           '• Em caso de dúvidas ou pele sensível, consulte um dermatologista.',
     },
     'ca': {
-      'app_title': 'Temporitzador d\'Exposició Solar',
+      'app_title':
+          'Sun Exposure Timer', // NOTRANSLATE: The app title must always remain in English ("Sun Exposure Timer")
       'select_skin_type': 'Selecciona el teu tipus de pell',
+      'silence_alarm': 'Silenciar Alarma',
       'onboarding_desc':
           'El tipus de pell determina la teva sensibilitat al sol i la dosi de radiació ultraviolada segura que pots rebre abans de patir eritema (cremada).',
       'accept': 'Acceptar',
@@ -954,7 +968,8 @@ class SunTimerApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Sun Exposure Timer',
+      title:
+          'Sun Exposure Timer', // NOTRANSLATE: The app title must always remain in English ("Sun Exposure Timer")
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         scaffoldBackgroundColor: const Color(0xFFFBF9F5),
@@ -1131,7 +1146,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 else
                   const SizedBox(height: 20),
                 Text(
-                  "Sun Exposure Timer",
+                  "Sun Exposure Timer", // NOTRANSLATE: The app title in the header must always remain in English ("Sun Exposure Timer")
                   style: GoogleFonts.poppins(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
@@ -1735,15 +1750,9 @@ class _DashboardScreenState extends State<DashboardScreen>
             !results.contains(ConnectivityResult.wifi) &&
             !results.contains(ConnectivityResult.ethernet));
 
-    debugPrint("📡 [CONNECTIVITY] Resultats rebuts: $results");
-    debugPrint(
-      "📡 [CONNECTIVITY] Càlcul Offline: $isCurrentlyOffline | GPS Actiu: $_isGpsActive",
-    );
-
     bool hasInternet = !isCurrentlyOffline;
     if (hasInternet) {
       hasInternet = await _hasRealInternet();
-      debugPrint("📡 [CONNECTIVITY] Comprovació de xarxa real: $hasInternet");
     }
 
     final bool finalOfflineState = !hasInternet;
@@ -2056,19 +2065,26 @@ class _DashboardScreenState extends State<DashboardScreen>
     _showFullscreenAlert();
   }
 
-  // Cierra el diálogo de advertencia, apaga la alarma y los destellos, y persiste el límite
-  void _dismissAlert() {
+  // Apaga la alarma sonora y los destellos
+  void _stopAlarmSoundAndFlashing() {
     _flashTimer?.cancel();
     try {
       FlutterRingtonePlayer().stop();
     } catch (e) {
       debugPrint("Error al parar Ringtone: $e");
     }
+    setState(() {
+      _isFlashing = false;
+    });
+  }
+
+  // Cierra el diálogo de advertencia, apaga la alarma y los destellos, y persiste el límite
+  void _dismissAlert() {
+    _stopAlarmSoundAndFlashing();
 
     bool wasDemo = _demoMode;
 
     setState(() {
-      _isFlashing = false;
       _demoMode = false;
       if (wasDemo) {
         _buttonState = 1;
@@ -2082,106 +2098,124 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   void _showFullscreenAlert() {
+    bool localAlarmSoundStopped = false;
+    final lang = appLanguage.value;
+
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
       barrierLabel: "Límite alcanzado",
       pageBuilder: (context, anim1, anim2) {
         final currentType = fitzpatrickTypes[widget.selectedSkinTypeIndex];
-        return Scaffold(
-          backgroundColor: const Color(0xFFFBF9F5),
-          body: SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(32.0),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Spacer(),
-                  // Icono animado del Sol / Advertencia
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFFFE599),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.wb_sunny_rounded,
-                        color: Color(0xFFF7D070),
-                        size: 80,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 40),
-                  Text(
-                    "¡Límite diario alcanzado!",
-                    style: GoogleFonts.poppins(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: const Color(0xFF2C3E50),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    "Has completado tu dosis máxima recomendada de exposición solar para hoy de acuerdo a tu fototipo (${currentType.name}).",
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      color: const Color(0xFF2C3E50).withOpacity(0.8),
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 24),
-                  Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFA8E6CF).withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(24),
-                    ),
-                    child: Row(
-                      children: [
-                        const Icon(
-                          Icons.shield_outlined,
-                          color: Color(0xFF73C6B6),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Text(
-                            "Busca la sombra, ponte protector solar e hidrátate bien.",
-                            style: GoogleFonts.poppins(
-                              fontSize: 13,
-                              color: const Color(0xFF2C3E50),
-                            ),
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return Scaffold(
+              backgroundColor: const Color(0xFFFBF9F5),
+              body: SafeArea(
+                child: Padding(
+                  padding: const EdgeInsets.all(32.0),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Spacer(),
+                      // Icono animado del Sol / Advertencia
+                      Center(
+                        child: Container(
+                          padding: const EdgeInsets.all(24),
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFFFE599),
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(
+                            Icons.wb_sunny_rounded,
+                            color: Color(0xFFF7D070),
+                            size: 80,
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                  const Spacer(),
-                  ElevatedButton(
-                    onPressed: _dismissAlert,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF73C6B6),
-                      foregroundColor: Colors.white,
-                      elevation: 0,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(24),
                       ),
-                    ),
-                    child: Text(
-                      "Entendido",
-                      style: GoogleFonts.poppins(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                      const SizedBox(height: 40),
+                      Text(
+                        "¡Límite diario alcanzado!",
+                        style: GoogleFonts.poppins(
+                          fontSize: 28,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF2C3E50),
+                        ),
+                        textAlign: TextAlign.center,
                       ),
-                    ),
+                      const SizedBox(height: 16),
+                      Text(
+                        "Has completado tu dosis máxima recomendada de exposición solar para hoy de acuerdo a tu fototipo (${currentType.name}).",
+                        style: GoogleFonts.poppins(
+                          fontSize: 16,
+                          color: const Color(0xFF2C3E50).withOpacity(0.8),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 24),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFA8E6CF).withOpacity(0.2),
+                          borderRadius: BorderRadius.circular(24),
+                        ),
+                        child: Row(
+                          children: [
+                            const Icon(
+                              Icons.shield_outlined,
+                              color: Color(0xFF73C6B6),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Text(
+                                "Busca la sombra, ponte protector solar e hidrátate bien.",
+                                style: GoogleFonts.poppins(
+                                  fontSize: 13,
+                                  color: const Color(0xFF2C3E50),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Spacer(),
+                      ElevatedButton(
+                        onPressed: () {
+                          if (!localAlarmSoundStopped) {
+                            _stopAlarmSoundAndFlashing();
+                            setDialogState(() {
+                              localAlarmSoundStopped = true;
+                            });
+                          } else {
+                            _dismissAlert();
+                          }
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF73C6B6),
+                          foregroundColor: Colors.white,
+                          elevation: 0,
+                          padding: const EdgeInsets.symmetric(vertical: 18),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(24),
+                          ),
+                        ),
+                        child: Text(
+                          localAlarmSoundStopped
+                              ? AppTranslations.getText(lang, 'understood')
+                              : AppTranslations.getText(lang, 'silence_alarm'),
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
-            ),
-          ),
+            );
+          },
         );
       },
     );
@@ -2752,7 +2786,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         CrossAxisAlignment.start,
                                     children: [
                                       Text(
-                                        "Sun Exposure Timer",
+                                        "Sun Exposure Timer", // NOTRANSLATE: The app title in the header must always remain in English ("Sun Exposure Timer")
                                         style: GoogleFonts.poppins(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold,
