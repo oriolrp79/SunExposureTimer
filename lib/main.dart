@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -158,8 +159,8 @@ class AppTranslations {
       'real_light': 'Real light',
       'simulated_lux': 'Simulated Lux',
       'direct_sun': 'Direct sun',
-      'shade_umbrella': 'Shade / Umbrella',
-      'indoor_deep_shade': 'Indoor / Deep shade',
+      'shade_umbrella': 'Shade',
+      'indoor_deep_shade': 'Indoor',
       'light_sensor_info':
           'The light sensor helps estimate if you are in the shade or in direct sun. Remember that sand and water reflect up to 20% of UV radiation even in the shade.',
       'header_info_p1':
@@ -167,7 +168,8 @@ class AppTranslations {
       'header_info_p2':
           'UV radiation data based on global meteorological models from NOAA / ECMWF.',
       'estimated_safe_time': 'Estimated Safe Sun Exposure Time',
-      'start_exposure': 'Start Alarm',
+      'solar_dose_pct': 'Max Solar Dose',
+      'start_exposure': 'Start Exposure',
       'daily_limit_reached': 'Daily limit reached',
       'cancel_exposure': 'Cancel Exposure',
       'safe_exposure_finished_title': 'Daily limit reached!',
@@ -189,7 +191,7 @@ class AppTranslations {
       'shadow_warning': 'Seek shade, wear sunscreen, and stay well hydrated.',
       'detecting_location': 'Detecting location...',
       'exposure_timer_title': 'Exposure Timer',
-      'remaining': 'remaining',
+      'accumulated': 'Accumulated',
       'uv_low': 'Low',
       'uv_moderate': 'Moderate',
       'uv_high': 'High',
@@ -250,8 +252,8 @@ class AppTranslations {
       'real_light': 'Luz real',
       'simulated_lux': 'Lux Simulado',
       'direct_sun': 'Sol directo',
-      'shade_umbrella': 'Sombra / Sombrilla',
-      'indoor_deep_shade': 'Interior / Sombra densa',
+      'shade_umbrella': 'Sombra',
+      'indoor_deep_shade': 'Interior',
       'light_sensor_info':
           'El sensor de luz ayuda a estimar si estás a la sombra o al sol directo. Recuerda que la arena y el agua reflejan hasta un 20% de la radiación UV incluso a la sombra.',
       'header_info_p1':
@@ -259,7 +261,8 @@ class AppTranslations {
       'header_info_p2':
           'Datos de radiación UV basados en modelos meteorológicos globales de la NOAA / ECMWF.',
       'estimated_safe_time': 'Tiempo seguro de exposición solar',
-      'start_exposure': 'Iniciar Alarma',
+      'solar_dose_pct': 'Dosis Solar Máxima',
+      'start_exposure': 'Iniciar Exposición',
       'daily_limit_reached': 'Límite diario alcanzado',
       'cancel_exposure': 'Cancelar Exposición',
       'safe_exposure_finished_title': '¡Límite diario alcanzado!',
@@ -282,7 +285,7 @@ class AppTranslations {
           'Busca la sombra, ponte protector solar e hidrátate bien.',
       'detecting_location': 'Detectando ubicación...',
       'exposure_timer_title': 'Temporizador de Exposición',
-      'remaining': 'restantes',
+      'accumulated': 'Acumulado',
       'uv_low': 'Bajo',
       'uv_moderate': 'Moderado',
       'uv_high': 'Alto',
@@ -343,8 +346,8 @@ class AppTranslations {
       'real_light': 'Echtes Licht',
       'simulated_lux': 'Simulierter Lux',
       'direct_sun': 'Direkte Sonne',
-      'shade_umbrella': 'Schatten / Schirm',
-      'indoor_deep_shade': 'Innen / Tiefer Schatten',
+      'shade_umbrella': 'Schatten',
+      'indoor_deep_shade': 'Innen',
       'light_sensor_info':
           'Der Lichtsensor hilft abzuschätzen, ob Sie sich im Schatten oder in der direkten Sonne befinden. Denken Sie daran, dass Sand und Wasser selbst im Schatten bis zu 20 % der UV-Strahlung reflektieren.',
       'header_info_p1':
@@ -352,7 +355,8 @@ class AppTranslations {
       'header_info_p2':
           'UV-Strahlungsdaten basierend auf globalen meteorologischen Modellen von NOAA / ECMWF.',
       'estimated_safe_time': 'Geschätzte sichere Sonnenexpositionszeit',
-      'start_exposure': 'Alarm starten',
+      'solar_dose_pct': 'Maximale Sonnendosis',
+      'start_exposure': 'Exposition starten',
       'daily_limit_reached': 'Tageslimit erreicht',
       'cancel_exposure': 'Exposition abbrechen',
       'safe_exposure_finished_title': 'Sichere Exposition beendet',
@@ -375,7 +379,7 @@ class AppTranslations {
           'Suchen Sie Schatten auf, tragen Sie Sonnencreme auf und trinken Sie ausreichend Wasser.',
       'detecting_location': 'Standort wird ermittelt...',
       'exposure_timer_title': 'Expositions-Timer',
-      'remaining': 'verbleibend',
+      'accumulated': 'Akkumuliert',
       'uv_low': 'Niedrig',
       'uv_moderate': 'Mäßig',
       'uv_high': 'Hoch',
@@ -436,8 +440,8 @@ class AppTranslations {
       'real_light': 'Lumière réelle',
       'simulated_lux': 'Lux simulé',
       'direct_sun': 'Soleil direct',
-      'shade_umbrella': 'Ombre / Parasol',
-      'indoor_deep_shade': 'Intérieur / Ombre dense',
+      'shade_umbrella': 'Ombre',
+      'indoor_deep_shade': 'Intérieur',
       'light_sensor_info':
           'Le capteur de lumière aide à estimer si vous êtes à l\'ombre ou en plein soleil. N\'oubliez pas que le sable et l\'eau réfléchissent jusqu\'à 20 % des rayons UV, même à l\'ombre.',
       'header_info_p1':
@@ -533,8 +537,8 @@ class AppTranslations {
       'real_light': 'Luce reale',
       'simulated_lux': 'Lux simulato',
       'direct_sun': 'Sole directo',
-      'shade_umbrella': 'Ombra / Ombrellone',
-      'indoor_deep_shade': 'Interno / Ombra densa',
+      'shade_umbrella': 'Ombra',
+      'indoor_deep_shade': 'Interno',
       'light_sensor_info':
           'Il sensore di luce aiuta a stimare se sei all\'ombra o al sol directo. Ricorda che la sabbia e l\'acqua riflettono fino al 20% delle radiazioni UV anche all\'ombra.',
       'header_info_p1':
@@ -542,7 +546,8 @@ class AppTranslations {
       'header_info_p2':
           'Dati sulla radiazione UV basati sui modelli meteorologici globali di NOAA / ECMWF.',
       'estimated_safe_time': 'Tempo di esposizione solare sicuro stimato',
-      'start_exposure': 'Avvia allarme',
+      'solar_dose_pct': 'Dose Solare Massima',
+      'start_exposure': 'Avvia Esposizione',
       'daily_limit_reached': 'Limite giornaliero raggiunto',
       'cancel_exposure': 'Annulla esposizione',
       'safe_exposure_finished_title': 'Esposizione sicura terminata',
@@ -565,7 +570,7 @@ class AppTranslations {
           'Cerca l\'ombra, usa la crema solare e rimani ben idratato.',
       'detecting_location': 'Rilevamento della posizione...',
       'exposure_timer_title': 'Timer di esposizione',
-      'remaining': 'rimanenti',
+      'accumulated': 'Accumulato',
       'uv_low': 'Basso',
       'uv_moderate': 'Moderato',
       'uv_high': 'Alto',
@@ -629,8 +634,8 @@ class AppTranslations {
       'real_light': 'Luz real',
       'simulated_lux': 'Lux simulado',
       'direct_sun': 'Sol direto',
-      'shade_umbrella': 'Sombra / Guarda-sol',
-      'indoor_deep_shade': 'Interior / Sombra densa',
+      'shade_umbrella': 'Sombra',
+      'indoor_deep_shade': 'Interior',
       'light_sensor_info':
           'O sensor de luz ajuda a estimar se está à sombra ou sob o sol direto. Lembre-se de que a areia e a água refletem até 20% da radiação UV, mesmo à sombra.',
       'header_info_p1':
@@ -638,7 +643,8 @@ class AppTranslations {
       'header_info_p2':
           'Dados de radiação UV baseados em modelos meteorológicos globais da NOAA / ECMWF.',
       'estimated_safe_time': 'Tempo seguro estimado de exposição solar',
-      'start_exposure': 'Iniciar Alarme',
+      'solar_dose_pct': 'Dose Solar Máxima',
+      'start_exposure': 'Iniciar Exposição',
       'daily_limit_reached': 'Limite diário atingido',
       'cancel_exposure': 'Cancelar exposição',
       'safe_exposure_finished_title': 'Exposição segura concluída',
@@ -661,7 +667,7 @@ class AppTranslations {
           'Procure a sombra, use protetor solar e mantenha-se bem hidratado.',
       'detecting_location': 'Detectando localização...',
       'exposure_timer_title': 'Temporizador de exposição',
-      'remaining': 'restantes',
+      'accumulated': 'Acumulado',
       'uv_low': 'Baixo',
       'uv_moderate': 'Moderado',
       'uv_high': 'Alto',
@@ -724,8 +730,8 @@ class AppTranslations {
       'real_light': 'Llum real',
       'simulated_lux': 'Lux simulat',
       'direct_sun': 'Sol directe',
-      'shade_umbrella': 'Ombra / Parasol',
-      'indoor_deep_shade': 'Interior / Sombra densa',
+      'shade_umbrella': 'Ombra',
+      'indoor_deep_shade': 'Interior',
       'light_sensor_info':
           'El sensor de llum ajuda a estimar si estàs a l\'ombra o al sol directe. Recorda que la sorra i l\'aigua reflecteixen fins a un 20% de la radiació UV fins i tot a l\'ombra.',
       'header_info_p1':
@@ -1368,6 +1374,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   int _buttonState = 1;
   int _calculatedSafeMinutes = 0;
   int _remainingSeconds = 0;
+  double _accumulatedDosePercentage = 0.0;
   Timer? _countdownTimer;
   Timer? _calculationTimer;
   bool _limitReachedToday = false;
@@ -1953,13 +1960,13 @@ class _DashboardScreenState extends State<DashboardScreen>
     }
   }
 
-  String _getEnvironmentName(int lux) {
+  String _getEnvironmentName(int lux, String lang) {
     if (lux >= 20000) {
-      return "Sol Directo";
+      return AppTranslations.getText(lang, 'direct_sun');
     } else if (lux >= 1000) {
-      return "Sombra / Sombrilla";
+      return AppTranslations.getText(lang, 'shade_umbrella');
     } else {
-      return "Interior / Sombra Densa";
+      return AppTranslations.getText(lang, 'indoor_deep_shade');
     }
   }
 
@@ -2013,16 +2020,52 @@ class _DashboardScreenState extends State<DashboardScreen>
     int durationSeconds = _demoMode ? 10 : _calculatedSafeMinutes * 60;
     setState(() {
       _remainingSeconds = durationSeconds;
+      _accumulatedDosePercentage = 0.0;
       _buttonState = 2;
     });
 
     _countdownTimer?.cancel();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (_remainingSeconds > 0) {
+      if (_accumulatedDosePercentage < 100.0) {
+        double percentagePerSecond;
+        if (_demoMode) {
+          percentagePerSecond = 10.0;
+        } else {
+          final currentType = fitzpatrickTypes[widget.selectedSkinTypeIndex];
+          final factorAtenuacion = _hasPhysicalLightSensor
+              ? _getAttenuationFactor(_luxValue)
+              : 1.0;
+
+          double rawTime;
+          if (_uvIndex < 0.5) {
+            rawTime = 480.0 / factorAtenuacion;
+          } else {
+            rawTime = (currentType.dose / _uvIndex) / factorAtenuacion;
+          }
+
+          if (rawTime > 480.0) {
+            rawTime = 480.0;
+          }
+          if (rawTime < 1.0) {
+            rawTime = 1.0;
+          }
+          percentagePerSecond = 100.0 / (rawTime * 60.0);
+        }
+
         setState(() {
-          _remainingSeconds--;
+          _accumulatedDosePercentage += percentagePerSecond;
+          if (_accumulatedDosePercentage > 100.0) {
+            _accumulatedDosePercentage = 100.0;
+          }
+          double remainingPercentage = 100.0 - _accumulatedDosePercentage;
+          _remainingSeconds = (remainingPercentage / percentagePerSecond)
+              .round();
+          if (_remainingSeconds < 0) {
+            _remainingSeconds = 0;
+          }
         });
-        if (_remainingSeconds == 0) {
+
+        if (_accumulatedDosePercentage >= 100.0 || _remainingSeconds <= 0) {
           _countdownTimer?.cancel();
           _onTimeFinished();
         }
@@ -2039,6 +2082,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     setState(() {
       _buttonState = 1;
       _demoMode = false;
+      _accumulatedDosePercentage = 0.0;
     });
   }
 
@@ -2086,6 +2130,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     setState(() {
       _demoMode = false;
+      _accumulatedDosePercentage = 0.0;
       if (wasDemo) {
         _buttonState = 1;
       }
@@ -3114,8 +3159,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 // SENSOR LUZ AMBIENTAL
                                 Expanded(
                                   child: Container(
-                                    height: 148,
-                                    padding: const EdgeInsets.all(16),
+                                    height: 120,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 10,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: _hasPhysicalLightSensor
                                           ? Colors.white
@@ -3136,47 +3184,49 @@ class _DashboardScreenState extends State<DashboardScreen>
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
+                                                MainAxisAlignment.start,
                                             children: [
                                               SizedBox(
-                                                height: 38,
+                                                height: 22,
                                                 child: Row(
                                                   mainAxisAlignment:
                                                       MainAxisAlignment
                                                           .spaceBetween,
                                                   crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
+                                                      CrossAxisAlignment.center,
                                                   children: [
                                                     Expanded(
-                                                      child: Column(
+                                                      child: Row(
                                                         crossAxisAlignment:
                                                             CrossAxisAlignment
-                                                                .start,
+                                                                .center,
                                                         children: [
-                                                          Text(
-                                                            AppTranslations.getText(
-                                                              lang,
-                                                              'real_light',
+                                                          Flexible(
+                                                            child: Text(
+                                                              AppTranslations.getText(
+                                                                lang,
+                                                                'real_light',
+                                                              ),
+                                                              style: GoogleFonts.poppins(
+                                                                fontSize: 12,
+                                                                fontWeight:
+                                                                    FontWeight
+                                                                        .w600,
+                                                                color:
+                                                                    const Color(
+                                                                      0xFF2C3E50,
+                                                                    ).withOpacity(
+                                                                      0.6,
+                                                                    ),
+                                                              ),
+                                                              maxLines: 1,
+                                                              overflow:
+                                                                  TextOverflow
+                                                                      .ellipsis,
                                                             ),
-                                                            style: GoogleFonts.poppins(
-                                                              fontSize: 12,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                              color:
-                                                                  const Color(
-                                                                    0xFF2C3E50,
-                                                                  ).withOpacity(
-                                                                    0.6,
-                                                                  ),
-                                                            ),
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
                                                           ),
                                                           const SizedBox(
-                                                            height: 2,
+                                                            width: 4,
                                                           ),
                                                           GestureDetector(
                                                             onTap:
@@ -3210,6 +3260,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                   ],
                                                 ),
                                               ),
+                                              const SizedBox(height: 0),
                                               Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
@@ -3225,7 +3276,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                         ),
                                                         style:
                                                             GoogleFonts.poppins(
-                                                              fontSize: 42,
+                                                              fontSize: 36,
                                                               fontWeight:
                                                                   FontWeight
                                                                       .bold,
@@ -3257,9 +3308,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                   Text(
                                                     _getEnvironmentName(
                                                       _luxValue,
+                                                      lang,
                                                     ),
                                                     style: GoogleFonts.poppins(
-                                                      fontSize: 11,
+                                                      fontSize: 15,
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       color:
@@ -3344,8 +3396,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 // ÍNDICE UV REAL/ESTIMADO
                                 Expanded(
                                   child: Container(
-                                    height: 148,
-                                    padding: const EdgeInsets.all(16),
+                                    height: 120,
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 10,
+                                    ),
                                     decoration: BoxDecoration(
                                       color:
                                           (_locationError ||
@@ -3383,16 +3438,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
+                                                MainAxisAlignment.start,
                                             children: [
                                               SizedBox(
-                                                height: 38,
+                                                height: 22,
                                                 child: Row(
                                                   mainAxisAlignment:
                                                       MainAxisAlignment
                                                           .spaceBetween,
                                                   crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
+                                                      CrossAxisAlignment.center,
                                                   children: [
                                                     Expanded(
                                                       child: Text(
@@ -3437,6 +3492,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                   ],
                                                 ),
                                               ),
+                                              const SizedBox(height: 0),
                                               Column(
                                                 crossAxisAlignment:
                                                     CrossAxisAlignment.start,
@@ -3451,7 +3507,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                       ),
                                                       style:
                                                           GoogleFonts.poppins(
-                                                            fontSize: 42,
+                                                            fontSize: 36,
                                                             fontWeight:
                                                                 FontWeight.bold,
                                                             color: const Color(
@@ -3486,7 +3542,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                             'uv_extreme',
                                                           ),
                                                     style: GoogleFonts.poppins(
-                                                      fontSize: 11,
+                                                      fontSize: 15,
                                                       fontWeight:
                                                           FontWeight.bold,
                                                       color: _getUvColor(
@@ -3509,10 +3565,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                             // LÓGICA DE ESTADO DEL BOTÓN PRINCIPAL / DETALLES DE ACCIÓN
                             if (_limitReachedToday)
                               _buildLimitReachedCard()
-                            else if (_buttonState == 1)
-                              _buildCalculatedButton()
-                            else if (_buttonState == 2)
-                              _buildCountdownTimerCard(),
+                            else
+                              _buildCombinedExposureCard(),
                             const SizedBox(height: 20),
                           ],
                         ),
@@ -3660,177 +3714,21 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  // ESTADO 1: Botón de inicio con el tiempo ya calculado
-  Widget _buildCalculatedButton() {
-    final lang = appLanguage.value;
-    return Container(
-      height: 150,
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF73C6B6),
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF73C6B6).withOpacity(0.3),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Row(
-                  children: [
-                    const Icon(Icons.sunny, color: Color(0xFFF7D070), size: 30),
-                    const SizedBox(width: 6),
-                    Expanded(
-                      child: Text(
-                        AppTranslations.getText(lang, 'estimated_safe_time'),
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w600,
-                          color: Colors.white.withOpacity(0.9),
-                        ),
-                        maxLines: 3,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(
-                    _formatSafeTime(_calculatedSafeMinutes),
-                    style: GoogleFonts.poppins(
-                      fontSize: 34,
-                      fontWeight: FontWeight.w800,
-                      color: Colors.white,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            flex: 2,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                ElevatedButton(
-                  onPressed: (_locationError || _isOffline || !_uvAvailable)
-                      ? null
-                      : _startCountdown,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: const Color(0xFF73C6B6),
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    alignment: Alignment.center,
-                  ),
-                  child: Text(
-                    AppTranslations.getText(lang, 'start_exposure'),
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                GestureDetector(
-                  onTap: (_locationError || _isOffline || !_uvAvailable)
-                      ? null
-                      : () {
-                          setState(() {
-                            _demoMode = true;
-                          });
-                          _startCountdown();
-                        },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 6,
-                    ),
-                    decoration: BoxDecoration(
-                      color: (_locationError || _isOffline || !_uvAvailable)
-                          ? Colors.white.withOpacity(0.05)
-                          : Colors.white.withOpacity(0.15),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: (_locationError || _isOffline || !_uvAvailable)
-                            ? Colors.white.withOpacity(0.1)
-                            : Colors.white.withOpacity(0.2),
-                      ),
-                    ),
-                    child: Center(
-                      child: Text(
-                        "Demo 10s",
-                        style: GoogleFonts.poppins(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: (_locationError || _isOffline || !_uvAvailable)
-                              ? Colors.white.withOpacity(0.4)
-                              : Colors.white,
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+  // Cálculo de la cantidad de exposición solar recibida en % (100% inicialmente, decreciendo según tiempo transcurrido)
+  double get _receivedSolarDosePercentage {
+    if (_buttonState != 2) return 0.0;
+    return _accumulatedDosePercentage.clamp(0.0, 100.0);
   }
 
-  Color _getCountdownColor(double progress) {
-    if (progress >= 0.50) {
-      return const Color(0xFF73C6B6);
-    } else if (progress >= 0.25) {
-      // Verde a amarillo progresivamente (50% al 25%)
-      double t = (0.50 - progress) / 0.25;
-      return Color.lerp(
-        const Color(0xFF73C6B6),
-        const Color(0xFFF7D070),
-        t.clamp(0.0, 1.0),
-      )!;
-    } else if (progress >= 0.10) {
-      // Amarillo a rojo progresivamente (25% al 10%)
-      double t = (0.25 - progress) / 0.15;
-      return Color.lerp(
-        const Color(0xFFF7D070),
-        Colors.redAccent,
-        t.clamp(0.0, 1.0),
-      )!;
-    } else {
-      // A partir del 10% solo rojo
-      return Colors.redAccent;
-    }
-  }
-
-  // ESTADO 2: Cronómetro circular animado de cuenta atrás
-  Widget _buildCountdownTimerCard() {
+  // CONTENEDOR UNIFICADO: Dosis Solar % + Countdown circular con porcentaje reseteado/activo + Botón Iniciar alarma
+  Widget _buildCombinedExposureCard() {
     final lang = appLanguage.value;
-    int totalDuration = _demoMode ? 10 : _calculatedSafeMinutes * 60;
-    double progress = totalDuration > 0
-        ? _remainingSeconds / totalDuration
-        : 0.0;
+    final bool isRunning = _buttonState == 2;
+    final double dosePercentage = _receivedSolarDosePercentage;
+    final double progress = dosePercentage / 100.0;
 
     return Container(
-      padding: const EdgeInsets.all(28),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(28),
@@ -3842,96 +3740,208 @@ class _DashboardScreenState extends State<DashboardScreen>
           ),
         ],
       ),
-      child: Column(
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Text(
-            AppTranslations.getText(lang, 'exposure_timer_title'),
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: const Color(0xFF2C3E50).withOpacity(0.6),
-            ),
-          ),
-          const SizedBox(height: 24),
-          // Círculo de cuenta atrás
-          SizedBox(
-            width: 180,
-            height: 180,
-            child: Stack(
-              fit: StackFit.expand,
+          // COLUMNA IZQUIERDA: Título "Dosi Solar Màxima" y countdown circular mostrando la cantidad de exposición en %
+          Expanded(
+            flex: 3,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(
-                  value: progress,
-                  strokeWidth: 10,
-                  backgroundColor: const Color(0xFFFBF9F5),
-                  valueColor: AlwaysStoppedAnimation<Color>(
-                    _getCountdownColor(progress),
-                  ),
+                Row(
+                  children: [
+                    const Icon(Icons.sunny, color: Color(0xFFF7D070), size: 22),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        AppTranslations.getText(lang, 'solar_dose_pct'),
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF2C3E50),
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
                 ),
+                const SizedBox(height: 14),
+                // Cuenta atrás circular mostrando el porcentaje % en medio
                 Center(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 12.0),
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: Text(
-                            _formatCountdownTime(_remainingSeconds),
-                            style: GoogleFonts.poppins(
-                              fontSize: 34,
-                              fontWeight: FontWeight.bold,
-                              color: const Color(0xFF2C3E50),
+                  child: SizedBox(
+                    width: 120,
+                    height: 120,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.rotationY(math.pi),
+                          child: CircularProgressIndicator(
+                            value: isRunning ? progress : 0.0,
+                            strokeWidth: 8,
+                            backgroundColor: const Color(0xFFFBF9F5),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              isRunning
+                                  ? _getCountdownColor(progress)
+                                  : const Color(0xFF73C6B6),
                             ),
                           ),
                         ),
-                      ),
-                      Text(
-                        AppTranslations.getText(lang, 'remaining'),
-                        style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: const Color(0xFF2C3E50).withOpacity(0.5),
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8.0,
+                                ),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    "${dosePercentage.round()}%",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF2C3E50),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                AppTranslations.getText(lang, 'accumulated'),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  color: const Color(
+                                    0xFF2C3E50,
+                                  ).withOpacity(0.5),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 28),
-          OutlinedButton(
-            onPressed: _cancelCountdown,
-            style: OutlinedButton.styleFrom(
-              side: const BorderSide(color: Colors.redAccent, width: 2),
-              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(24),
-              ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
+          const SizedBox(width: 16),
+          // COLUMNA DERECHA: Botón Iniciar alarma (para iniciar countdown) y Demo
+          Expanded(
+            flex: 2,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const Icon(Icons.stop_rounded, color: Colors.redAccent),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    AppTranslations.getText(lang, 'cancel_exposure'),
-                    style: GoogleFonts.poppins(
-                      fontSize: 14,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.redAccent,
+                ElevatedButton(
+                  onPressed: (_locationError || _isOffline || !_uvAvailable)
+                      ? null
+                      : (isRunning ? _cancelCountdown : _startCountdown),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isRunning
+                        ? Colors.redAccent
+                        : const Color(0xFF73C6B6),
+                    foregroundColor: Colors.white,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                      horizontal: 8,
                     ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    alignment: Alignment.center,
+                  ),
+                  child: Text(
+                    isRunning
+                        ? AppTranslations.getText(lang, 'cancel_exposure')
+                        : AppTranslations.getText(lang, 'start_exposure'),
+                    style: GoogleFonts.poppins(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.center,
                   ),
                 ),
+                if (!isRunning) ...[
+                  const SizedBox(height: 10),
+                  GestureDetector(
+                    onTap: (_locationError || _isOffline || !_uvAvailable)
+                        ? null
+                        : () {
+                            setState(() {
+                              _demoMode = true;
+                            });
+                            _startCountdown();
+                          },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 6,
+                      ),
+                      decoration: BoxDecoration(
+                        color: (_locationError || _isOffline || !_uvAvailable)
+                            ? const Color(0xFF2C3E50).withOpacity(0.05)
+                            : const Color(0xFF73C6B6).withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: (_locationError || _isOffline || !_uvAvailable)
+                              ? const Color(0xFF2C3E50).withOpacity(0.1)
+                              : const Color(0xFF73C6B6).withOpacity(0.3),
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          "Demo 10s",
+                          style: GoogleFonts.poppins(
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                (_locationError || _isOffline || !_uvAvailable)
+                                ? const Color(0xFF2C3E50).withOpacity(0.4)
+                                : const Color(0xFF73C6B6),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
         ],
       ),
     );
+  }
+
+  Color _getCountdownColor(double progress) {
+    if (progress <= 0.50) {
+      return const Color(0xFF73C6B6);
+    } else if (progress <= 0.75) {
+      // Verde a amarillo progresivamente (50% al 75%)
+      double t = (progress - 0.50) / 0.25;
+      return Color.lerp(
+        const Color(0xFF73C6B6),
+        const Color(0xFFF7D070),
+        t.clamp(0.0, 1.0),
+      )!;
+    } else if (progress <= 0.90) {
+      // Amarillo a rojo progresivamente (75% al 90%)
+      double t = (progress - 0.75) / 0.15;
+      return Color.lerp(
+        const Color(0xFFF7D070),
+        Colors.redAccent,
+        t.clamp(0.0, 1.0),
+      )!;
+    } else {
+      // A partir del 90% solo rojo
+      return Colors.redAccent;
+    }
   }
 
   // Método auxiliar para obtener color según nivel de UV

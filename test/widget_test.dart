@@ -57,15 +57,15 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     // Verificar que se muestra el tiempo seguro estimado automáticamente y el botón de demo
-    expect(find.text('Tiempo seguro de exposición solar'), findsOneWidget);
+    expect(find.text('Dosis Solar Máxima'), findsOneWidget);
     expect(find.text('Demo 10s'), findsOneWidget);
 
     // Tap "Demo 10s" para iniciar la cuenta atrás de demo de 10 segundos
     await tester.tap(find.text('Demo 10s'));
     await tester.pump();
 
-    // Verificar que se muestra el contador en 10 s
-    expect(find.text('10 s'), findsOneWidget);
+    // Verificar que se muestra el contador en 0%
+    expect(find.text('0%'), findsOneWidget);
 
     // Avanzar el tiempo 10 segundos (1 segundo a la vez para asegurar que el temporizador periódico se dispare)
     for (int i = 0; i < 10; i++) {
@@ -79,12 +79,17 @@ void main() {
     // Verificar que aparece el diálogo de límite diario alcanzado
     expect(find.text('¡Límite diario alcanzado!'), findsOneWidget);
 
+    // Silenciar la alarma
+    await tester.tap(find.text('Silenciar Alarma'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 100));
+
     // Cerrar el diálogo pulsando "Entendido"
     await tester.tap(find.text('Entendido'));
     await tester.pump();
     await tester.pump(const Duration(milliseconds: 100));
 
     // Verificar que volvemos al estado inicial y no estamos bloqueados
-    expect(find.text('Tiempo seguro de exposición solar'), findsOneWidget);
+    expect(find.text('Dosis Solar Máxima'), findsOneWidget);
   });
 }
