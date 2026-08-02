@@ -1409,6 +1409,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   bool _vitDCelebrated = false;
   bool _showVitDRipple = false;
   late AnimationController _vitDRippleController;
+  late AnimationController _orbitalEchoController;
 
   // Animaciones de Alerta (Flashes)
   bool _isFlashing = false;
@@ -1425,6 +1426,10 @@ class _DashboardScreenState extends State<DashboardScreen>
     _vitDRippleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
+    );
+    _orbitalEchoController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
     );
     _vitDRippleController.addStatusListener((status) {
       if (status == AnimationStatus.completed) {
@@ -1547,6 +1552,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     _connectivitySubscription?.cancel();
     _networkCheckTimer?.cancel();
     _vitDRippleController.dispose();
+    _orbitalEchoController.dispose();
     super.dispose();
   }
 
@@ -2070,6 +2076,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     });
 
     _countdownTimer?.cancel();
+    _orbitalEchoController.repeat();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (_accumulatedDosePercentage < 100.0) {
         double percentagePerSecond;
@@ -2120,10 +2127,14 @@ class _DashboardScreenState extends State<DashboardScreen>
 
         if (_accumulatedDosePercentage >= 100.0 || _remainingSeconds <= 0) {
           _countdownTimer?.cancel();
+          _orbitalEchoController.stop();
+          _orbitalEchoController.reset();
           _onTimeFinished();
         }
       } else {
         _countdownTimer?.cancel();
+        _orbitalEchoController.stop();
+        _orbitalEchoController.reset();
         _onTimeFinished();
       }
     });
@@ -2132,6 +2143,8 @@ class _DashboardScreenState extends State<DashboardScreen>
   // Detener o cancelar la exposición
   void _cancelCountdown() {
     _countdownTimer?.cancel();
+    _orbitalEchoController.stop();
+    _orbitalEchoController.reset();
     setState(() {
       _buttonState = 1;
       _demoMode = false;
@@ -2363,22 +2376,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  String _formatSafeTime(int minutes) {
-    if (minutes >= 60) {
-      final hours = minutes ~/ 60;
-      final mins = minutes % 60;
-      return mins > 0 ? "${hours}h $mins min" : "${hours}h";
-    }
-    return "$minutes min";
-  }
 
-  String _formatCountdownTime(int totalSeconds) {
-    if (totalSeconds >= 60) {
-      int minutes = totalSeconds ~/ 60;
-      return _formatSafeTime(minutes);
-    }
-    return "$totalSeconds s";
-  }
 
   String _formatLux(int lux) {
     final valueStr = lux.toString();
@@ -4017,15 +4015,20 @@ class _DashboardScreenState extends State<DashboardScreen>
                         Transform(
                           alignment: Alignment.center,
                           transform: Matrix4.rotationY(math.pi),
-                          child: CircularProgressIndicator(
-                            value: isRunning ? progress : 0.0,
-                            strokeWidth: 8,
-                            backgroundColor: const Color(0xFFFBF9F5),
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                              isRunning
-                                  ? _getCountdownColor(progress)
-                                  : const Color(0xFF73C6B6),
-                            ),
+                          child: AnimatedBuilder(
+                            animation: _orbitalEchoController,
+                            builder: (context, child) {
+                              return OrbitalCircularProgressIndicator(
+                                value: isRunning ? progress : 0.0,
+                                strokeWidth: 8,
+                                backgroundColor: const Color(0xFFFBF9F5),
+                                valueColor: isRunning
+                                    ? _getCountdownColor(progress)
+                                    : const Color(0xFF73C6B6),
+                                isRunning: isRunning,
+                                animationValue: _orbitalEchoController.value,
+                              );
+                            },
                           ),
                         ),
                         Center(
@@ -4102,15 +4105,20 @@ class _DashboardScreenState extends State<DashboardScreen>
                         Transform(
                           alignment: Alignment.center,
                           transform: Matrix4.rotationY(math.pi),
-                          child: CircularProgressIndicator(
-                            value: isRunning
-                                ? (_receivedVitDPercentage / 100.0)
-                                : 0.0,
-                            strokeWidth: 8,
-                            backgroundColor: const Color(0xFFFBF9F5),
-                            valueColor: const AlwaysStoppedAnimation<Color>(
-                              Color(0xFF0023FF),
-                            ),
+                          child: AnimatedBuilder(
+                            animation: _orbitalEchoController,
+                            builder: (context, child) {
+                              return OrbitalCircularProgressIndicator(
+                                value: isRunning
+                                    ? (_receivedVitDPercentage / 100.0)
+                                    : 0.0,
+                                strokeWidth: 8,
+                                backgroundColor: const Color(0xFFFBF9F5),
+                                valueColor: const Color(0xFF0023FF),
+                                isRunning: isRunning,
+                                animationValue: _orbitalEchoController.value,
+                              );
+                            },
                           ),
                         ),
                         if (_showVitDRipple)
@@ -4294,5 +4302,145 @@ class _DashboardScreenState extends State<DashboardScreen>
     if (uv <= 7.9) return const Color(0xFFE67E22); // Naranja - Alto
     if (uv <= 10.9) return const Color(0xFFE74C3C); // Rojo - Muy Alto
     return const Color(0xFF9B59B6); // Púrpura - Extremo
+  }
+}
+
+class OrbitalCircularProgressIndicator extends StatelessWidget {
+  final double value;
+  final double strokeWidth;
+  final Color backgroundColor;
+  final Color valueColor;
+  final bool isRunning;
+  final double animationValue;
+
+  const OrbitalCircularProgressIndicator({
+    super.key,
+    required this.value,
+    required this.strokeWidth,
+    required this.backgroundColor,
+    required this.valueColor,
+    required this.isRunning,
+    required this.animationValue,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox.expand(
+      child: CustomPaint(
+        painter: _OrbitalCircularProgressPainter(
+          value: value,
+          strokeWidth: strokeWidth,
+          backgroundColor: backgroundColor,
+          valueColor: valueColor,
+          isRunning: isRunning,
+          animationValue: animationValue,
+        ),
+      ),
+    );
+  }
+}
+
+class _OrbitalCircularProgressPainter extends CustomPainter {
+  final double value;
+  final double strokeWidth;
+  final Color backgroundColor;
+  final Color valueColor;
+  final bool isRunning;
+  final double animationValue;
+
+  _OrbitalCircularProgressPainter({
+    required this.value,
+    required this.strokeWidth,
+    required this.backgroundColor,
+    required this.valueColor,
+    required this.isRunning,
+    required this.animationValue,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    final radius = (size.width - strokeWidth) / 2;
+
+    // 1. Dibuixa el cercle de fons (canal)
+    final bgPaint = Paint()
+      ..color = backgroundColor
+      ..strokeWidth = strokeWidth
+      ..style = PaintingStyle.stroke
+      ..strokeCap = StrokeCap.square;
+    canvas.drawCircle(center, radius, bgPaint);
+
+    // 2. Dibuixa l'arc de progrés
+    final double startAngle = -math.pi / 2;
+    final double sweepAngle = 2 * math.pi * value.clamp(0.0, 1.0);
+
+    if (sweepAngle > 0) {
+      final progressPaint = Paint()
+        ..color = valueColor
+        ..strokeWidth = strokeWidth
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.square;
+      canvas.drawArc(
+        Rect.fromCircle(center: center, radius: radius),
+        startAngle,
+        sweepAngle,
+        false,
+        progressPaint,
+      );
+    }
+
+    // 3. Dibuixa l'Eco Orbital (cometa) si la sessió està activa
+    if (isRunning) {
+      // El centre de l'arc gira 360 graus sincronitzat amb animationValue (de 0 a 1)
+      final double rotationCenter = 2 * math.pi * animationValue;
+      // Arc de ~45 graus (pi/4 radiants)
+      final double arcLength = math.pi / 4;
+      // L'inici de l'arc de manera que rotationCenter en sigui el centre:
+      final double echoStartAngle = rotationCenter - arcLength / 2;
+
+      final echoPaint = Paint()
+        ..strokeWidth = strokeWidth
+        ..style = PaintingStyle.stroke
+        ..strokeCap = StrokeCap.round; // Capçals arrodonits per a un efecte visual més suau i premium
+
+      final Rect rect = Rect.fromCircle(center: center, radius: radius);
+
+      // Definim el SweepGradient de manera que comenci en transparent (opacitat 0.0),
+      // arribi al punt màxim (opacitat 0.8) al mig de l'arc (0.0625 de volta, és a dir, 22.5 graus)
+      // i torni a desdibuixar-se fins a transparent (opacitat 0.0) al final de l'arc (0.125 de volta, és a dir, 45 graus).
+      echoPaint.shader = SweepGradient(
+        colors: [
+          valueColor.withOpacity(0.0),
+          valueColor.withOpacity(0.8),
+          valueColor.withOpacity(0.0),
+          valueColor.withOpacity(0.0),
+        ],
+        stops: const [
+          0.0,
+          0.0625, // pi/8 és 1/16 (0.0625) d'una volta completa (mig arc, màxim a 22.5 graus)
+          0.125,  // pi/4 és 1/8 (0.125) d'una volta completa (final de l'arc a 45 graus)
+          1.0,
+        ],
+        transform: GradientRotation(echoStartAngle),
+      ).createShader(rect);
+
+      canvas.drawArc(
+        rect,
+        echoStartAngle,
+        arcLength,
+        false,
+        echoPaint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _OrbitalCircularProgressPainter oldDelegate) {
+    return oldDelegate.value != value ||
+        oldDelegate.strokeWidth != strokeWidth ||
+        oldDelegate.backgroundColor != backgroundColor ||
+        oldDelegate.valueColor != valueColor ||
+        oldDelegate.isRunning != isRunning ||
+        oldDelegate.animationValue != animationValue;
   }
 }
