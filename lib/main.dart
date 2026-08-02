@@ -221,6 +221,7 @@ class AppTranslations {
       'disclaimer_point3':
           '• For any doubts or sensitive skin, you must consult a dermatologist.',
       'vit_d_100_percent': '100% of daily Vitamin D achieved!',
+      'solar_intensity': 'Radiation intensity',
     },
     'es': {
       'app_title':
@@ -319,6 +320,7 @@ class AppTranslations {
       'disclaimer_point3':
           '• Ante dudas o pieles sensibles, se debe consultar con un dermatólogo.',
       'vit_d_100_percent': '¡100% de Vitamina D diaria conseguida!',
+      'solar_intensity': 'Intensidad de radiación',
     },
     'de': {
       'app_title':
@@ -415,6 +417,7 @@ class AppTranslations {
       'disclaimer_point3':
           '• Bei Fragen oder empfindlicher Haut wenden Sie sich an einen Dermatologen.',
       'vit_d_100_percent': '100% des täglichen Vitamin D erreicht!',
+      'solar_intensity': 'Strahlungsintensität',
     },
     'fr': {
       'app_title':
@@ -512,6 +515,7 @@ class AppTranslations {
       'disclaimer_point3':
           '• En cas de doute ou de peau sensible, veuillez consulter un dermatologue.',
       'vit_d_100_percent': '100% de la vitamine D quotidienne atteinte!',
+      'solar_intensity': 'Intensité du rayonnement',
     },
     'it': {
       'app_title':
@@ -612,6 +616,7 @@ class AppTranslations {
       'disclaimer_point3':
           '• In caso di dubbi o pelle sensibile, consultare un dermatologo.',
       'vit_d_100_percent': '100% di vitamina D giornaliera raggiunta!',
+      'solar_intensity': 'Intensità delle radiazioni',
     },
     'pt': {
       'app_title':
@@ -711,6 +716,7 @@ class AppTranslations {
       'disclaimer_point3':
           '• Em caso de dúvidas ou pele sensível, consulte um dermatologista.',
       'vit_d_100_percent': '100% de vitamina D diária alcançada!',
+      'solar_intensity': 'Intensidade da radiação',
     },
     'ca': {
       'app_title':
@@ -810,6 +816,7 @@ class AppTranslations {
       'disclaimer_point3':
           '• Davant de dubtes o pells sensibles, cal consultar un dermatóleg.',
       'vit_d_100_percent': '100% de Vitamina D diària aconseguida!',
+      'solar_intensity': 'Intensitat de radiació',
     },
   };
 
@@ -1987,19 +1994,19 @@ class _DashboardScreenState extends State<DashboardScreen>
   double _getAttenuationFactor(int lux) {
     if (lux <= 0) {
       return 0.1;
-    } else if (lux < 1000) {
-      return 0.1 + 0.4 * (lux / 1000.0);
-    } else if (lux < 20000) {
-      return 0.5 + 0.5 * ((lux - 1000.0) / 19000.0);
+    } else if (lux <= 400) {
+      return 0.1 + 0.4 * (lux / 400.0);
+    } else if (lux <= 6000) {
+      return 0.5 + 0.5 * ((lux - 400.0) / 5600.0);
     } else {
       return 1.0;
     }
   }
 
   String _getEnvironmentName(int lux, String lang) {
-    if (lux >= 20000) {
+    if (lux >= 6001) {
       return AppTranslations.getText(lang, 'direct_sun');
-    } else if (lux >= 1000) {
+    } else if (lux >= 401) {
       return AppTranslations.getText(lang, 'shade_umbrella');
     } else {
       return AppTranslations.getText(lang, 'indoor_deep_shade');
@@ -2007,9 +2014,9 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   IconData _getEnvironmentIcon(int lux) {
-    if (lux >= 20000) {
+    if (lux >= 6001) {
       return Icons.wb_sunny_rounded;
-    } else if (lux >= 1000) {
+    } else if (lux >= 401) {
       return Icons.beach_access_rounded;
     } else {
       return Icons.house_siding_rounded;
@@ -2017,7 +2024,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Color _getEnvironmentIconColor(int lux) {
-    if (lux >= 20000) {
+    if (lux >= 6001) {
       return const Color(0xFFF7D070);
     } else {
       return const Color(0xFF73C6B6);
@@ -3651,7 +3658,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 16),
+                            _buildSolarIntensityCard(),
+                            const SizedBox(height: 16),
                             // LÓGICA DE ESTADO DEL BOTÓN PRINCIPAL / DETALLES DE ACCIÓN
                             if (_limitReachedToday)
                               _buildLimitReachedCard()
@@ -3737,6 +3746,143 @@ class _DashboardScreenState extends State<DashboardScreen>
             ),
           ),
         ),
+      ),
+    );
+  }
+
+  double _getCurrentPercentagePerSecond() {
+    final currentType = fitzpatrickTypes[widget.selectedSkinTypeIndex];
+    final factorAtenuacion = _hasPhysicalLightSensor
+        ? _getAttenuationFactor(_luxValue)
+        : 1.0;
+
+    double rawTime;
+    if (_uvIndex < 0.5) {
+      rawTime = 480.0 / factorAtenuacion;
+    } else {
+      rawTime = (currentType.dose / _uvIndex) / factorAtenuacion;
+    }
+
+    if (rawTime > 480.0) {
+      rawTime = 480.0;
+    }
+    if (rawTime < 1.0) {
+      rawTime = 1.0;
+    }
+    return 100.0 / (rawTime * 60.0);
+  }
+
+  double get _solarRadiationWm2 {
+    final factorAtenuacion = _hasPhysicalLightSensor
+        ? _getAttenuationFactor(_luxValue)
+        : 1.0;
+    return _uvIndex * factorAtenuacion * 90.9;
+  }
+
+  double get _solarIntensityRatio {
+    final currentPercentagePerSecond = _getCurrentPercentagePerSecond();
+    return (currentPercentagePerSecond / 0.0917).clamp(0.0, 1.0);
+  }
+
+  Widget _buildSolarIntensityCard() {
+    final lang = appLanguage.value;
+    final double ratio = _solarIntensityRatio;
+    final int radiationValue = _solarRadiationWm2.round();
+
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 16,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.equalizer_rounded, color: Colors.red, size: 24),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        AppTranslations.getText(lang, 'solar_intensity'),
+                        style: GoogleFonts.poppins(
+                          fontSize: 11,
+                          color: const Color(0xFF2C3E50).withOpacity(0.6),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      "$radiationValue W/m²",
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        color: const Color(0xFF2C3E50),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(6),
+                  child: Container(
+                    height: 12,
+                    width: double.infinity,
+                    color: const Color(0xFF2C3E50).withOpacity(0.08),
+                    child: LayoutBuilder(
+                      builder: (context, constraints) {
+                        return Stack(
+                          children: [
+                            Align(
+                              alignment: Alignment.centerLeft,
+                              child: FractionallySizedBox(
+                                widthFactor: ratio,
+                                child: ClipRect(
+                                  child: OverflowBox(
+                                    alignment: Alignment.centerLeft,
+                                    maxWidth: constraints.maxWidth,
+                                    minWidth: constraints.maxWidth,
+                                    child: Container(
+                                      decoration: const BoxDecoration(
+                                        gradient: LinearGradient(
+                                          colors: [
+                                            Color(0xFF2ECC71), // Verde
+                                            Color(0xFFF1C40F), // Groc
+                                            Color(0xFFE67E22), // Taronja
+                                            Color(0xFFE74C3C), // Vermell
+                                            Color(0xFF9B59B6), // Morat
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -3857,7 +4003,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           fontWeight: FontWeight.bold,
                           color: const Color(0xFF2C3E50),
                         ),
-                        maxLines: 2,
+                        maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -3984,8 +4130,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   height: size,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
-                                    color: const Color(0xFF0023FF)
-                                        .withOpacity(opacity),
+                                    color: const Color(
+                                      0xFF0023FF,
+                                    ).withOpacity(opacity),
                                   ),
                                 ),
                               );

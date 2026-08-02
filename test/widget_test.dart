@@ -61,7 +61,10 @@ void main() {
     expect(find.text('Demo 10s'), findsOneWidget);
 
     // Tap "Demo 10s" para iniciar la cuenta atrás de demo de 10 segundos
-    await tester.tap(find.text('Demo 10s'));
+    final demoBtn = find.text('Demo 10s');
+    await tester.ensureVisible(demoBtn);
+    await tester.pump();
+    await tester.tap(demoBtn);
     await tester.pump();
 
     // Verificar que se muestran los contadores en 0%
