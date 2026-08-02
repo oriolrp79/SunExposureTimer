@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   ambient_light
+  audioplayers_linux
   url_launcher_linux
 )
 

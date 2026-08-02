@@ -5,6 +5,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
@@ -219,6 +220,7 @@ class AppTranslations {
       'disclaimer_point2': '• The use of the app is at the user\'s own risk.',
       'disclaimer_point3':
           '• For any doubts or sensitive skin, you must consult a dermatologist.',
+      'vit_d_100_percent': '100% of daily Vitamin D achieved!',
     },
     'es': {
       'app_title':
@@ -316,6 +318,7 @@ class AppTranslations {
           '• El uso de la aplicación es bajo la propia responsabilidad del usuario.',
       'disclaimer_point3':
           '• Ante dudas o pieles sensibles, se debe consultar con un dermatólogo.',
+      'vit_d_100_percent': '¡100% de Vitamina D diaria conseguida!',
     },
     'de': {
       'app_title':
@@ -411,6 +414,7 @@ class AppTranslations {
           '• Die Nutzung der App erfolgt auf eigene Verantwortung des Nutzers.',
       'disclaimer_point3':
           '• Bei Fragen oder empfindlicher Haut wenden Sie sich an einen Dermatologen.',
+      'vit_d_100_percent': '100% des täglichen Vitamin D erreicht!',
     },
     'fr': {
       'app_title':
@@ -507,6 +511,7 @@ class AppTranslations {
           '• L\'utilisation de l\'application est sous la seule responsabilité de l\'utilisateur.',
       'disclaimer_point3':
           '• En cas de doute ou de peau sensible, veuillez consulter un dermatologue.',
+      'vit_d_100_percent': '100% de la vitamine D quotidienne atteinte!',
     },
     'it': {
       'app_title':
@@ -606,6 +611,7 @@ class AppTranslations {
           '• L\'uso dell\'applicazione è a proprio rischio e pericolo dell\'utente.',
       'disclaimer_point3':
           '• In caso di dubbi o pelle sensibile, consultare un dermatologo.',
+      'vit_d_100_percent': '100% di vitamina D giornaliera raggiunta!',
     },
     'pt': {
       'app_title':
@@ -704,6 +710,7 @@ class AppTranslations {
           '• O uso do aplicativo é de inteira responsabilidade do usuário.',
       'disclaimer_point3':
           '• Em caso de dúvidas ou pele sensível, consulte um dermatologista.',
+      'vit_d_100_percent': '100% de vitamina D diária alcançada!',
     },
     'ca': {
       'app_title':
@@ -802,6 +809,7 @@ class AppTranslations {
           '• L\'ús de l\'aplicació és sota la pròpia responsabilitat de l\'usuari.',
       'disclaimer_point3':
           '• Davant de dubtes o pells sensibles, cal consultar un dermatóleg.',
+      'vit_d_100_percent': '100% de Vitamina D diària aconseguida!',
     },
   };
 
@@ -1391,6 +1399,9 @@ class _DashboardScreenState extends State<DashboardScreen>
   Timer? _calculationTimer;
   bool _limitReachedToday = false;
   bool _demoMode = false; // Modo demo de 10 segundos
+  bool _vitDCelebrated = false;
+  bool _showVitDRipple = false;
+  late AnimationController _vitDRippleController;
 
   // Animaciones de Alerta (Flashes)
   bool _isFlashing = false;
@@ -1404,6 +1415,18 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   void initState() {
     super.initState();
+    _vitDRippleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+    _vitDRippleController.addStatusListener((status) {
+      if (status == AnimationStatus.completed) {
+        setState(() {
+          _showVitDRipple = false;
+        });
+        _vitDRippleController.reset();
+      }
+    });
     appLanguage.addListener(_onLanguageChanged);
     _updateClock();
     _clockTimer = Timer.periodic(
@@ -1516,6 +1539,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     _bannerAd?.dispose();
     _connectivitySubscription?.cancel();
     _networkCheckTimer?.cancel();
+    _vitDRippleController.dispose();
     super.dispose();
   }
 
@@ -2034,6 +2058,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       _remainingSeconds = durationSeconds;
       _accumulatedDosePercentage = 0.0;
       _accumulatedVitDPercentage = 0.0;
+      _vitDCelebrated = false;
       _buttonState = 2;
     });
 
@@ -2071,8 +2096,12 @@ class _DashboardScreenState extends State<DashboardScreen>
             _accumulatedDosePercentage = 100.0;
           }
           _accumulatedVitDPercentage += percentagePerSecond * 4.0;
-          if (_accumulatedVitDPercentage > 100.0) {
+          if (_accumulatedVitDPercentage >= 100.0) {
             _accumulatedVitDPercentage = 100.0;
+            if (!_vitDCelebrated) {
+              _vitDCelebrated = true;
+              _triggerVitDCelebration();
+            }
           }
           double remainingPercentage = 100.0 - _accumulatedDosePercentage;
           _remainingSeconds = (remainingPercentage / percentagePerSecond)
@@ -2101,7 +2130,49 @@ class _DashboardScreenState extends State<DashboardScreen>
       _demoMode = false;
       _accumulatedDosePercentage = 0.0;
       _accumulatedVitDPercentage = 0.0;
+      _vitDCelebrated = false;
     });
+  }
+
+  void _triggerVitDCelebration() {
+    try {
+      HapticFeedback.lightImpact();
+    } catch (e) {
+      debugPrint("Error al realitzar feedback hàptic: $e");
+    }
+
+    setState(() {
+      _showVitDRipple = true;
+    });
+    _vitDRippleController.forward(from: 0.0);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            AppTranslations.getText(appLanguage.value, 'vit_d_100_percent'),
+            style: GoogleFonts.poppins(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          backgroundColor: const Color(0xFF0023FF),
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+          duration: const Duration(seconds: 3),
+        ),
+      );
+    }
+
+    try {
+      final player = AudioPlayer();
+      player.play(AssetSource('sounds/seeds.mp3'));
+    } catch (e) {
+      debugPrint("Error en reproduir l'àudio de celebració: $e");
+    }
   }
 
   // Acción finalizada
@@ -3900,6 +3971,26 @@ class _DashboardScreenState extends State<DashboardScreen>
                             ),
                           ),
                         ),
+                        if (_showVitDRipple)
+                          AnimatedBuilder(
+                            animation: _vitDRippleController,
+                            builder: (context, child) {
+                              final value = _vitDRippleController.value;
+                              final size = value * 120.0;
+                              final opacity = 1.0 - value;
+                              return Center(
+                                child: Container(
+                                  width: size,
+                                  height: size,
+                                  decoration: BoxDecoration(
+                                    shape: BoxShape.circle,
+                                    color: const Color(0xFF0023FF)
+                                        .withOpacity(opacity),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
                         Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,

@@ -4,6 +4,7 @@
 
 list(APPEND FLUTTER_PLUGIN_LIST
   ambient_light
+  audioplayers_windows
   connectivity_plus
   geolocator_windows
   url_launcher_windows
