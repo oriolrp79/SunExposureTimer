@@ -169,6 +169,7 @@ class AppTranslations {
           'UV radiation data based on global meteorological models from NOAA / ECMWF.',
       'estimated_safe_time': 'Estimated Safe Sun Exposure Time',
       'solar_dose_pct': 'Max Solar Dose',
+      'vitamin_d': 'Vitamin D',
       'start_exposure': 'Start Exposure',
       'daily_limit_reached': 'Daily limit reached',
       'cancel_exposure': 'Cancel Exposure',
@@ -262,6 +263,7 @@ class AppTranslations {
           'Datos de radiación UV basados en modelos meteorológicos globales de la NOAA / ECMWF.',
       'estimated_safe_time': 'Tiempo seguro de exposición solar',
       'solar_dose_pct': 'Dosis Solar Máxima',
+      'vitamin_d': 'Vitamina D',
       'start_exposure': 'Iniciar Exposición',
       'daily_limit_reached': 'Límite diario alcanzado',
       'cancel_exposure': 'Cancelar Exposición',
@@ -356,6 +358,7 @@ class AppTranslations {
           'UV-Strahlungsdaten basierend auf globalen meteorologischen Modellen von NOAA / ECMWF.',
       'estimated_safe_time': 'Geschätzte sichere Sonnenexpositionszeit',
       'solar_dose_pct': 'Maximale Sonnendosis',
+      'vitamin_d': 'Vitamin D',
       'start_exposure': 'Exposition starten',
       'daily_limit_reached': 'Tageslimit erreicht',
       'cancel_exposure': 'Exposition abbrechen',
@@ -450,7 +453,8 @@ class AppTranslations {
           'Données de rayonnement UV basées sur les modèles météorologiques mondiaux de la NOAA / CEPMMT.',
       'estimated_safe_time': 'Temps d\'exposition solaire sûr estimé',
       'solar_dose_pct': 'Dose solaire maximale',
-      'start_exposure': 'Démarrer l\'alarme',
+      'vitamin_d': 'Vitamine D',
+      'start_exposure': 'Démarrer l\'exposition',
       'daily_limit_reached': 'Limite quotidienne atteinte',
       'cancel_exposure': 'Annuler l\'exposition',
       'safe_exposure_finished_title': 'Exposition sûre terminée',
@@ -549,6 +553,7 @@ class AppTranslations {
           'Dati sulla radiazione UV basati sui modelli meteorologici globali di NOAA / ECMWF.',
       'estimated_safe_time': 'Tempo di esposizione solare sicuro stimato',
       'solar_dose_pct': 'Dose Solare Massima',
+      'vitamin_d': 'Vitamina D',
       'start_exposure': 'Avvia Esposizione',
       'daily_limit_reached': 'Limite giornaliero raggiunto',
       'cancel_exposure': 'Annulla esposizione',
@@ -646,6 +651,7 @@ class AppTranslations {
           'Dados de radiação UV baseados em modelos meteorológicos globais da NOAA / ECMWF.',
       'estimated_safe_time': 'Tempo seguro estimado de exposição solar',
       'solar_dose_pct': 'Dose Solar Máxima',
+      'vitamin_d': 'Vitamina D',
       'start_exposure': 'Iniciar Exposição',
       'daily_limit_reached': 'Limite diário atingido',
       'cancel_exposure': 'Cancelar exposição',
@@ -742,7 +748,8 @@ class AppTranslations {
           'Dades de radiació UV basades en models meteorològics globals de la NOAA / ECMWF.',
       'estimated_safe_time': 'Temps segur estimat d\'exposició solar',
       'solar_dose_pct': 'Dosi Solar Màxima',
-      'start_exposure': 'Iniciar Alarma',
+      'vitamin_d': 'Vitamina D',
+      'start_exposure': 'Iniciar Exposició',
       'daily_limit_reached': 'Límit diari assolit',
       'cancel_exposure': 'Cancel·lar exposició',
       'safe_exposure_finished_title': 'Exposició segura finalitzada',
@@ -1379,6 +1386,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   int _calculatedSafeMinutes = 0;
   int _remainingSeconds = 0;
   double _accumulatedDosePercentage = 0.0;
+  double _accumulatedVitDPercentage = 0.0;
   Timer? _countdownTimer;
   Timer? _calculationTimer;
   bool _limitReachedToday = false;
@@ -2025,6 +2033,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     setState(() {
       _remainingSeconds = durationSeconds;
       _accumulatedDosePercentage = 0.0;
+      _accumulatedVitDPercentage = 0.0;
       _buttonState = 2;
     });
 
@@ -2061,6 +2070,10 @@ class _DashboardScreenState extends State<DashboardScreen>
           if (_accumulatedDosePercentage > 100.0) {
             _accumulatedDosePercentage = 100.0;
           }
+          _accumulatedVitDPercentage += percentagePerSecond * 4.0;
+          if (_accumulatedVitDPercentage > 100.0) {
+            _accumulatedVitDPercentage = 100.0;
+          }
           double remainingPercentage = 100.0 - _accumulatedDosePercentage;
           _remainingSeconds = (remainingPercentage / percentagePerSecond)
               .round();
@@ -2087,6 +2100,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       _buttonState = 1;
       _demoMode = false;
       _accumulatedDosePercentage = 0.0;
+      _accumulatedVitDPercentage = 0.0;
     });
   }
 
@@ -2135,6 +2149,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     setState(() {
       _demoMode = false;
       _accumulatedDosePercentage = 0.0;
+      _accumulatedVitDPercentage = 0.0;
       if (wasDemo) {
         _buttonState = 1;
       }
@@ -3724,6 +3739,11 @@ class _DashboardScreenState extends State<DashboardScreen>
     return _accumulatedDosePercentage.clamp(0.0, 100.0);
   }
 
+  double get _receivedVitDPercentage {
+    if (_buttonState != 2) return 0.0;
+    return _accumulatedVitDPercentage.clamp(0.0, 100.0);
+  }
+
   // CONTENEDOR UNIFICADO: Dosis Solar % + Countdown circular con porcentaje reseteado/activo + Botón Iniciar alarma
   Widget _buildCombinedExposureCard() {
     final lang = appLanguage.value;
@@ -3807,6 +3827,91 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   fit: BoxFit.scaleDown,
                                   child: Text(
                                     "${dosePercentage.round()}%",
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 26,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF2C3E50),
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                AppTranslations.getText(lang, 'accumulated'),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 10,
+                                  color: const Color(
+                                    0xFF2C3E50,
+                                  ).withOpacity(0.5),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 20),
+                Row(
+                  children: [
+                    SvgPicture.asset(
+                      'assets/icons/pill.svg',
+                      width: 22,
+                      height: 22,
+                      colorFilter: const ColorFilter.mode(
+                        Color(0xFF0023FF),
+                        BlendMode.srcIn,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        AppTranslations.getText(lang, 'vitamin_d'),
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF2C3E50),
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                Center(
+                  child: SizedBox(
+                    width: 120,
+                    height: 120,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Transform(
+                          alignment: Alignment.center,
+                          transform: Matrix4.rotationY(math.pi),
+                          child: CircularProgressIndicator(
+                            value: isRunning
+                                ? (_receivedVitDPercentage / 100.0)
+                                : 0.0,
+                            strokeWidth: 8,
+                            backgroundColor: const Color(0xFFFBF9F5),
+                            valueColor: const AlwaysStoppedAnimation<Color>(
+                              Color(0xFF0023FF),
+                            ),
+                          ),
+                        ),
+                        Center(
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8.0,
+                                ),
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    "${_receivedVitDPercentage.round()}%",
                                     style: GoogleFonts.poppins(
                                       fontSize: 26,
                                       fontWeight: FontWeight.bold,

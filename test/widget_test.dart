@@ -64,8 +64,8 @@ void main() {
     await tester.tap(find.text('Demo 10s'));
     await tester.pump();
 
-    // Verificar que se muestra el contador en 0%
-    expect(find.text('0%'), findsOneWidget);
+    // Verificar que se muestran los contadores en 0%
+    expect(find.text('0%'), findsNWidgets(2));
 
     // Avanzar el tiempo 10 segundos (1 segundo a la vez para asegurar que el temporizador periódico se dispare)
     for (int i = 0; i < 10; i++) {
