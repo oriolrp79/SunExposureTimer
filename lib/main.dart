@@ -135,7 +135,7 @@ class AppTranslations {
       'select_skin_type': 'Select your skin type',
       'silence_alarm': 'Mute Alarm',
       'onboarding_desc':
-          'Your skin type determines your sensitivity to the sun and the safe dose of UV radiation you can receive before sunburn.',
+          'Your skin type (Fitzpatrick scale) determines your sun sensitivity and the safe UV radiation dose you can receive before suffering skin burns.',
       'accept': 'Accept',
       'skin_type_1_name': 'Type I',
       'skin_type_1_desc': 'Very fair. Always burns, never tans.',
@@ -229,7 +229,7 @@ class AppTranslations {
       'select_skin_type': 'Selecciona tu tipo de piel',
       'silence_alarm': 'Silenciar Alarma',
       'onboarding_desc':
-          'El tipo de piel determina tu sensibilidad al sol y la dosis de radiación ultravioleta segura que puedes recibir antes de sufrir eritema (quemadura).',
+          'El tipo de piel (escala Fitzpatrick) determina tu sensibilidad al sol y la dosis de radiación ultravioleta segura que puedes recibir antes de sufrir quemaduras en la piel.',
       'accept': 'Aceptar',
       'skin_type_1_name': 'Tipo I',
       'skin_type_1_desc': 'Muy clara. Siempre se quema, nunca se broncea.',
@@ -328,7 +328,7 @@ class AppTranslations {
       'select_skin_type': 'Wählen Sie Ihren Hauttyp',
       'silence_alarm': 'Alarm stummschalten',
       'onboarding_desc':
-          'Ihr Hauttyp bestimmt Ihre Empfindlichkeit gegenüber der Sonne und die sichere UV-Dosis, die Sie vor einem Sonnenbrand erhalten können.',
+          'Ihr Hauttyp (Fitzpatrick-Skala) bestimmt Ihre Empfindlichkeit gegenüber der Sonne und die sichere UV-Dosis, die Sie vor Hautverbrennungen erhalten können.',
       'accept': 'Akzeptieren',
       'skin_type_1_name': 'Typ I',
       'skin_type_1_desc': 'Sehr hell. Verbrennt immer, bräunt nie.',
@@ -425,7 +425,7 @@ class AppTranslations {
       'select_skin_type': 'Sélectionnez votre type de peau',
       'silence_alarm': 'Couper l\'alarme',
       'onboarding_desc':
-          'Votre type de peau détermine votre sensibilité au soleil et la dose sûre de rayonnement ultraviolet que vous pouvez recevoir avant d\'attraper un coup de soleil.',
+          'Votre type de peau (échelle de Fitzpatrick) détermine votre sensibilité au soleil et la dose sûre de rayonnement ultraviolet que vous pouvez recevoir avant de subir des brûlures cutanées.',
       'accept': 'Accepter',
       'skin_type_1_name': 'Type I',
       'skin_type_1_desc': 'Très claire. Brûle toujours, ne bronze jamais.',
@@ -523,7 +523,7 @@ class AppTranslations {
       'select_skin_type': 'Seleziona il tuo tipo di pelle',
       'silence_alarm': 'Silenzia sveglia',
       'onboarding_desc':
-          'Il tuo tipo di pelle determina la tua sensibilità al sol e la dose sicura di radiazioni ultraviolette que puoi ricevere prima di scottarti.',
+          'Il tuo tipo di pelle (scala Fitzpatrick) determina la tua sensibilità al sole e la dose sicura di radiazioni ultraviolette che puoi ricevere prima di subire ustioni cutanee.',
       'accept': 'Accetta',
       'skin_type_1_name': 'Tipo I',
       'skin_type_1_desc':
@@ -624,7 +624,7 @@ class AppTranslations {
       'select_skin_type': 'Selecione o seu tipo de pele',
       'silence_alarm': 'Silenciar Alarme',
       'onboarding_desc':
-          'O seu tipo de pele determina a sua sensibilidade ao sol e a dose segura de radiação ultravioleta que pode receber antes de sofrer eritema (queimadura).',
+          'O seu tipo de pele (escala de Fitzpatrick) determina a sua sensibilidade ao sol e a dose segura de radiação ultravioleta que pode receber antes de sofrer queimaduras na pele.',
       'accept': 'Aceitar',
       'skin_type_1_name': 'Tipo I',
       'skin_type_1_desc': 'Muito clara. Sempre se queima, nunca se bronzeia.',
@@ -724,7 +724,7 @@ class AppTranslations {
       'select_skin_type': 'Selecciona el teu tipus de pell',
       'silence_alarm': 'Silenciar Alarma',
       'onboarding_desc':
-          'El tipus de pell determina la teva sensibilitat al sol i la dosi de radiació ultraviolada segura que pots rebre abans de patir eritema (cremada).',
+          'El tipus de pell (escala Fitzpatrick) determina la teva sensibilitat al sol i la dosi de radiació ultraviolada segura que pots rebre abans de patir cremades a la pell.',
       'accept': 'Acceptar',
       'skin_type_1_name': 'Tipus I',
       'skin_type_1_desc': 'Molt clara. Sempre es crema, mai es bronzeja.',
@@ -3073,8 +3073,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                                         Text(
                                           "${AppTranslations.getText(lang, 'your_skin_type')}: ${AppTranslations.getText(lang, 'skin_type_${widget.selectedSkinTypeIndex + 1}_name')}",
                                           style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
                                             color: const Color(0xFF2C3E50),
                                           ),
                                         ),
@@ -3140,10 +3140,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                                             'location',
                                           ),
                                           style: GoogleFonts.poppins(
-                                            fontSize: 11,
-                                            color: const Color(
-                                              0xFF2C3E50,
-                                            ).withOpacity(0.6),
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color(0xFF2C3E50),
                                           ),
                                         ),
                                         Text(
@@ -3156,11 +3155,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                 )
                                               : _locationName,
                                           style: GoogleFonts.poppins(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
+                                            fontSize: 11,
                                             color: _locationError
                                                 ? Colors.redAccent
-                                                : const Color(0xFF2C3E50),
+                                                : const Color(
+                                                    0xFF2C3E50,
+                                                  ).withOpacity(0.6),
                                           ),
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis,
@@ -3305,15 +3305,13 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                                 'real_light',
                                                               ),
                                                               style: GoogleFonts.poppins(
-                                                                fontSize: 12,
+                                                                fontSize: 13,
                                                                 fontWeight:
                                                                     FontWeight
-                                                                        .w600,
+                                                                        .bold,
                                                                 color:
                                                                     const Color(
                                                                       0xFF2C3E50,
-                                                                    ).withOpacity(
-                                                                      0.6,
                                                                     ),
                                                               ),
                                                               maxLines: 1,
@@ -3443,12 +3441,12 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                       ),
                                                       style:
                                                           GoogleFonts.poppins(
-                                                            fontSize: 12,
+                                                            fontSize: 13,
                                                             fontWeight:
                                                                 FontWeight.bold,
                                                             color: const Color(
                                                               0xFF2C3E50,
-                                                            ).withOpacity(0.5),
+                                                            ),
                                                           ),
                                                       maxLines: 1,
                                                       overflow:
@@ -3554,15 +3552,13 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                         ),
                                                         style:
                                                             GoogleFonts.poppins(
-                                                              fontSize: 12,
+                                                              fontSize: 13,
                                                               fontWeight:
                                                                   FontWeight
-                                                                      .w600,
+                                                                      .bold,
                                                               color:
                                                                   const Color(
                                                                     0xFF2C3E50,
-                                                                  ).withOpacity(
-                                                                    0.6,
                                                                   ),
                                                             ),
                                                         maxLines: 1,
@@ -3818,8 +3814,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                       child: Text(
                         AppTranslations.getText(lang, 'solar_intensity'),
                         style: GoogleFonts.poppins(
-                          fontSize: 11,
-                          color: const Color(0xFF2C3E50).withOpacity(0.6),
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF2C3E50),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -3829,9 +3826,8 @@ class _DashboardScreenState extends State<DashboardScreen>
                     Text(
                       "$radiationValue W/m²",
                       style: GoogleFonts.poppins(
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                        color: const Color(0xFF2C3E50),
+                        fontSize: 11,
+                        color: const Color(0xFF2C3E50).withOpacity(0.6),
                       ),
                     ),
                   ],
@@ -4003,7 +3999,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                           fontWeight: FontWeight.bold,
                           color: const Color(0xFF2C3E50),
                         ),
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -4055,10 +4051,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                               Text(
                                 AppTranslations.getText(lang, 'accumulated'),
                                 style: GoogleFonts.poppins(
-                                  fontSize: 10,
+                                  fontSize: 11,
                                   color: const Color(
                                     0xFF2C3E50,
-                                  ).withOpacity(0.5),
+                                  ).withOpacity(0.6),
                                 ),
                               ),
                             ],
@@ -4161,10 +4157,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                               Text(
                                 AppTranslations.getText(lang, 'accumulated'),
                                 style: GoogleFonts.poppins(
-                                  fontSize: 10,
+                                  fontSize: 11,
                                   color: const Color(
                                     0xFF2C3E50,
-                                  ).withOpacity(0.5),
+                                  ).withOpacity(0.6),
                                 ),
                               ),
                             ],
