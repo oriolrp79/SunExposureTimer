@@ -449,6 +449,7 @@ class AppTranslations {
       'header_info_p2':
           'Données de rayonnement UV basées sur les modèles météorologiques mondiaux de la NOAA / CEPMMT.',
       'estimated_safe_time': 'Temps d\'exposition solaire sûr estimé',
+      'solar_dose_pct': 'Dose solaire maximale',
       'start_exposure': 'Démarrer l\'alarme',
       'daily_limit_reached': 'Limite quotidienne atteinte',
       'cancel_exposure': 'Annuler l\'exposition',
@@ -473,6 +474,7 @@ class AppTranslations {
       'detecting_location': 'Détection de l\'emplacement...',
       'exposure_timer_title': 'Minuteur d\'exposition',
       'remaining': 'restants',
+      'accumulated': 'Accumulé',
       'uv_low': 'Faible',
       'uv_moderate': 'Modéré',
       'uv_high': 'Élevé',
@@ -739,6 +741,7 @@ class AppTranslations {
       'header_info_p2':
           'Dades de radiació UV basades en models meteorològics globals de la NOAA / ECMWF.',
       'estimated_safe_time': 'Temps segur estimat d\'exposició solar',
+      'solar_dose_pct': 'Dosi Solar Màxima',
       'start_exposure': 'Iniciar Alarma',
       'daily_limit_reached': 'Límit diari assolit',
       'cancel_exposure': 'Cancel·lar exposició',
@@ -763,6 +766,7 @@ class AppTranslations {
       'detecting_location': 'Detectant ubicació...',
       'exposure_timer_title': 'Temporitzador d\'Exposició',
       'remaining': 'restants',
+      'accumulated': 'Acumulat',
       'uv_low': 'Baix',
       'uv_moderate': 'Moderat',
       'uv_high': 'Alt',
@@ -3182,7 +3186,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                     child: _hasPhysicalLightSensor
                                         ? Column(
                                             crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                                CrossAxisAlignment.stretch,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -3263,12 +3267,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                                               const SizedBox(height: 0),
                                               Column(
                                                 crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
+                                                    CrossAxisAlignment.center,
                                                 children: [
                                                   FittedBox(
                                                     fit: BoxFit.scaleDown,
-                                                    alignment:
-                                                        Alignment.centerLeft,
+                                                    alignment: Alignment.center,
                                                     child: Text.rich(
                                                       TextSpan(
                                                         text: _formatLux(
@@ -3310,6 +3313,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                       _luxValue,
                                                       lang,
                                                     ),
+                                                    textAlign: TextAlign.center,
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 15,
                                                       fontWeight:
@@ -3436,7 +3440,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                           )
                                         : Column(
                                             crossAxisAlignment:
-                                                CrossAxisAlignment.start,
+                                                CrossAxisAlignment.stretch,
                                             mainAxisAlignment:
                                                 MainAxisAlignment.start,
                                             children: [
@@ -3495,12 +3499,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                                               const SizedBox(height: 0),
                                               Column(
                                                 crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
+                                                    CrossAxisAlignment.center,
                                                 children: [
                                                   FittedBox(
                                                     fit: BoxFit.scaleDown,
-                                                    alignment:
-                                                        Alignment.centerLeft,
+                                                    alignment: Alignment.center,
                                                     child: Text(
                                                       _uvIndex.toStringAsFixed(
                                                         1,
@@ -3541,6 +3544,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                             lang,
                                                             'uv_extreme',
                                                           ),
+                                                    textAlign: TextAlign.center,
                                                     style: GoogleFonts.poppins(
                                                       fontSize: 15,
                                                       fontWeight:
