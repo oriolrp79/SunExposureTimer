@@ -20,8 +20,26 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'search_city_bottom_sheet.dart';
 import 'services/ip_location_service.dart';
 
-void main() {
+// --- CONFIGURACIÓN DE MODO DEMO ---
+// Cambiar a 'true' para visualizar el botón "Demo 10s" o 'false' para ocultarlo.
+const bool showDemoButton = true;
+
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Pre-carrega de SharedPreferences
+  final prefs = await SharedPreferences.getInstance();
+
+  // Carregar preferència d'idioma i establir-la immediatament en el ValueNotifier global
+  final String selectedLang =
+      prefs.getString('app_language') ?? getSystemLanguageCode();
+  appLanguage.value = selectedLang;
+
+  // Carregar preferència de fototipus de pell
+  final int? savedSkinType = prefs.containsKey('skin_type')
+      ? prefs.getInt('skin_type')
+      : null;
+
   MobileAds.instance.initialize();
 
   // Permet que l'aplicació es dibuixi sota les barres del sistema (edge-to-edge) per permetre transparències reals
@@ -40,7 +58,7 @@ void main() {
     ),
   );
 
-  runApp(const SunTimerApp());
+  runApp(SunTimerApp(initialSkinType: savedSkinType));
 }
 
 /// Clase que define los fototipos de la escala de Fitzpatrick.
@@ -221,7 +239,7 @@ class AppTranslations {
       'disclaimer_point3':
           '• For any doubts or sensitive skin, you must consult a dermatologist.',
       'vit_d_100_percent': '100% of daily Vitamin D achieved!',
-      'solar_intensity': 'Radiation intensity',
+      'solar_intensity': 'Impact on your skin',
     },
     'es': {
       'app_title':
@@ -320,7 +338,7 @@ class AppTranslations {
       'disclaimer_point3':
           '• Ante dudas o pieles sensibles, se debe consultar con un dermatólogo.',
       'vit_d_100_percent': '¡100% de Vitamina D diaria conseguida!',
-      'solar_intensity': 'Intensidad de radiación',
+      'solar_intensity': 'Impacto en tu piel',
     },
     'de': {
       'app_title':
@@ -417,7 +435,7 @@ class AppTranslations {
       'disclaimer_point3':
           '• Bei Fragen oder empfindlicher Haut wenden Sie sich an einen Dermatologen.',
       'vit_d_100_percent': '100% des täglichen Vitamin D erreicht!',
-      'solar_intensity': 'Strahlungsintensität',
+      'solar_intensity': 'Belastung deiner Haut',
     },
     'fr': {
       'app_title':
@@ -515,7 +533,7 @@ class AppTranslations {
       'disclaimer_point3':
           '• En cas de doute ou de peau sensible, veuillez consulter un dermatologue.',
       'vit_d_100_percent': '100% de la vitamine D quotidienne atteinte!',
-      'solar_intensity': 'Intensité du rayonnement',
+      'solar_intensity': 'Impact sur votre peau',
     },
     'it': {
       'app_title':
@@ -616,7 +634,7 @@ class AppTranslations {
       'disclaimer_point3':
           '• In caso di dubbi o pelle sensibile, consultare un dermatologo.',
       'vit_d_100_percent': '100% di vitamina D giornaliera raggiunta!',
-      'solar_intensity': 'Intensità delle radiazioni',
+      'solar_intensity': 'Impatto sulla tua pelle',
     },
     'pt': {
       'app_title':
@@ -716,7 +734,7 @@ class AppTranslations {
       'disclaimer_point3':
           '• Em caso de dúvidas ou pele sensível, consulte um dermatologista.',
       'vit_d_100_percent': '100% de vitamina D diária alcançada!',
-      'solar_intensity': 'Intensidade da radiação',
+      'solar_intensity': 'Impacto na sua pele',
     },
     'ca': {
       'app_title':
@@ -816,7 +834,7 @@ class AppTranslations {
       'disclaimer_point3':
           '• Davant de dubtes o pells sensibles, cal consultar un dermatóleg.',
       'vit_d_100_percent': '100% de Vitamina D diària aconseguida!',
-      'solar_intensity': 'Intensitat de radiació',
+      'solar_intensity': 'Impacte a la teva pell',
     },
   };
 
@@ -995,7 +1013,9 @@ class AppTranslations {
 }
 
 class SunTimerApp extends StatelessWidget {
-  const SunTimerApp({super.key});
+  final int? initialSkinType;
+
+  const SunTimerApp({super.key, this.initialSkinType});
 
   @override
   Widget build(BuildContext context) {
@@ -1020,7 +1040,7 @@ class SunTimerApp extends StatelessWidget {
       home: ValueListenableBuilder<String>(
         valueListenable: appLanguage,
         builder: (context, lang, child) {
-          return const InitialRouter();
+          return InitialRouter(initialSkinType: initialSkinType);
         },
       ),
     );
@@ -1029,56 +1049,26 @@ class SunTimerApp extends StatelessWidget {
 
 /// Enrutador inicial que decide si mostrar el Onboarding o el Dashboard principal.
 class InitialRouter extends StatefulWidget {
-  const InitialRouter({super.key});
+  final int? initialSkinType;
+
+  const InitialRouter({super.key, this.initialSkinType});
 
   @override
   State<InitialRouter> createState() => _InitialRouterState();
 }
 
 class _InitialRouterState extends State<InitialRouter> {
-  bool _isLoading = true;
   int? _savedSkinType;
   bool _isEditingSkinType = false;
 
   @override
   void initState() {
     super.initState();
-    _checkPreferences();
-  }
-
-  Future<void> _checkPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-
-    // Cargar preferencia de idioma
-    String selectedLang;
-    if (prefs.containsKey('app_language')) {
-      selectedLang = prefs.getString('app_language')!;
-    } else {
-      // Auto-detectar idioma
-      selectedLang = getSystemLanguageCode();
-    }
-    appLanguage.value = selectedLang;
-
-    setState(() {
-      _savedSkinType = prefs.containsKey('skin_type')
-          ? prefs.getInt('skin_type')
-          : null;
-      _isLoading = false;
-    });
+    _savedSkinType = widget.initialSkinType;
   }
 
   @override
   Widget build(BuildContext context) {
-    if (_isLoading) {
-      return const Scaffold(
-        body: Center(
-          child: CircularProgressIndicator(
-            valueColor: AlwaysStoppedAnimation<Color>(Color(0xFFF7D070)),
-          ),
-        ),
-      );
-    }
-
     if (_savedSkinType == null || _isEditingSkinType) {
       return OnboardingScreen(
         initialSelectedIndex: _savedSkinType,
@@ -1395,6 +1385,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   BannerAd? _bannerAd;
   bool _isBannerAdReady = false;
   double? _adWidth;
+  bool _firstFrameRendered = false;
 
   // Lógica del Temporizador (0 = Inicial, 1 = Calculado, 2 = Countdown Activo)
   int _buttonState = 1;
@@ -1446,7 +1437,6 @@ class _DashboardScreenState extends State<DashboardScreen>
       (timer) => _updateClock(),
     );
     _checkDailyLimit();
-    _initLightSensor();
 
     // Detecció de connectivitat inicial i subscripció reactiva en temps real
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
@@ -1468,17 +1458,30 @@ class _DashboardScreenState extends State<DashboardScreen>
       }
     });
 
-    _fetchLocationAndUv();
     _initUpdateListener();
 
     // Calcular inicialmente
     _calculateRecommendedTime();
+
+    // Optimización de arranque rápido: Diferir tareas pesadas para después del renderizado del primer frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) {
+        setState(() {
+          _firstFrameRendered = true;
+        });
+        _initLightSensor();
+        _fetchLocationAndUv();
+        _loadBannerAd();
+      }
+    });
   }
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _loadBannerAd();
+    if (_firstFrameRendered) {
+      _loadBannerAd();
+    }
   }
 
   @override
@@ -2375,8 +2378,6 @@ class _DashboardScreenState extends State<DashboardScreen>
       },
     );
   }
-
-
 
   String _formatLux(int lux) {
     final valueStr = lux.toString();
@@ -3780,7 +3781,13 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Widget _buildSolarIntensityCard() {
     final lang = appLanguage.value;
-    final double ratio = _solarIntensityRatio;
+    final double linearRatio = _solarIntensityRatio;
+
+    // Transformación logarítmica para la representación visual (curvatura k = 9.0)
+    const double k = 9.0;
+    final double logarithmicRatio =
+        math.log(1.0 + k * linearRatio) / math.log(1.0 + k);
+
     final int radiationValue = _solarRadiationWm2.round();
 
     return Container(
@@ -3844,7 +3851,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                             Align(
                               alignment: Alignment.centerLeft,
                               child: FractionallySizedBox(
-                                widthFactor: ratio,
+                                widthFactor: logarithmicRatio,
                                 child: ClipRect(
                                   child: OverflowBox(
                                     alignment: Alignment.centerLeft,
@@ -4219,7 +4226,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     textAlign: TextAlign.center,
                   ),
                 ),
-                if (!isRunning) ...[
+                if (!isRunning && showDemoButton) ...[
                   const SizedBox(height: 10),
                   GestureDetector(
                     onTap: (_locationError || _isOffline || !_uvAvailable)
@@ -4401,7 +4408,8 @@ class _OrbitalCircularProgressPainter extends CustomPainter {
       final echoPaint = Paint()
         ..strokeWidth = strokeWidth
         ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round; // Capçals arrodonits per a un efecte visual més suau i premium
+        ..strokeCap = StrokeCap
+            .round; // Capçals arrodonits per a un efecte visual més suau i premium
 
       final Rect rect = Rect.fromCircle(center: center, radius: radius);
 
@@ -4418,19 +4426,13 @@ class _OrbitalCircularProgressPainter extends CustomPainter {
         stops: const [
           0.0,
           0.0625, // pi/8 és 1/16 (0.0625) d'una volta completa (mig arc, màxim a 22.5 graus)
-          0.125,  // pi/4 és 1/8 (0.125) d'una volta completa (final de l'arc a 45 graus)
+          0.125, // pi/4 és 1/8 (0.125) d'una volta completa (final de l'arc a 45 graus)
           1.0,
         ],
         transform: GradientRotation(echoStartAngle),
       ).createShader(rect);
 
-      canvas.drawArc(
-        rect,
-        echoStartAngle,
-        arcLength,
-        false,
-        echoPaint,
-      );
+      canvas.drawArc(rect, echoStartAngle, arcLength, false, echoPaint);
     }
   }
 
