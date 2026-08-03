@@ -19,6 +19,12 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'search_city_bottom_sheet.dart';
 import 'services/ip_location_service.dart';
+import 'package:flutter_local_notifications/flutter_local_notifications.dart';
+import 'package:timezone/data/latest.dart' as tz;
+import 'package:timezone/timezone.dart' as tz;
+
+final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
+    FlutterLocalNotificationsPlugin();
 
 // --- CONFIGURACIÓN DE MODO DEMO ---
 // Cambiar a 'true' para visualizar el botón "Demo 10s" o 'false' para ocultarlo.
@@ -26,6 +32,7 @@ const bool showDemoButton = true;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  tz.initializeTimeZones();
 
   // Pre-carrega de SharedPreferences
   final prefs = await SharedPreferences.getInstance();
@@ -1361,7 +1368,7 @@ class DashboardScreen extends StatefulWidget {
 }
 
 class _DashboardScreenState extends State<DashboardScreen>
-    with TickerProviderStateMixin {
+    with TickerProviderStateMixin, WidgetsBindingObserver {
   // Ubicación y API
   Position? _currentPosition;
   String _locationName = "Detectando ubicación...";
@@ -1395,9 +1402,11 @@ class _DashboardScreenState extends State<DashboardScreen>
   double _accumulatedVitDPercentage = 0.0;
   Timer? _countdownTimer;
   Timer? _calculationTimer;
+  Timer? _stateSavingTimer;
   bool _limitReachedToday = false;
   bool _demoMode = false; // Modo demo de 10 segundos
   bool _vitDCelebrated = false;
+  bool _postponedVitDNotification = false;
   bool _showVitDRipple = false;
   late AnimationController _vitDRippleController;
   late AnimationController _orbitalEchoController;
@@ -1414,6 +1423,8 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _initNotifications();
     _vitDRippleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -1544,12 +1555,14 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     appLanguage.removeListener(_onLanguageChanged);
     _clockTimer.cancel();
     _calculationTimer?.cancel();
     _lightSubscription?.cancel();
     _updateSubscription?.cancel();
     _countdownTimer?.cancel();
+    _stateSavingTimer?.cancel();
     _flashTimer?.cancel();
     _bannerAd?.dispose();
     _connectivitySubscription?.cancel();
@@ -1557,6 +1570,396 @@ class _DashboardScreenState extends State<DashboardScreen>
     _vitDRippleController.dispose();
     _orbitalEchoController.dispose();
     super.dispose();
+  }
+
+  // --- NOTIFICACIONES Y CICLO DE VIDA DE SESIÓN ---
+
+  Future<void> _initNotifications() async {
+    final String currentLang = appLanguage.value;
+    String stopAlarmActionText = 'Stop Alarm';
+    if (currentLang == 'es') {
+      stopAlarmActionText = 'Detener Alarma';
+    } else if (currentLang == 'ca') {
+      stopAlarmActionText = 'Aturar Alarma';
+    } else if (currentLang == 'fr') {
+      stopAlarmActionText = 'Arrêter l\'alarme';
+    } else if (currentLang == 'it') {
+      stopAlarmActionText = 'Arresta allarme';
+    } else if (currentLang == 'pt') {
+      stopAlarmActionText = 'Parar Alarme';
+    } else if (currentLang == 'de') {
+      stopAlarmActionText = 'Alarm stoppen';
+    }
+
+    final List<DarwinNotificationCategory> darwinNotificationCategories = [
+      DarwinNotificationCategory(
+        'sun_exposure_category',
+        actions: <DarwinNotificationAction>[
+          DarwinNotificationAction.plain(
+            'stop_alarm_action',
+            stopAlarmActionText,
+            options: <DarwinNotificationActionOption>{
+              DarwinNotificationActionOption.foreground,
+            },
+          ),
+        ],
+      ),
+    ];
+
+    const AndroidInitializationSettings initializationSettingsAndroid =
+        AndroidInitializationSettings('@mipmap/launcher_icon');
+
+    final InitializationSettings initializationSettings =
+        InitializationSettings(
+          android: initializationSettingsAndroid,
+          iOS: DarwinInitializationSettings(
+            notificationCategories: darwinNotificationCategories,
+          ),
+        );
+
+    try {
+      await flutterLocalNotificationsPlugin.initialize(
+        settings: initializationSettings,
+        onDidReceiveNotificationResponse: _handleNotificationResponse,
+      );
+
+      final NotificationAppLaunchDetails? notificationAppLaunchDetails =
+          await flutterLocalNotificationsPlugin
+              .getNotificationAppLaunchDetails();
+      if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
+        final response = notificationAppLaunchDetails!.notificationResponse;
+        if (response != null) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _handleNotificationResponse(response);
+          });
+        }
+      }
+    } catch (e) {
+      debugPrint("Error initializing notifications: $e");
+    }
+  }
+
+  void _handleNotificationResponse(NotificationResponse response) {
+    try {
+      FlutterRingtonePlayer().stop();
+    } catch (e) {
+      debugPrint("Error stopping ringtone: $e");
+    }
+
+    _stopAlarmSoundAndFlashing();
+
+    if (response.actionId == 'stop_alarm_action' || response.id == 102) {
+      if (!_isFlashing) {
+        _onTimeFinished(playAlarmSound: false);
+      }
+    }
+  }
+
+  Future<bool> _requestNotificationPermissionIfNeeded() async {
+    try {
+      if (Platform.isAndroid) {
+        final androidPlugin = flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<
+              AndroidFlutterLocalNotificationsPlugin
+            >();
+        if (androidPlugin != null) {
+          final bool? enabled = await androidPlugin.areNotificationsEnabled();
+          if (enabled == true) {
+            return true;
+          }
+          final bool? requested = await androidPlugin
+              .requestNotificationsPermission();
+          return requested ?? false;
+        }
+      } else if (Platform.isIOS) {
+        final iosPlugin = flutterLocalNotificationsPlugin
+            .resolvePlatformSpecificImplementation<
+              IOSFlutterLocalNotificationsPlugin
+            >();
+        if (iosPlugin != null) {
+          final bool? requested = await iosPlugin.requestPermissions(
+            alert: true,
+            badge: true,
+            sound: true,
+          );
+          return requested ?? false;
+        }
+      }
+    } catch (e) {
+      debugPrint("Error requesting notification permission: $e");
+    }
+    return false;
+  }
+
+  Future<void> _saveSessionState() async {
+    final double currentIntensity = _demoMode
+        ? 10.0
+        : _getCurrentPercentagePerSecond();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('timer_active', true);
+      await prefs.setInt(
+        'last_timestamp',
+        DateTime.now().millisecondsSinceEpoch,
+      );
+      await prefs.setDouble('accumulated_dose_pct', _accumulatedDosePercentage);
+      await prefs.setDouble(
+        'accumulated_vit_d_pct',
+        _accumulatedVitDPercentage,
+      );
+      await prefs.setDouble('last_skin_intensity', currentIntensity);
+      await prefs.setBool('demo_mode', _demoMode);
+
+      await _scheduleLocalNotifications(currentIntensity);
+    } catch (e) {
+      debugPrint("Error saving session state: $e");
+    }
+  }
+
+  Future<void> _scheduleLocalNotifications(double lastSkinIntensity) async {
+    try {
+      await flutterLocalNotificationsPlugin.cancel(id: 101);
+      await flutterLocalNotificationsPlugin.cancel(id: 102);
+
+      if (lastSkinIntensity <= 0) return;
+
+      final double doseRemainingSeconds =
+          (100.0 - _accumulatedDosePercentage) / lastSkinIntensity;
+      final double vitDRemainingSeconds =
+          (100.0 - _accumulatedVitDPercentage) / (lastSkinIntensity * 4.0);
+
+      final now = DateTime.now();
+
+      final lang = appLanguage.value;
+
+      // Default (English)
+      String doseTitle = 'Solar Safety Alert! 🚨';
+      String doseBody =
+          'You have reached 100% of your maximum dose. Stop exposure.';
+      String vitDTitle = 'Vitamin D target reached! ☀️';
+      String vitDBody =
+          'You have generated 100% of your daily recommended dose.';
+      String stopAlarmActionText = 'Stop Alarm';
+
+      if (lang == 'es') {
+        doseTitle = '¡Alerta de Seguridad Solar! 🚨';
+        doseBody =
+            'Has alcanzado el 100% de la dosis máxima. Detén la exposición.';
+        vitDTitle = '¡Objetivo de Vitamina D alcanzado! ☀️';
+        vitDBody = 'Has generado el 100% de tu dosis diaria recomendada.';
+        stopAlarmActionText = 'Detener Alarma';
+      } else if (lang == 'ca') {
+        doseTitle = 'Alerta de Seguretat Solar! 🚨';
+        doseBody = 'Has assolit el 100% de la dosi màxima. Atura l\'exposició.';
+        vitDTitle = 'Objectiu de Vitamina D assolit! ☀️';
+        vitDBody = 'Has generat el 100% de la teva dosi diària recomanada.';
+        stopAlarmActionText = 'Aturar Alarma';
+      } else if (lang == 'fr') {
+        doseTitle = 'Alerte de Sécurité Solaire! 🚨';
+        doseBody =
+            'Vous avez atteint 100% de la dose maximale. Arrêtez l\'exposition.';
+        vitDTitle = 'Objectif en Vitamine D atteint! ☀️';
+        vitDBody =
+            'Vous avez généré 100% de votre dose quotidienne recommandée.';
+        stopAlarmActionText = 'Arrêter l\'alarme';
+      } else if (lang == 'it') {
+        doseTitle = 'Allerta di Sicurezza Solare! 🚨';
+        doseBody =
+            'Hai raggiunto il 100% della dose massima. Interrompi l\'esposizione.';
+        vitDTitle = 'Obiettivo di Vitamina D raggiunto! ☀️';
+        vitDBody =
+            'Hai generato il 100% della tua dose giornaliera raccomandata.';
+        stopAlarmActionText = 'Arresta allarme';
+      } else if (lang == 'pt') {
+        doseTitle = 'Alerta de Segurança Solar! 🚨';
+        doseBody = 'Você atingiu 100% da dose máxima. Pare a exposição.';
+        vitDTitle = 'Objetivo de Vitamina D atingido! ☀️';
+        vitDBody = 'Você gerou 100% da sua dose diária recomendada.';
+        stopAlarmActionText = 'Parar Alarme';
+      } else if (lang == 'de') {
+        doseTitle = 'Solarsicherheitsalarm! 🚨';
+        doseBody =
+            'Sie haben 100% der maximalen Dosis erreicht. Beenden Sie die Exposition.';
+        vitDTitle = 'Vitamin-D-Ziel erreicht! ☀️';
+        vitDBody = 'Sie haben 100% Ihrer empfohlenen Tagesdosis gebildet.';
+        stopAlarmActionText = 'Alarm stoppen';
+      }
+
+      final AndroidNotificationDetails androidPlatformChannelSpecificsDose =
+          AndroidNotificationDetails(
+            'sun_exposure_channel_id',
+            'Sun Exposure Notifications',
+            channelDescription:
+                'Notifications for safe sun exposure and Vitamin D targets',
+            importance: Importance.max,
+            priority: Priority.high,
+            playSound: true,
+            actions: <AndroidNotificationAction>[
+              AndroidNotificationAction(
+                'stop_alarm_action',
+                stopAlarmActionText,
+                showsUserInterface: true,
+              ),
+            ],
+          );
+
+      final NotificationDetails platformChannelSpecificsDose =
+          NotificationDetails(
+            android: androidPlatformChannelSpecificsDose,
+            iOS: const DarwinNotificationDetails(
+              categoryIdentifier: 'sun_exposure_category',
+              presentAlert: true,
+              presentSound: true,
+              presentBadge: true,
+            ),
+          );
+
+      const AndroidNotificationDetails androidPlatformChannelSpecificsVitD =
+          AndroidNotificationDetails(
+            'sun_exposure_channel_id_vit_d',
+            'Vitamin D Notifications',
+            channelDescription: 'Notifications for Vitamin D targets',
+            importance: Importance.max,
+            priority: Priority.high,
+            playSound: true,
+          );
+
+      const NotificationDetails platformChannelSpecificsVitD =
+          NotificationDetails(
+            android: androidPlatformChannelSpecificsVitD,
+            iOS: DarwinNotificationDetails(
+              presentAlert: true,
+              presentSound: true,
+              presentBadge: true,
+            ),
+          );
+
+      if (doseRemainingSeconds > 0) {
+        final scheduledTimeDose = now.add(
+          Duration(milliseconds: (doseRemainingSeconds * 1000).round()),
+        );
+        await flutterLocalNotificationsPlugin.zonedSchedule(
+          id: 102,
+          title: doseTitle,
+          body: doseBody,
+          scheduledDate: tz.TZDateTime.from(scheduledTimeDose, tz.local),
+          notificationDetails: platformChannelSpecificsDose,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        );
+      }
+
+      if (vitDRemainingSeconds > 0) {
+        final scheduledTimeVitD = now.add(
+          Duration(milliseconds: (vitDRemainingSeconds * 1000).round()),
+        );
+        await flutterLocalNotificationsPlugin.zonedSchedule(
+          id: 101,
+          title: vitDTitle,
+          body: vitDBody,
+          scheduledDate: tz.TZDateTime.from(scheduledTimeVitD, tz.local),
+          notificationDetails: platformChannelSpecificsVitD,
+          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+        );
+      }
+    } catch (e) {
+      debugPrint("Error scheduling local notifications: $e");
+    }
+  }
+
+  Future<void> _clearSavedSessionState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('timer_active', false);
+      await prefs.remove('last_timestamp');
+      await prefs.remove('accumulated_dose_pct');
+      await prefs.remove('accumulated_vit_d_pct');
+      await prefs.remove('last_skin_intensity');
+      await prefs.remove('demo_mode');
+
+      await flutterLocalNotificationsPlugin.cancel(id: 101);
+      await flutterLocalNotificationsPlugin.cancel(id: 102);
+    } catch (e) {
+      debugPrint("Error clearing saved session state: $e");
+    }
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      _handleAppResumed();
+    }
+  }
+
+  Future<void> _handleAppResumed() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final bool active = prefs.getBool('timer_active') ?? false;
+      if (!active) return;
+
+      final int? lastTimestamp = prefs.getInt('last_timestamp');
+      final double? savedDosePct = prefs.getDouble('accumulated_dose_pct');
+      final double? savedVitDPct = prefs.getDouble('accumulated_vit_d_pct');
+      final double? lastSkinIntensity = prefs.getDouble('last_skin_intensity');
+      final bool? savedDemoMode = prefs.getBool('demo_mode');
+
+      if (lastTimestamp == null ||
+          savedDosePct == null ||
+          lastSkinIntensity == null) {
+        return;
+      }
+
+      final double elapsedSeconds =
+          (DateTime.now().millisecondsSinceEpoch - lastTimestamp) / 1000.0;
+      if (elapsedSeconds < 0) return;
+
+      final double doseIncrement = elapsedSeconds * lastSkinIntensity;
+      final double vitDIncrement = elapsedSeconds * lastSkinIntensity * 4.0;
+
+      double newDosePct = savedDosePct + doseIncrement;
+      double newVitDPct = (savedVitDPct ?? 0.0) + vitDIncrement;
+
+      if (newDosePct > 100.0) {
+        newDosePct = 100.0;
+      }
+      if (newVitDPct > 100.0) {
+        newVitDPct = 100.0;
+      }
+
+      setState(() {
+        _demoMode = savedDemoMode ?? false;
+        _accumulatedDosePercentage = newDosePct;
+        _accumulatedVitDPercentage = newVitDPct;
+        if (_accumulatedVitDPercentage >= 100.0) {
+          if (!_vitDCelebrated) {
+            _vitDCelebrated = true;
+            _triggerVitDCelebration();
+          }
+        }
+
+        if (lastSkinIntensity > 0) {
+          _remainingSeconds =
+              ((100.0 - _accumulatedDosePercentage) / lastSkinIntensity)
+                  .round();
+        } else {
+          _remainingSeconds = 0;
+        }
+        if (_remainingSeconds < 0) {
+          _remainingSeconds = 0;
+        }
+      });
+
+      if (newDosePct >= 100.0 || _remainingSeconds <= 0) {
+        _countdownTimer?.cancel();
+        _stateSavingTimer?.cancel();
+        _orbitalEchoController.stop();
+        _orbitalEchoController.reset();
+        _onTimeFinished();
+      } else {
+        _startCountdown(resuming: true);
+      }
+    } catch (e) {
+      debugPrint("Error handling app resumed: $e");
+    }
   }
 
   void _onLanguageChanged() {
@@ -2068,15 +2471,53 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   // Iniciar la cuenta atrás
-  void _startCountdown() {
-    int durationSeconds = _demoMode ? 10 : _calculatedSafeMinutes * 60;
-    setState(() {
-      _remainingSeconds = durationSeconds;
-      _accumulatedDosePercentage = 0.0;
-      _accumulatedVitDPercentage = 0.0;
-      _vitDCelebrated = false;
-      _buttonState = 2;
-    });
+  Future<void> _startCountdown({bool resuming = false}) async {
+    if (!resuming) {
+      final bool hasPermission = await _requestNotificationPermissionIfNeeded();
+      if (!hasPermission && mounted) {
+        final lang = appLanguage.value;
+        String warningMsg = lang == 'es'
+            ? 'Sin permisos de notificación, no recibirás alertas si minimizas la app.'
+            : 'Without notification permissions, you won\'t receive alerts if you minimize the app.';
+        if (lang == 'ca') {
+          warningMsg =
+              'Sense permisos de notificació, no rebràs alertes si minimitzes l\'app.';
+        } else if (lang == 'fr') {
+          warningMsg =
+              'Sans autorisations de notification, vous ne recevrez pas d\'alertes si vous minimisez l\'application.';
+        } else if (lang == 'it') {
+          warningMsg =
+              'Senza i permessi di notifica, non riceverai avvisi se minimizzi l\'app.';
+        } else if (lang == 'pt') {
+          warningMsg =
+              'Sem permissões de notificação, você não receberá alertas se minimizar o aplicativo.';
+        } else if (lang == 'de') {
+          warningMsg =
+              'Ohne Benachrichtigungsberechtigungen erhalten Sie keine Warnungen, wenn Sie die App minimieren.';
+        }
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(warningMsg),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
+    }
+
+    if (!resuming) {
+      int durationSeconds = _demoMode ? 10 : _calculatedSafeMinutes * 60;
+      setState(() {
+        _remainingSeconds = durationSeconds;
+        _accumulatedDosePercentage = 0.0;
+        _accumulatedVitDPercentage = 0.0;
+        _vitDCelebrated = false;
+        _buttonState = 2;
+      });
+    } else {
+      setState(() {
+        _buttonState = 2;
+      });
+    }
 
     _countdownTimer?.cancel();
     _orbitalEchoController.repeat();
@@ -2086,25 +2527,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         if (_demoMode) {
           percentagePerSecond = 10.0;
         } else {
-          final currentType = fitzpatrickTypes[widget.selectedSkinTypeIndex];
-          final factorAtenuacion = _hasPhysicalLightSensor
-              ? _getAttenuationFactor(_luxValue)
-              : 1.0;
-
-          double rawTime;
-          if (_uvIndex < 0.5) {
-            rawTime = 480.0 / factorAtenuacion;
-          } else {
-            rawTime = (currentType.dose / _uvIndex) / factorAtenuacion;
-          }
-
-          if (rawTime > 480.0) {
-            rawTime = 480.0;
-          }
-          if (rawTime < 1.0) {
-            rawTime = 1.0;
-          }
-          percentagePerSecond = 100.0 / (rawTime * 60.0);
+          percentagePerSecond = _getCurrentPercentagePerSecond();
         }
 
         setState(() {
@@ -2130,22 +2553,32 @@ class _DashboardScreenState extends State<DashboardScreen>
 
         if (_accumulatedDosePercentage >= 100.0 || _remainingSeconds <= 0) {
           _countdownTimer?.cancel();
+          _stateSavingTimer?.cancel();
           _orbitalEchoController.stop();
           _orbitalEchoController.reset();
           _onTimeFinished();
         }
       } else {
         _countdownTimer?.cancel();
+        _stateSavingTimer?.cancel();
         _orbitalEchoController.stop();
         _orbitalEchoController.reset();
         _onTimeFinished();
       }
+    });
+
+    _saveSessionState();
+    _stateSavingTimer?.cancel();
+    _stateSavingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+      _saveSessionState();
     });
   }
 
   // Detener o cancelar la exposición
   void _cancelCountdown() {
     _countdownTimer?.cancel();
+    _stateSavingTimer?.cancel();
+    _clearSavedSessionState();
     _orbitalEchoController.stop();
     _orbitalEchoController.reset();
     setState(() {
@@ -2158,6 +2591,11 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   void _triggerVitDCelebration() {
+    if (_isFlashing || _accumulatedDosePercentage >= 100.0) {
+      _postponedVitDNotification = true;
+      return;
+    }
+
     try {
       HapticFeedback.lightImpact();
     } catch (e) {
@@ -2199,18 +2637,24 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   // Acción finalizada
-  void _onTimeFinished() {
-    // 1. Activar alertas sonoras nativas
-    try {
-      FlutterRingtonePlayer().playAlarm(asAlarm: true);
-    } catch (e) {
-      debugPrint("Error con RingtonePlayer: $e");
+  void _onTimeFinished({bool playAlarmSound = true}) {
+    _stateSavingTimer?.cancel();
+    _clearSavedSessionState();
+
+    if (playAlarmSound) {
+      // 1. Activar alertas sonoras nativas
+      try {
+        FlutterRingtonePlayer().playAlarm(asAlarm: true);
+      } catch (e) {
+        debugPrint("Error con RingtonePlayer: $e");
+      }
     }
 
     // 2. Activar la animación de flash (destellos)
     setState(() {
       _isFlashing = true;
     });
+    _flashTimer?.cancel();
     _flashTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
       setState(() {
         _flashToggle = !_flashToggle;
@@ -2252,6 +2696,15 @@ class _DashboardScreenState extends State<DashboardScreen>
     Navigator.of(context).pop(); // Cerrar diálogo
     if (!wasDemo) {
       _saveDailyLimitReached(); // Persistir hoy como completado
+    }
+
+    if (_postponedVitDNotification) {
+      _postponedVitDNotification = false;
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          _triggerVitDCelebration();
+        }
+      });
     }
   }
 
