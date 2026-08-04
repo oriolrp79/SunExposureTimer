@@ -27,8 +27,8 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
 // --- CONFIGURACIÓN DE MODO DEMO ---
-// Cambiar a 'true' para visualizar el botón "Demo 10s" o 'false' para ocultarlo.
-const bool showDemoButton = true;
+// Cambiar a 'true' para visualizar el botón "Demo 30s" o 'false' para ocultarlo.
+const bool showDemoButton = false;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -198,7 +198,7 @@ class AppTranslations {
       'vitamin_d': 'Vitamin D',
       'start_exposure': 'Start Exposure',
       'daily_limit_reached': 'Daily limit reached',
-      'cancel_exposure': 'Cancel Exposure',
+      'cancel_exposure': 'Pause Exposure',
       'safe_exposure_finished_title': 'Daily limit reached!',
       'safe_exposure_finished_body':
           'You have reached your recommended sun limit!',
@@ -214,6 +214,7 @@ class AppTranslations {
       'sun_limit_reached_card_body':
           'You have already reached your recommended safe sun dose for today. Return tomorrow for new monitoring.',
       'reset_limit_proto': 'Reset limit (Prototype Mode)',
+      'reset': 'Reset',
       'ad_space': 'Reserved Space for Advertising',
       'shadow_warning': 'Seek shade, wear sunscreen, and stay well hydrated.',
       'detecting_location': 'Detecting location...',
@@ -294,7 +295,7 @@ class AppTranslations {
       'vitamin_d': 'Vitamina D',
       'start_exposure': 'Iniciar Exposición',
       'daily_limit_reached': 'Límite diario alcanzado',
-      'cancel_exposure': 'Cancelar Exposición',
+      'cancel_exposure': 'Pausar Exposición',
       'safe_exposure_finished_title': '¡Límite diario alcanzado!',
       'safe_exposure_finished_body':
           '¡Has alcanzado tu límite de sol recomendado!',
@@ -310,6 +311,7 @@ class AppTranslations {
       'sun_limit_reached_card_body':
           'Ya has completado tu dosis de sol recomendada para el día de hoy. Vuelve mañana para un nuevo monitoreo seguro.',
       'reset_limit_proto': 'Reestablecer límite (Modo Prototipo)',
+      'reset': 'Reiniciar',
       'ad_space': 'Espacio reservado para Publicidad',
       'shadow_warning':
           'Busca la sombra, ponte protector solar e hidrátate bien.',
@@ -391,7 +393,7 @@ class AppTranslations {
       'vitamin_d': 'Vitamin D',
       'start_exposure': 'Exposition starten',
       'daily_limit_reached': 'Tageslimit erreicht',
-      'cancel_exposure': 'Exposition abbrechen',
+      'cancel_exposure': 'Belichtung pausieren',
       'safe_exposure_finished_title': 'Sichere Exposition beendet',
       'safe_exposure_finished_body':
           'Sie haben Ihr empfohlenes Sonnenlimit erreicht!',
@@ -407,6 +409,7 @@ class AppTranslations {
       'sun_limit_reached_card_body':
           'Sie haben Ihre empfohlene sichere Sonnendosis für heute bereits erreicht. Kommen Sie morgen für eine neue Überwachung wieder.',
       'reset_limit_proto': 'Limit zurücksetzen (Prototyp-Modus)',
+      'reset': 'Zurücksetzen',
       'ad_space': 'Reservierter Platz für Werbung',
       'shadow_warning':
           'Suchen Sie Schatten auf, tragen Sie Sonnencreme auf und trinken Sie ausreichend Wasser.',
@@ -488,7 +491,7 @@ class AppTranslations {
       'vitamin_d': 'Vitamine D',
       'start_exposure': 'Démarrer l\'exposition',
       'daily_limit_reached': 'Limite quotidienne atteinte',
-      'cancel_exposure': 'Annuler l\'exposition',
+      'cancel_exposure': 'Pause de l\'exposition',
       'safe_exposure_finished_title': 'Exposition sûre terminée',
       'safe_exposure_finished_body':
           'Vous avez atteint votre limite d\'exposition recommandée !',
@@ -504,6 +507,7 @@ class AppTranslations {
       'sun_limit_reached_card_body':
           'Vous avez déjà atteint votre dose de soleil sûre recommandée pour aujourd\'hui. Revenez demain pour un nouveau suivi.',
       'reset_limit_proto': 'Réinitialiser la limite (Mode Prototype)',
+      'reset': 'Réinitialiser',
       'ad_space': 'Espace réservé à la publicité',
       'shadow_warning':
           'Recherchez l\'ombre, mettez de la crème solaire et restez bien hydraté.',
@@ -590,7 +594,7 @@ class AppTranslations {
       'vitamin_d': 'Vitamina D',
       'start_exposure': 'Avvia Esposizione',
       'daily_limit_reached': 'Limite giornaliero raggiunto',
-      'cancel_exposure': 'Annulla esposizione',
+      'cancel_exposure': 'Pausa esposizione',
       'safe_exposure_finished_title': 'Esposizione sicura terminata',
       'safe_exposure_finished_body':
           'Hai raggiunto il tuo limite di sole consigliato!',
@@ -606,6 +610,7 @@ class AppTranslations {
       'sun_limit_reached_card_body':
           'Hai già completato la tua dose di sole sicura consigliata per oggi. Torna domani per un nuovo monitoraggio.',
       'reset_limit_proto': 'Reimposta limite (Modalità Prototipo)',
+      'reset': 'Reimposta',
       'ad_space': 'Spazio riservato alla pubblicità',
       'shadow_warning':
           'Cerca l\'ombra, usa la crema solare e rimani ben idratato.',
@@ -690,7 +695,7 @@ class AppTranslations {
       'vitamin_d': 'Vitamina D',
       'start_exposure': 'Iniciar Exposição',
       'daily_limit_reached': 'Limite diário atingido',
-      'cancel_exposure': 'Cancelar exposição',
+      'cancel_exposure': 'Pausar Exposição',
       'safe_exposure_finished_title': 'Exposição segura concluída',
       'safe_exposure_finished_body':
           'Você atingiu o seu limite de sol recomendado!',
@@ -706,6 +711,7 @@ class AppTranslations {
       'sun_limit_reached_card_body':
           'Já atingiu a sua dose de sol segura recomendada para hoje. Volte amanhã para uma nova monitorização.',
       'reset_limit_proto': 'Redefinir limite (Modo Protótipo)',
+      'reset': 'Reiniciar',
       'ad_space': 'Espaço reservado para publicidade',
       'shadow_warning':
           'Procure a sombra, use protetor solar e mantenha-se bem hidratado.',
@@ -789,7 +795,7 @@ class AppTranslations {
       'vitamin_d': 'Vitamina D',
       'start_exposure': 'Iniciar Exposició',
       'daily_limit_reached': 'Límit diari assolit',
-      'cancel_exposure': 'Cancel·lar exposició',
+      'cancel_exposure': 'Pausar Exposició',
       'safe_exposure_finished_title': 'Exposició segura finalitzada',
       'safe_exposure_finished_body':
           '¡Has assolit el teu límit de sol recomanat!',
@@ -805,6 +811,7 @@ class AppTranslations {
       'sun_limit_reached_card_body':
           'Ja has completat la teva dosi de sol recomanada per a avui. Torna demà per a un nou monitoratge segur.',
       'reset_limit_proto': 'Restablir límit (Mode Prototip)',
+      'reset': 'Restablir',
       'ad_space': 'Espai reservat per a publicitat',
       'shadow_warning':
           'Busca l\'ombra, posa\'t protector solar i hidrata\'t bé.',
@@ -1404,9 +1411,10 @@ class _DashboardScreenState extends State<DashboardScreen>
   Timer? _calculationTimer;
   Timer? _stateSavingTimer;
   bool _limitReachedToday = false;
-  bool _demoMode = false; // Modo demo de 10 segundos
+  bool _demoMode = false; // Modo demo de 30 segundos
   bool _vitDCelebrated = false;
   bool _postponedVitDNotification = false;
+  DateTime? _scheduledDoseTime;
   bool _showVitDRipple = false;
   late AnimationController _vitDRippleController;
   late AnimationController _orbitalEchoController;
@@ -1447,7 +1455,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       const Duration(seconds: 1),
       (timer) => _updateClock(),
     );
-    _checkDailyLimit();
+    _loadSavedSessionState();
 
     // Detecció de connectivitat inicial i subscripció reactiva en temps real
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
@@ -1663,6 +1671,13 @@ class _DashboardScreenState extends State<DashboardScreen>
               AndroidFlutterLocalNotificationsPlugin
             >();
         if (androidPlugin != null) {
+          try {
+            await androidPlugin.requestExactAlarmsPermission();
+          } catch (e) {
+            debugPrint(
+              "Error requesting exact alarms permission in request: $e",
+            );
+          }
           final bool? enabled = await androidPlugin.areNotificationsEnabled();
           if (enabled == true) {
             return true;
@@ -1693,7 +1708,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Future<void> _saveSessionState() async {
     final double currentIntensity = _demoMode
-        ? 10.0
+        ? (100.0 / 30.0)
         : _getCurrentPercentagePerSecond();
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -1718,15 +1733,17 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Future<void> _scheduleLocalNotifications(double lastSkinIntensity) async {
     try {
-      await flutterLocalNotificationsPlugin.cancel(id: 101);
-      await flutterLocalNotificationsPlugin.cancel(id: 102);
-
       if (lastSkinIntensity <= 0) return;
 
       final double doseRemainingSeconds =
           (100.0 - _accumulatedDosePercentage) / lastSkinIntensity;
       final double vitDRemainingSeconds =
           (100.0 - _accumulatedVitDPercentage) / (lastSkinIntensity * 4.0);
+
+      debugPrint('⏱️ [NOTIF DEBUG] Hora actual: ${DateTime.now()}');
+      debugPrint(
+        '⏱️ [NOTIF DEBUG] Segons restants Dosi: $doseRemainingSeconds',
+      );
 
       final now = DateTime.now();
 
@@ -1736,64 +1753,49 @@ class _DashboardScreenState extends State<DashboardScreen>
       String doseTitle = 'Solar Safety Alert! 🚨';
       String doseBody =
           'You have reached 100% of your maximum dose. Stop exposure.';
-      String vitDTitle = 'Vitamin D target reached! ☀️';
-      String vitDBody =
-          'You have generated 100% of your daily recommended dose.';
       String stopAlarmActionText = 'Stop Alarm';
 
       if (lang == 'es') {
         doseTitle = '¡Alerta de Seguridad Solar! 🚨';
         doseBody =
             'Has alcanzado el 100% de la dosis máxima. Detén la exposición.';
-        vitDTitle = '¡Objetivo de Vitamina D alcanzado! ☀️';
-        vitDBody = 'Has generado el 100% de tu dosis diaria recomendada.';
         stopAlarmActionText = 'Detener Alarma';
       } else if (lang == 'ca') {
         doseTitle = 'Alerta de Seguretat Solar! 🚨';
         doseBody = 'Has assolit el 100% de la dosi màxima. Atura l\'exposició.';
-        vitDTitle = 'Objectiu de Vitamina D assolit! ☀️';
-        vitDBody = 'Has generat el 100% de la teva dosi diària recomanada.';
         stopAlarmActionText = 'Aturar Alarma';
       } else if (lang == 'fr') {
         doseTitle = 'Alerte de Sécurité Solaire! 🚨';
         doseBody =
             'Vous avez atteint 100% de la dose maximale. Arrêtez l\'exposition.';
-        vitDTitle = 'Objectif en Vitamine D atteint! ☀️';
-        vitDBody =
-            'Vous avez généré 100% de votre dose quotidienne recommandée.';
         stopAlarmActionText = 'Arrêter l\'alarme';
       } else if (lang == 'it') {
         doseTitle = 'Allerta di Sicurezza Solare! 🚨';
         doseBody =
-            'Hai raggiunto il 100% della dose massima. Interrompi l\'esposizione.';
-        vitDTitle = 'Obiettivo di Vitamina D raggiunto! ☀️';
-        vitDBody =
-            'Hai generato il 100% della tua dose giornaliera raccomandata.';
+            'Hai raggiunto le 100% della dose massima. Interrompi l\'esposizione.';
         stopAlarmActionText = 'Arresta allarme';
       } else if (lang == 'pt') {
         doseTitle = 'Alerta de Segurança Solar! 🚨';
         doseBody = 'Você atingiu 100% da dose máxima. Pare a exposição.';
-        vitDTitle = 'Objetivo de Vitamina D atingido! ☀️';
-        vitDBody = 'Você gerou 100% da sua dose diária recomendada.';
         stopAlarmActionText = 'Parar Alarme';
       } else if (lang == 'de') {
         doseTitle = 'Solarsicherheitsalarm! 🚨';
         doseBody =
             'Sie haben 100% der maximalen Dosis erreicht. Beenden Sie die Exposition.';
-        vitDTitle = 'Vitamin-D-Ziel erreicht! ☀️';
-        vitDBody = 'Sie haben 100% Ihrer empfohlenen Tagesdosis gebildet.';
         stopAlarmActionText = 'Alarm stoppen';
       }
 
       final AndroidNotificationDetails androidPlatformChannelSpecificsDose =
           AndroidNotificationDetails(
-            'sun_exposure_channel_id',
+            'sun_exposure_channel_id_v2',
             'Sun Exposure Notifications',
             channelDescription:
                 'Notifications for safe sun exposure and Vitamin D targets',
             importance: Importance.max,
             priority: Priority.high,
             playSound: true,
+            visibility: NotificationVisibility.public,
+            fullScreenIntent: true,
             actions: <AndroidNotificationAction>[
               AndroidNotificationAction(
                 'stop_alarm_action',
@@ -1814,59 +1816,59 @@ class _DashboardScreenState extends State<DashboardScreen>
             ),
           );
 
-      const AndroidNotificationDetails androidPlatformChannelSpecificsVitD =
-          AndroidNotificationDetails(
-            'sun_exposure_channel_id_vit_d',
-            'Vitamin D Notifications',
-            channelDescription: 'Notifications for Vitamin D targets',
-            importance: Importance.max,
-            priority: Priority.high,
-            playSound: true,
+      bool shouldScheduleDose = doseRemainingSeconds > 0;
+      if (shouldScheduleDose) {
+        if (_scheduledDoseTime != null && doseRemainingSeconds <= 60) {
+          debugPrint(
+            '⏱️ [NOTIF DEBUG] Recta final Dosi (<=60s) i ja programada. Ometent reprogramació per evitar cancel·lació.',
           );
+          shouldScheduleDose = false;
+        }
+      }
 
-      const NotificationDetails platformChannelSpecificsVitD =
-          NotificationDetails(
-            android: androidPlatformChannelSpecificsVitD,
-            iOS: DarwinNotificationDetails(
-              presentAlert: true,
-              presentSound: true,
-              presentBadge: true,
-            ),
-          );
-
-      if (doseRemainingSeconds > 0) {
+      if (shouldScheduleDose) {
+        await flutterLocalNotificationsPlugin.cancel(id: 102);
         final scheduledTimeDose = now.add(
           Duration(milliseconds: (doseRemainingSeconds * 1000).round()),
         );
-        await flutterLocalNotificationsPlugin.zonedSchedule(
-          id: 102,
-          title: doseTitle,
-          body: doseBody,
-          scheduledDate: tz.TZDateTime.from(scheduledTimeDose, tz.local),
-          notificationDetails: platformChannelSpecificsDose,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        );
-      }
-
-      if (vitDRemainingSeconds > 0) {
-        final scheduledTimeVitD = now.add(
-          Duration(milliseconds: (vitDRemainingSeconds * 1000).round()),
-        );
-        await flutterLocalNotificationsPlugin.zonedSchedule(
-          id: 101,
-          title: vitDTitle,
-          body: vitDBody,
-          scheduledDate: tz.TZDateTime.from(scheduledTimeVitD, tz.local),
-          notificationDetails: platformChannelSpecificsVitD,
-          androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        );
+        try {
+          debugPrint(
+            '📅 [NOTIF DEBUG] Programant Dosi Solar per a: $scheduledTimeDose (TZ: ${tz.TZDateTime.from(scheduledTimeDose, tz.local)})',
+          );
+          await flutterLocalNotificationsPlugin.zonedSchedule(
+            id: 102,
+            title: doseTitle,
+            body: doseBody,
+            scheduledDate: tz.TZDateTime.from(scheduledTimeDose, tz.local),
+            notificationDetails: platformChannelSpecificsDose,
+            androidScheduleMode: AndroidScheduleMode.alarmClock,
+          );
+          debugPrint('✅ [NOTIF DEBUG] Notificació 102 programada amb èxit.');
+          _scheduledDoseTime = scheduledTimeDose;
+        } catch (e) {
+          debugPrint('❌ [NOTIF DEBUG] Error programant Dosi Solar: $e');
+          debugPrint(
+            "Failed to schedule exact alarm for dose, falling back to inexact: $e",
+          );
+          await flutterLocalNotificationsPlugin.zonedSchedule(
+            id: 102,
+            title: doseTitle,
+            body: doseBody,
+            scheduledDate: tz.TZDateTime.from(scheduledTimeDose, tz.local),
+            notificationDetails: platformChannelSpecificsDose,
+            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
+          );
+          _scheduledDoseTime = scheduledTimeDose;
+        }
       }
     } catch (e) {
       debugPrint("Error scheduling local notifications: $e");
     }
   }
 
-  Future<void> _clearSavedSessionState() async {
+  Future<void> _clearSavedSessionState({
+    bool cancelNotifications = false,
+  }) async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('timer_active', false);
@@ -1876,8 +1878,14 @@ class _DashboardScreenState extends State<DashboardScreen>
       await prefs.remove('last_skin_intensity');
       await prefs.remove('demo_mode');
 
-      await flutterLocalNotificationsPlugin.cancel(id: 101);
-      await flutterLocalNotificationsPlugin.cancel(id: 102);
+      _scheduledDoseTime = null;
+
+      if (cancelNotifications) {
+        debugPrint(
+          '⚠️ [NOTIF DEBUG] Cancel·lant notificació 102 des de _clearSavedSessionState()',
+        );
+        await flutterLocalNotificationsPlugin.cancel(id: 102);
+      }
     } catch (e) {
       debugPrint("Error clearing saved session state: $e");
     }
@@ -1991,15 +1999,37 @@ class _DashboardScreenState extends State<DashboardScreen>
     }
   }
 
-  // Verifica si el límite ya fue alcanzado hoy en SharedPreferences
-  Future<void> _checkDailyLimit() async {
-    final prefs = await SharedPreferences.getInstance();
-    final today = DateTime.now().toIso8601String().substring(0, 10);
-    final savedLimitDate = prefs.getString('daily_limit_date');
-    if (savedLimitDate == today) {
-      setState(() {
-        _limitReachedToday = true;
-      });
+  // Carga el estado guardado de la sesión y maneja límites diarios
+  Future<void> _loadSavedSessionState() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      final savedLimitDate = prefs.getString('daily_limit_date');
+      if (savedLimitDate == today) {
+        setState(() {
+          _limitReachedToday = true;
+          _accumulatedDosePercentage = 100.0;
+          _accumulatedVitDPercentage = 100.0;
+        });
+        return;
+      }
+
+      final double? savedDosePct = prefs.getDouble('accumulated_dose_pct');
+      final double? savedVitDPct = prefs.getDouble('accumulated_vit_d_pct');
+      final bool active = prefs.getBool('timer_active') ?? false;
+
+      if (savedDosePct != null) {
+        setState(() {
+          _accumulatedDosePercentage = savedDosePct;
+          _accumulatedVitDPercentage = savedVitDPct ?? 0.0;
+        });
+      }
+
+      if (active) {
+        await _handleAppResumed();
+      }
+    } catch (e) {
+      debugPrint("Error loading saved session state: $e");
     }
   }
 
@@ -2504,17 +2534,30 @@ class _DashboardScreenState extends State<DashboardScreen>
       }
     }
 
-    if (!resuming) {
-      int durationSeconds = _demoMode ? 10 : _calculatedSafeMinutes * 60;
+    final bool isPausedResume =
+        _accumulatedDosePercentage > 0.0 && _accumulatedDosePercentage < 100.0;
+    final bool shouldResume = resuming || isPausedResume;
+
+    if (!shouldResume) {
+      int durationSeconds = _demoMode ? 30 : _calculatedSafeMinutes * 60;
       setState(() {
         _remainingSeconds = durationSeconds;
         _accumulatedDosePercentage = 0.0;
         _accumulatedVitDPercentage = 0.0;
         _vitDCelebrated = false;
         _buttonState = 2;
+        _scheduledDoseTime = null;
       });
     } else {
+      double percentagePerSecond = _demoMode
+          ? (100.0 / 30.0)
+          : _getCurrentPercentagePerSecond();
+      double remainingPercentage = 100.0 - _accumulatedDosePercentage;
+      int durationSeconds = (remainingPercentage / percentagePerSecond).round();
+      if (durationSeconds < 0) durationSeconds = 0;
+
       setState(() {
+        _remainingSeconds = durationSeconds;
         _buttonState = 2;
       });
     }
@@ -2525,7 +2568,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       if (_accumulatedDosePercentage < 100.0) {
         double percentagePerSecond;
         if (_demoMode) {
-          percentagePerSecond = 10.0;
+          percentagePerSecond = 100.0 / 30.0;
         } else {
           percentagePerSecond = _getCurrentPercentagePerSecond();
         }
@@ -2574,23 +2617,67 @@ class _DashboardScreenState extends State<DashboardScreen>
     });
   }
 
-  // Detener o cancelar la exposición
-  void _cancelCountdown() {
+  // Pausar la exposición manteniendo los valores acumulados intactos
+  Future<void> _pauseCountdown() async {
     _countdownTimer?.cancel();
     _stateSavingTimer?.cancel();
-    _clearSavedSessionState();
+    _orbitalEchoController.stop();
+
+    // Cancel pending notifications since we paused
+    await flutterLocalNotificationsPlugin.cancel(id: 102);
+    _scheduledDoseTime = null;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('timer_active', false);
+    await prefs.setDouble('accumulated_dose_pct', _accumulatedDosePercentage);
+    await prefs.setDouble('accumulated_vit_d_pct', _accumulatedVitDPercentage);
+
+    setState(() {
+      _buttonState = 1;
+      _demoMode = false;
+    });
+  }
+
+  // Resetear la exposición a 0%
+  Future<void> _resetCountdown() async {
+    _countdownTimer?.cancel();
+    _stateSavingTimer?.cancel();
     _orbitalEchoController.stop();
     _orbitalEchoController.reset();
+    _scheduledDoseTime = null;
+
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('timer_active', false);
+    await prefs.remove('last_timestamp');
+    await prefs.remove('accumulated_dose_pct');
+    await prefs.remove('accumulated_vit_d_pct');
+    await prefs.remove('last_skin_intensity');
+    await prefs.remove('demo_mode');
+    await prefs.remove('daily_limit_date');
+
+    await flutterLocalNotificationsPlugin.cancel(id: 102);
+
     setState(() {
       _buttonState = 1;
       _demoMode = false;
       _accumulatedDosePercentage = 0.0;
       _accumulatedVitDPercentage = 0.0;
       _vitDCelebrated = false;
+      _limitReachedToday = false;
     });
   }
 
   void _triggerVitDCelebration() {
+    final bool isInForeground =
+        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
+
+    if (!isInForeground) {
+      debugPrint(
+        '⏱️ [NOTIF DEBUG] Vitamina D assolida en segon pla. S\'omet el SnackBar/so in-app per permetre la notificació del sistema.',
+      );
+      return;
+    }
+
     if (_isFlashing || _accumulatedDosePercentage >= 100.0) {
       _postponedVitDNotification = true;
       return;
@@ -2682,21 +2769,14 @@ class _DashboardScreenState extends State<DashboardScreen>
   void _dismissAlert() {
     _stopAlarmSoundAndFlashing();
 
-    bool wasDemo = _demoMode;
-
     setState(() {
       _demoMode = false;
-      _accumulatedDosePercentage = 0.0;
-      _accumulatedVitDPercentage = 0.0;
-      if (wasDemo) {
-        _buttonState = 1;
-      }
+      _accumulatedDosePercentage = 100.0;
+      _accumulatedVitDPercentage = 100.0;
     });
 
     Navigator.of(context).pop(); // Cerrar diálogo
-    if (!wasDemo) {
-      _saveDailyLimitReached(); // Persistir hoy como completado
-    }
+    _saveDailyLimitReached(); // Persistir hoy como completado
 
     if (_postponedVitDNotification) {
       _postponedVitDNotification = false;
@@ -4110,10 +4190,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                             _buildSolarIntensityCard(),
                             const SizedBox(height: 16),
                             // LÓGICA DE ESTADO DEL BOTÓN PRINCIPAL / DETALLES DE ACCIÓN
-                            if (_limitReachedToday)
-                              _buildLimitReachedCard()
-                            else
-                              _buildCombinedExposureCard(),
+                            _buildCombinedExposureCard(),
                             const SizedBox(height: 20),
                           ],
                         ),
@@ -4341,77 +4418,12 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
-  // Card que se muestra si el límite fue alcanzado hoy
-  Widget _buildLimitReachedCard() {
-    final lang = appLanguage.value;
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFF2C3E50).withOpacity(0.05),
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(
-          color: const Color(0xFF2C3E50).withOpacity(0.1),
-          width: 2,
-        ),
-      ),
-      child: Column(
-        children: [
-          const Icon(
-            Icons.done_all_rounded,
-            color: Color(0xFF73C6B6),
-            size: 48,
-          ),
-          const SizedBox(height: 12),
-          Text(
-            AppTranslations.getText(lang, 'daily_limit_reached'),
-            style: GoogleFonts.poppins(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: const Color(0xFF2C3E50),
-            ),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            AppTranslations.getText(lang, 'sun_limit_reached_card_body'),
-            style: GoogleFonts.poppins(
-              fontSize: 13,
-              color: const Color(0xFF2C3E50).withOpacity(0.7),
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 16),
-          TextButton(
-            onPressed: () async {
-              // Botón secreto de reseteo para permitir probar nuevamente en el mismo día
-              final prefs = await SharedPreferences.getInstance();
-              await prefs.remove('daily_limit_date');
-              setState(() {
-                _limitReachedToday = false;
-                _buttonState = 1;
-              });
-            },
-            child: Text(
-              AppTranslations.getText(lang, 'reset_limit_proto'),
-              style: GoogleFonts.poppins(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                color: const Color(0xFF73C6B6),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   // Cálculo de la cantidad de exposición solar recibida en % (100% inicialmente, decreciendo según tiempo transcurrido)
   double get _receivedSolarDosePercentage {
-    if (_buttonState != 2) return 0.0;
     return _accumulatedDosePercentage.clamp(0.0, 100.0);
   }
 
   double get _receivedVitDPercentage {
-    if (_buttonState != 2) return 0.0;
     return _accumulatedVitDPercentage.clamp(0.0, 100.0);
   }
 
@@ -4479,12 +4491,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                             animation: _orbitalEchoController,
                             builder: (context, child) {
                               return OrbitalCircularProgressIndicator(
-                                value: isRunning ? progress : 0.0,
+                                value: progress,
                                 strokeWidth: 8,
                                 backgroundColor: const Color(0xFFFBF9F5),
-                                valueColor: isRunning
-                                    ? _getCountdownColor(progress)
-                                    : const Color(0xFF73C6B6),
+                                valueColor: _getCountdownColor(progress),
                                 isRunning: isRunning,
                                 animationValue: _orbitalEchoController.value,
                               );
@@ -4569,9 +4579,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                             animation: _orbitalEchoController,
                             builder: (context, child) {
                               return OrbitalCircularProgressIndicator(
-                                value: isRunning
-                                    ? (_receivedVitDPercentage / 100.0)
-                                    : 0.0,
+                                value: _receivedVitDPercentage / 100.0,
                                 strokeWidth: 8,
                                 backgroundColor: const Color(0xFFFBF9F5),
                                 valueColor: const Color(0xFF0023FF),
@@ -4650,13 +4658,19 @@ class _DashboardScreenState extends State<DashboardScreen>
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 ElevatedButton(
-                  onPressed: (_locationError || _isOffline || !_uvAvailable)
+                  onPressed:
+                      (_locationError ||
+                          _isOffline ||
+                          !_uvAvailable ||
+                          (_limitReachedToday && !isRunning))
                       ? null
-                      : (isRunning ? _cancelCountdown : _startCountdown),
+                      : (isRunning ? _pauseCountdown : _startCountdown),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isRunning
                         ? Colors.redAccent
-                        : const Color(0xFF73C6B6),
+                        : ((_limitReachedToday && !isRunning)
+                              ? Colors.grey.shade400
+                              : const Color(0xFF73C6B6)),
                     foregroundColor: Colors.white,
                     elevation: 0,
                     padding: const EdgeInsets.symmetric(
@@ -4671,12 +4685,42 @@ class _DashboardScreenState extends State<DashboardScreen>
                   child: Text(
                     isRunning
                         ? AppTranslations.getText(lang, 'cancel_exposure')
-                        : AppTranslations.getText(lang, 'start_exposure'),
+                        : ((_limitReachedToday && !isRunning)
+                              ? AppTranslations.getText(
+                                  lang,
+                                  'daily_limit_reached',
+                                )
+                              : AppTranslations.getText(
+                                  lang,
+                                  'start_exposure',
+                                )),
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
                     ),
                     textAlign: TextAlign.center,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                OutlinedButton(
+                  onPressed: _resetCountdown,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: const Color(0xFF73C6B6),
+                    side: const BorderSide(
+                      color: Color(0xFF73C6B6),
+                      width: 1.5,
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                  ),
+                  child: Text(
+                    AppTranslations.getText(lang, 'reset'),
+                    style: GoogleFonts.poppins(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
                 if (!isRunning && showDemoButton) ...[
@@ -4708,7 +4752,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                       ),
                       child: Center(
                         child: Text(
-                          "Demo 10s",
+                          "Demo 30s",
                           style: GoogleFonts.poppins(
                             fontSize: 10,
                             fontWeight: FontWeight.bold,
