@@ -1455,7 +1455,6 @@ class _DashboardScreenState extends State<DashboardScreen>
       const Duration(seconds: 1),
       (timer) => _updateClock(),
     );
-    _loadSavedSessionState();
 
     // Detecció de connectivitat inicial i subscripció reactiva en temps real
     _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
@@ -1488,8 +1487,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         setState(() {
           _firstFrameRendered = true;
         });
-        _initLightSensor();
-        _fetchLocationAndUv();
+        _loadSavedSessionState();
         _loadBannerAd();
       }
     });
@@ -1900,6 +1898,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   Future<void> _handleAppResumed() async {
     try {
+      // 1. Recuperació de SharedPreferences (Dades Històriques):
       final prefs = await SharedPreferences.getInstance();
       final bool active = prefs.getBool('timer_active') ?? false;
       if (!active) return;
@@ -1916,55 +1915,78 @@ class _DashboardScreenState extends State<DashboardScreen>
         return;
       }
 
+      // Check if already 100% or more
+      if (savedDosePct >= 100.0) {
+        return;
+      }
+
+      // 2. Càlcul d'Acumulació en Segon Pla ( Catch-up ):
       final double elapsedSeconds =
           (DateTime.now().millisecondsSinceEpoch - lastTimestamp) / 1000.0;
-      if (elapsedSeconds < 0) return;
 
-      final double doseIncrement = elapsedSeconds * lastSkinIntensity;
-      final double vitDIncrement = elapsedSeconds * lastSkinIntensity * 4.0;
+      double newDosePct = savedDosePct;
+      double newVitDPct = savedVitDPct ?? 0.0;
 
-      double newDosePct = savedDosePct + doseIncrement;
-      double newVitDPct = (savedVitDPct ?? 0.0) + vitDIncrement;
+      if (elapsedSeconds > 0) {
+        final double doseIncrement = elapsedSeconds * lastSkinIntensity;
+        final double vitDIncrement = elapsedSeconds * lastSkinIntensity * 4.0;
 
-      if (newDosePct > 100.0) {
-        newDosePct = 100.0;
+        newDosePct = savedDosePct + doseIncrement;
+        newVitDPct = (savedVitDPct ?? 0.0) + vitDIncrement;
+
+        if (newDosePct > 100.0) {
+          newDosePct = 100.0;
+        }
+        if (newVitDPct > 100.0) {
+          newVitDPct = 100.0;
+        }
       }
-      if (newVitDPct > 100.0) {
-        newVitDPct = 100.0;
+
+      int remainingSeconds = 0;
+      if (lastSkinIntensity > 0) {
+        remainingSeconds = ((100.0 - newDosePct) / lastSkinIntensity).round();
+      }
+      if (remainingSeconds < 0) {
+        remainingSeconds = 0;
       }
 
       setState(() {
         _demoMode = savedDemoMode ?? false;
         _accumulatedDosePercentage = newDosePct;
         _accumulatedVitDPercentage = newVitDPct;
+        _remainingSeconds = remainingSeconds;
         if (_accumulatedVitDPercentage >= 100.0) {
           if (!_vitDCelebrated) {
             _vitDCelebrated = true;
             _triggerVitDCelebration();
           }
         }
-
-        if (lastSkinIntensity > 0) {
-          _remainingSeconds =
-              ((100.0 - _accumulatedDosePercentage) / lastSkinIntensity)
-                  .round();
-        } else {
-          _remainingSeconds = 0;
-        }
-        if (_remainingSeconds < 0) {
-          _remainingSeconds = 0;
-        }
       });
 
-      if (newDosePct >= 100.0 || _remainingSeconds <= 0) {
+      if (newDosePct >= 100.0 || remainingSeconds <= 0) {
         _countdownTimer?.cancel();
         _stateSavingTimer?.cancel();
         _orbitalEchoController.stop();
         _orbitalEchoController.reset();
         _onTimeFinished();
-      } else {
-        _startCountdown(resuming: true);
+        return;
       }
+
+      // 3. Consulta de dades actuals (API Índex UV):
+      await _fetchLocationAndUv();
+
+      // 4. Activació de lectors de sensors i procés regular:
+      await _initLightSensor();
+      await _startCountdown(resuming: true);
+
+      // 5. Re-activació del timer de guardat a LocalStorage:
+      // (La gestió dels 10 segons de durada del timer s'aplica directament a _startCountdown)
+
+      // 6. Reprogramació de notificacions de sistema:
+      final double activeIntensity = _demoMode
+          ? (100.0 / 30.0)
+          : _getCurrentPercentagePerSecond();
+      await _scheduleLocalNotifications(activeIntensity);
     } catch (e) {
       debugPrint("Error handling app resumed: $e");
     }
@@ -1999,6 +2021,13 @@ class _DashboardScreenState extends State<DashboardScreen>
     }
   }
 
+  void _startNormalSensorsAndUv() {
+    if (mounted) {
+      _initLightSensor();
+      _fetchLocationAndUv();
+    }
+  }
+
   // Carga el estado guardado de la sesión y maneja límites diarios
   Future<void> _loadSavedSessionState() async {
     try {
@@ -2011,6 +2040,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           _accumulatedDosePercentage = 100.0;
           _accumulatedVitDPercentage = 100.0;
         });
+        _startNormalSensorsAndUv();
         return;
       }
 
@@ -2025,11 +2055,14 @@ class _DashboardScreenState extends State<DashboardScreen>
         });
       }
 
-      if (active) {
+      if (active && savedDosePct != null && savedDosePct < 100.0) {
         await _handleAppResumed();
+      } else {
+        _startNormalSensorsAndUv();
       }
     } catch (e) {
       debugPrint("Error loading saved session state: $e");
+      _startNormalSensorsAndUv();
     }
   }
 
@@ -2069,6 +2102,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             }
           });
 
+          await _lightSubscription?.cancel();
           _lightSubscription = sensor.ambientLightStream.listen((lux) {
             setState(() {
               _luxValue = lux.round();
@@ -2612,7 +2646,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     _saveSessionState();
     _stateSavingTimer?.cancel();
-    _stateSavingTimer = Timer.periodic(const Duration(seconds: 5), (timer) {
+    _stateSavingTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       _saveSessionState();
     });
   }
