@@ -145,17 +145,40 @@ class NotificationService {
 
     debugPrint("DIAGNOSTICS: Scheduling notification ID $id at $tzScheduledTime. Device clock is ${DateTime.now()}. Timezone local is ${tz.local}");
 
-    const AndroidNotificationDetails androidDetails = AndroidNotificationDetails(
-      'sun_exposure_channel',
-      'Alertes d\'Exposició Solar',
-      channelDescription: 'Notificacions quan s\'assoleix la Vitamina D o el límit de radiació solar.',
-      importance: Importance.max,
-      priority: Priority.high,
-    );
+    AndroidNotificationDetails androidDetails;
+    DarwinNotificationDetails iosDetails;
 
-    const DarwinNotificationDetails iosDetails = DarwinNotificationDetails();
+    if (id == 1) {
+      // Vitamina D amb so personalitzat
+      androidDetails = const AndroidNotificationDetails(
+        'sun_exposure_vit_d_channel',
+        'Alertes d\'Exposició Solar - Vitamina D',
+        channelDescription: 'Notificació quan s\'assoleix la Vitamina D.',
+        importance: Importance.max,
+        priority: Priority.high,
+        sound: RawResourceAndroidNotificationSound('seeds'),
+        playSound: true,
+      );
+      iosDetails = const DarwinNotificationDetails(
+        sound: 'seeds.mp3',
+      );
+    } else {
+      // Dosi Solar Màxima amb so personalitzat també (seeds.mp3)
+      androidDetails = const AndroidNotificationDetails(
+        'sun_exposure_max_dose_channel',
+        'Alertes d\'Exposició Solar - Dosi Solar Màxima',
+        channelDescription: 'Notificació quan s\'assoleix el límit de radiació solar.',
+        importance: Importance.max,
+        priority: Priority.high,
+        sound: RawResourceAndroidNotificationSound('seeds'),
+        playSound: true,
+      );
+      iosDetails = const DarwinNotificationDetails(
+        sound: 'seeds.mp3',
+      );
+    }
 
-    const NotificationDetails details = NotificationDetails(
+    final NotificationDetails details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );

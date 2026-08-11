@@ -21,7 +21,6 @@ import 'search_city_bottom_sheet.dart';
 import 'services/ip_location_service.dart';
 import 'services/notification_service.dart';
 
-
 // --- CONFIGURACIÓN DE MODO DEMO ---
 // Cambiar a 'true' para visualizar el botón "Demo 30s" o 'false' para ocultarlo.
 const bool showDemoButton = true;
@@ -29,7 +28,6 @@ const bool showDemoButton = true;
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await NotificationService().initialize();
-
 
   // Pre-carrega de SharedPreferences
   final prefs = await SharedPreferences.getInstance();
@@ -245,6 +243,8 @@ class AppTranslations {
           '• For any doubts or sensitive skin, you must consult a dermatologist.',
       'vit_d_100_percent': '100% of daily Vitamin D achieved!',
       'solar_intensity': 'Impact on your skin',
+      'fullscreen_alert_body':
+          'You have completed your recommended maximum daily sun exposure for today according to your skin type ({phototype}).',
     },
     'es': {
       'app_title':
@@ -345,6 +345,8 @@ class AppTranslations {
           '• Ante dudas o pieles sensibles, se debe consultar con un dermatólogo.',
       'vit_d_100_percent': '¡100% de Vitamina D diaria conseguida!',
       'solar_intensity': 'Impacto en tu piel',
+      'fullscreen_alert_body':
+          'Has completado tu dosis máxima recomendada de exposición solar para hoy de acuerdo a tu fototipo ({phototype}).',
     },
     'de': {
       'app_title':
@@ -443,6 +445,8 @@ class AppTranslations {
           '• Bei Fragen oder empfindlicher Haut wenden Sie sich an einen Dermatologen.',
       'vit_d_100_percent': '100% des täglichen Vitamin D erreicht!',
       'solar_intensity': 'Belastung deiner Haut',
+      'fullscreen_alert_body':
+          'Sie haben Ihre empfohlene maximale tägliche Sonnenexposition für heute entsprechend Ihrem Hauttyp ({phototype}) erreicht.',
     },
     'fr': {
       'app_title':
@@ -542,6 +546,8 @@ class AppTranslations {
           '• En cas de doute ou de peau sensible, veuillez consulter un dermatologue.',
       'vit_d_100_percent': '100% de la vitamine D quotidienne atteinte!',
       'solar_intensity': 'Impact sur votre peau',
+      'fullscreen_alert_body':
+          'Vous avez atteint votre exposition solaire maximale quotidienne recommandée pour aujourd\'hui selon votre phototype ({phototype}).',
     },
     'it': {
       'app_title':
@@ -644,6 +650,8 @@ class AppTranslations {
           '• In caso di dubbi o pelle sensibile, consultare un dermatologo.',
       'vit_d_100_percent': '100% di vitamina D giornaliera raggiunta!',
       'solar_intensity': 'Impatto sulla tua pelle',
+      'fullscreen_alert_body':
+          'Hai completato la tua esposizione solare massima giornaliera raccomandata per oggi in base al tuo fototipo ({phototype}).',
     },
     'pt': {
       'app_title':
@@ -745,6 +753,8 @@ class AppTranslations {
           '• Em caso de dúvidas ou pele sensível, consulte um dermatologista.',
       'vit_d_100_percent': '100% de vitamina D diária alcançada!',
       'solar_intensity': 'Impacto na sua pele',
+      'fullscreen_alert_body':
+          'Você completou a sua exposição solar máxima diária recomendada para hoje de acordo com o seu fototipo ({phototype}).',
     },
     'ca': {
       'app_title':
@@ -846,6 +856,8 @@ class AppTranslations {
           '• Davant de dubtes o pells sensibles, cal consultar un dermatóleg.',
       'vit_d_100_percent': '100% de Vitamina D diària aconseguida!',
       'solar_intensity': 'Impacte a la teva pell',
+      'fullscreen_alert_body':
+          'Has completat la teva dosi màxima recomanada d\'exposició solar per a avui d\'acord amb el teu fototip ({phototype}).',
     },
   };
 
@@ -1574,7 +1586,6 @@ class _DashboardScreenState extends State<DashboardScreen>
     super.dispose();
   }
 
-
   Future<void> _saveSessionState() async {
     final double currentIntensity = _demoMode
         ? (100.0 / 30.0)
@@ -1725,6 +1736,38 @@ class _DashboardScreenState extends State<DashboardScreen>
           );
         }
       });
+      if (_buttonState == 2) {
+        _reprogramNotificationsWithNewLanguage();
+      }
+    }
+  }
+
+  Future<void> _reprogramNotificationsWithNewLanguage() async {
+    final double startingDosePct = _accumulatedDosePercentage;
+    final double startingVitDPct = _accumulatedVitDPercentage;
+    final double pctPerSec = _demoMode
+        ? (100.0 / 30.0)
+        : _getCurrentPercentagePerSecond();
+
+    final double dosePctRemaining = (100.0 - startingDosePct).clamp(0.0, 100.0);
+    final double vitDPctRemaining = (100.0 - startingVitDPct).clamp(0.0, 100.0);
+
+    final int secondsToMaxDose = pctPerSec > 0
+        ? (dosePctRemaining / pctPerSec).round()
+        : 0;
+    final int secondsToVitD = pctPerSec > 0
+        ? (vitDPctRemaining / (pctPerSec * 4.0)).round()
+        : 0;
+
+    try {
+      await NotificationService().scheduleExposureNotifications(
+        vitDSeconds: secondsToVitD,
+        maxDoseSeconds: secondsToMaxDose,
+        lang: appLanguage.value,
+        textGetter: AppTranslations.getText,
+      );
+    } catch (e) {
+      debugPrint("Error rescheduling on language change: $e");
     }
   }
 
@@ -2254,8 +2297,6 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   // Iniciar la cuenta atrás
   Future<void> _startCountdown({bool resuming = false}) async {
-
-
     final bool isPausedResume =
         _accumulatedDosePercentage > 0.0 && _accumulatedDosePercentage < 100.0;
     final bool shouldResume = resuming || isPausedResume;
@@ -2268,7 +2309,6 @@ class _DashboardScreenState extends State<DashboardScreen>
         _accumulatedVitDPercentage = 0.0;
         _vitDCelebrated = false;
         _buttonState = 2;
-
       });
     } else {
       double percentagePerSecond = _demoMode
@@ -2332,8 +2372,6 @@ class _DashboardScreenState extends State<DashboardScreen>
       }
     });
 
-
-
     _saveSessionState();
     _stateSavingTimer?.cancel();
     _stateSavingTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
@@ -2341,9 +2379,15 @@ class _DashboardScreenState extends State<DashboardScreen>
     });
 
     // Programació de notificacions quan s'inicia l'exposició
-    final double startingDosePct = shouldResume ? _accumulatedDosePercentage : 0.0;
-    final double startingVitDPct = shouldResume ? _accumulatedVitDPercentage : 0.0;
-    final double pctPerSec = _demoMode ? (100.0 / 30.0) : _getCurrentPercentagePerSecond();
+    final double startingDosePct = shouldResume
+        ? _accumulatedDosePercentage
+        : 0.0;
+    final double startingVitDPct = shouldResume
+        ? _accumulatedVitDPercentage
+        : 0.0;
+    final double pctPerSec = _demoMode
+        ? (100.0 / 30.0)
+        : _getCurrentPercentagePerSecond();
 
     final double dosePctRemaining = (100.0 - startingDosePct).clamp(0.0, 100.0);
     final double vitDPctRemaining = (100.0 - startingVitDPct).clamp(0.0, 100.0);
@@ -2415,8 +2459,6 @@ class _DashboardScreenState extends State<DashboardScreen>
     await prefs.remove('demo_mode');
     await prefs.remove('daily_limit_date');
 
-
-
     setState(() {
       _buttonState = 1;
       _demoMode = false;
@@ -2431,8 +2473,6 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   void _triggerVitDCelebration() {
-
-
     try {
       HapticFeedback.lightImpact();
     } catch (e) {
@@ -2477,12 +2517,6 @@ class _DashboardScreenState extends State<DashboardScreen>
   void _onTimeFinished({bool playAlarmSound = true}) {
     _stateSavingTimer?.cancel();
     _clearSavedSessionState();
-
-    try {
-      NotificationService().cancelAllExposureNotifications();
-    } catch (e) {
-      debugPrint("Error cancelling notifications: $e");
-    }
 
     if (playAlarmSound) {
       // 1. Activar alertas sonoras nativas
@@ -2533,8 +2567,6 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     Navigator.of(context).pop(); // Cerrar diálogo
     _saveDailyLimitReached(); // Persistir hoy como completado
-
-
   }
 
   void _showFullscreenAlert() {
@@ -2544,7 +2576,10 @@ class _DashboardScreenState extends State<DashboardScreen>
     showGeneralDialog(
       context: context,
       barrierDismissible: false,
-      barrierLabel: "Límite alcanzado",
+      barrierLabel: AppTranslations.getText(
+        lang,
+        'safe_exposure_finished_title',
+      ),
       pageBuilder: (context, anim1, anim2) {
         final currentType = fitzpatrickTypes[widget.selectedSkinTypeIndex];
         return StatefulBuilder(
@@ -2572,7 +2607,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                       ),
                       const SizedBox(height: 40),
                       Text(
-                        "¡Límite diario alcanzado!",
+                        AppTranslations.getText(
+                          lang,
+                          'safe_exposure_finished_title',
+                        ),
                         style: GoogleFonts.poppins(
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
@@ -2582,7 +2620,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        "Has completado tu dosis máxima recomendada de exposición solar para hoy de acuerdo a tu fototipo (${currentType.name}).",
+                        AppTranslations.getText(
+                          lang,
+                          'fullscreen_alert_body',
+                        ).replaceAll('{phototype}', currentType.name),
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           color: const Color(0xFF2C3E50).withOpacity(0.8),
@@ -2605,7 +2646,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
-                                "Busca la sombra, ponte protector solar e hidrátate bien.",
+                                AppTranslations.getText(lang, 'shadow_warning'),
                                 style: GoogleFonts.poppins(
                                   fontSize: 13,
                                   color: const Color(0xFF2C3E50),
@@ -3563,12 +3604,18 @@ class _DashboardScreenState extends State<DashboardScreen>
                                               SizedBox(
                                                 height: 22,
                                                 child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
                                                   children: [
+                                                    Icon(
+                                                      _getEnvironmentIcon(
+                                                        _luxValue,
+                                                      ),
+                                                      size: 22,
+                                                      color:
+                                                          _getEnvironmentIconColor(
+                                                            _luxValue,
+                                                          ),
+                                                    ),
+                                                    const SizedBox(width: 8),
                                                     Expanded(
                                                       child: Row(
                                                         crossAxisAlignment:
@@ -3617,17 +3664,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                           ),
                                                         ],
                                                       ),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    Icon(
-                                                      _getEnvironmentIcon(
-                                                        _luxValue,
-                                                      ),
-                                                      size: 20,
-                                                      color:
-                                                          _getEnvironmentIconColor(
-                                                            _luxValue,
-                                                          ),
                                                     ),
                                                   ],
                                                 ),
@@ -3706,10 +3742,16 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                 MainAxisAlignment.spaceBetween,
                                             children: [
                                               Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceBetween,
                                                 children: [
+                                                  Icon(
+                                                    Icons
+                                                        .lightbulb_outline_rounded,
+                                                    color: const Color(
+                                                      0xFF2C3E50,
+                                                    ).withOpacity(0.3),
+                                                    size: 22,
+                                                  ),
+                                                  const SizedBox(width: 8),
                                                   Expanded(
                                                     child: Text(
                                                       AppTranslations.getText(
@@ -3729,14 +3771,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                       overflow:
                                                           TextOverflow.ellipsis,
                                                     ),
-                                                  ),
-                                                  Icon(
-                                                    Icons
-                                                        .lightbulb_outline_rounded,
-                                                    color: const Color(
-                                                      0xFF2C3E50,
-                                                    ).withOpacity(0.3),
-                                                    size: 18,
                                                   ),
                                                 ],
                                               ),
@@ -3815,12 +3849,23 @@ class _DashboardScreenState extends State<DashboardScreen>
                                               SizedBox(
                                                 height: 22,
                                                 child: Row(
-                                                  mainAxisAlignment:
-                                                      MainAxisAlignment
-                                                          .spaceBetween,
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.center,
                                                   children: [
+                                                    SvgPicture.asset(
+                                                      'assets/icons/heat_24.svg',
+                                                      width: 22,
+                                                      height: 22,
+                                                      colorFilter:
+                                                          const ColorFilter.mode(
+                                                            Color.fromARGB(
+                                                              255,
+                                                              149,
+                                                              62,
+                                                              255,
+                                                            ),
+                                                            BlendMode.srcIn,
+                                                          ),
+                                                    ),
+                                                    const SizedBox(width: 8),
                                                     Expanded(
                                                       child: Text(
                                                         AppTranslations.getText(
@@ -3842,22 +3887,6 @@ class _DashboardScreenState extends State<DashboardScreen>
                                                         overflow: TextOverflow
                                                             .ellipsis,
                                                       ),
-                                                    ),
-                                                    const SizedBox(width: 4),
-                                                    SvgPicture.asset(
-                                                      'assets/icons/heat_24.svg',
-                                                      width: 20,
-                                                      height: 20,
-                                                      colorFilter:
-                                                          const ColorFilter.mode(
-                                                            Color.fromARGB(
-                                                              255,
-                                                              149,
-                                                              62,
-                                                              255,
-                                                            ),
-                                                            BlendMode.srcIn,
-                                                          ),
                                                     ),
                                                   ],
                                                 ),
