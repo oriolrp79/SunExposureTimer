@@ -28,7 +28,7 @@ final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
 
 // --- CONFIGURACIÓN DE MODO DEMO ---
 // Cambiar a 'true' para visualizar el botón "Demo 30s" o 'false' para ocultarlo.
-const bool showDemoButton = false;
+const bool showDemoButton = true;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -2835,7 +2835,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return Scaffold(
-              backgroundColor: const Color(0xFFFBF9F5),
+              backgroundColor: const Color(0xFFFFFFFF),
               body: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.all(32.0),
@@ -2844,18 +2844,14 @@ class _DashboardScreenState extends State<DashboardScreen>
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const Spacer(),
-                      // Icono animado del Sol / Advertencia
                       Center(
-                        child: Container(
-                          padding: const EdgeInsets.all(24),
-                          decoration: const BoxDecoration(
-                            color: Color(0xFFFFE599),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(
-                            Icons.wb_sunny_rounded,
-                            color: Color(0xFFF7D070),
-                            size: 80,
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(28),
+                          child: Image.asset(
+                            'assets/icon512.png',
+                            width: 120,
+                            height: 120,
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ),
