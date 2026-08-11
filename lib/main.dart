@@ -19,12 +19,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'search_city_bottom_sheet.dart';
 import 'services/ip_location_service.dart';
-import 'package:flutter_local_notifications/flutter_local_notifications.dart';
-import 'package:timezone/data/latest.dart' as tz;
-import 'package:timezone/timezone.dart' as tz;
 
-final FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
-    FlutterLocalNotificationsPlugin();
 
 // --- CONFIGURACIÓN DE MODO DEMO ---
 // Cambiar a 'true' para visualizar el botón "Demo 30s" o 'false' para ocultarlo.
@@ -32,7 +27,7 @@ const bool showDemoButton = true;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  tz.initializeTimeZones();
+
 
   // Pre-carrega de SharedPreferences
   final prefs = await SharedPreferences.getInstance();
@@ -1413,8 +1408,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   bool _limitReachedToday = false;
   bool _demoMode = false; // Modo demo de 30 segundos
   bool _vitDCelebrated = false;
-  bool _postponedVitDNotification = false;
-  DateTime? _scheduledDoseTime;
+
   bool _showVitDRipple = false;
   late AnimationController _vitDRippleController;
   late AnimationController _orbitalEchoController;
@@ -1432,7 +1426,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
-    _initNotifications();
+
     _vitDRippleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1000),
@@ -1578,131 +1572,6 @@ class _DashboardScreenState extends State<DashboardScreen>
     super.dispose();
   }
 
-  // --- NOTIFICACIONES Y CICLO DE VIDA DE SESIÓN ---
-
-  Future<void> _initNotifications() async {
-    final String currentLang = appLanguage.value;
-    String stopAlarmActionText = 'Stop Alarm';
-    if (currentLang == 'es') {
-      stopAlarmActionText = 'Detener Alarma';
-    } else if (currentLang == 'ca') {
-      stopAlarmActionText = 'Aturar Alarma';
-    } else if (currentLang == 'fr') {
-      stopAlarmActionText = 'Arrêter l\'alarme';
-    } else if (currentLang == 'it') {
-      stopAlarmActionText = 'Arresta allarme';
-    } else if (currentLang == 'pt') {
-      stopAlarmActionText = 'Parar Alarme';
-    } else if (currentLang == 'de') {
-      stopAlarmActionText = 'Alarm stoppen';
-    }
-
-    final List<DarwinNotificationCategory> darwinNotificationCategories = [
-      DarwinNotificationCategory(
-        'sun_exposure_category',
-        actions: <DarwinNotificationAction>[
-          DarwinNotificationAction.plain(
-            'stop_alarm_action',
-            stopAlarmActionText,
-            options: <DarwinNotificationActionOption>{
-              DarwinNotificationActionOption.foreground,
-            },
-          ),
-        ],
-      ),
-    ];
-
-    const AndroidInitializationSettings initializationSettingsAndroid =
-        AndroidInitializationSettings('@mipmap/launcher_icon');
-
-    final InitializationSettings initializationSettings =
-        InitializationSettings(
-          android: initializationSettingsAndroid,
-          iOS: DarwinInitializationSettings(
-            notificationCategories: darwinNotificationCategories,
-          ),
-        );
-
-    try {
-      await flutterLocalNotificationsPlugin.initialize(
-        settings: initializationSettings,
-        onDidReceiveNotificationResponse: _handleNotificationResponse,
-      );
-
-      final NotificationAppLaunchDetails? notificationAppLaunchDetails =
-          await flutterLocalNotificationsPlugin
-              .getNotificationAppLaunchDetails();
-      if (notificationAppLaunchDetails?.didNotificationLaunchApp ?? false) {
-        final response = notificationAppLaunchDetails!.notificationResponse;
-        if (response != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _handleNotificationResponse(response);
-          });
-        }
-      }
-    } catch (e) {
-      debugPrint("Error initializing notifications: $e");
-    }
-  }
-
-  void _handleNotificationResponse(NotificationResponse response) {
-    try {
-      FlutterRingtonePlayer().stop();
-    } catch (e) {
-      debugPrint("Error stopping ringtone: $e");
-    }
-
-    _stopAlarmSoundAndFlashing();
-
-    if (response.actionId == 'stop_alarm_action' || response.id == 102) {
-      if (!_isFlashing) {
-        _onTimeFinished(playAlarmSound: false);
-      }
-    }
-  }
-
-  Future<bool> _requestNotificationPermissionIfNeeded() async {
-    try {
-      if (Platform.isAndroid) {
-        final androidPlugin = flutterLocalNotificationsPlugin
-            .resolvePlatformSpecificImplementation<
-              AndroidFlutterLocalNotificationsPlugin
-            >();
-        if (androidPlugin != null) {
-          try {
-            await androidPlugin.requestExactAlarmsPermission();
-          } catch (e) {
-            debugPrint(
-              "Error requesting exact alarms permission in request: $e",
-            );
-          }
-          final bool? enabled = await androidPlugin.areNotificationsEnabled();
-          if (enabled == true) {
-            return true;
-          }
-          final bool? requested = await androidPlugin
-              .requestNotificationsPermission();
-          return requested ?? false;
-        }
-      } else if (Platform.isIOS) {
-        final iosPlugin = flutterLocalNotificationsPlugin
-            .resolvePlatformSpecificImplementation<
-              IOSFlutterLocalNotificationsPlugin
-            >();
-        if (iosPlugin != null) {
-          final bool? requested = await iosPlugin.requestPermissions(
-            alert: true,
-            badge: true,
-            sound: true,
-          );
-          return requested ?? false;
-        }
-      }
-    } catch (e) {
-      debugPrint("Error requesting notification permission: $e");
-    }
-    return false;
-  }
 
   Future<void> _saveSessionState() async {
     final double currentIntensity = _demoMode
@@ -1722,151 +1591,12 @@ class _DashboardScreenState extends State<DashboardScreen>
       );
       await prefs.setDouble('last_skin_intensity', currentIntensity);
       await prefs.setBool('demo_mode', _demoMode);
-
-      await _scheduleLocalNotifications(currentIntensity);
     } catch (e) {
       debugPrint("Error saving session state: $e");
     }
   }
 
-  Future<void> _scheduleLocalNotifications(double lastSkinIntensity) async {
-    try {
-      if (lastSkinIntensity <= 0) return;
-
-      final double doseRemainingSeconds =
-          (100.0 - _accumulatedDosePercentage) / lastSkinIntensity;
-      final double vitDRemainingSeconds =
-          (100.0 - _accumulatedVitDPercentage) / (lastSkinIntensity * 4.0);
-
-      debugPrint('⏱️ [NOTIF DEBUG] Hora actual: ${DateTime.now()}');
-      debugPrint(
-        '⏱️ [NOTIF DEBUG] Segons restants Dosi: $doseRemainingSeconds',
-      );
-
-      final now = DateTime.now();
-
-      final lang = appLanguage.value;
-
-      // Default (English)
-      String doseTitle = 'Solar Safety Alert! 🚨';
-      String doseBody =
-          'You have reached 100% of your maximum dose. Stop exposure.';
-      String stopAlarmActionText = 'Stop Alarm';
-
-      if (lang == 'es') {
-        doseTitle = '¡Alerta de Seguridad Solar! 🚨';
-        doseBody =
-            'Has alcanzado el 100% de la dosis máxima. Detén la exposición.';
-        stopAlarmActionText = 'Detener Alarma';
-      } else if (lang == 'ca') {
-        doseTitle = 'Alerta de Seguretat Solar! 🚨';
-        doseBody = 'Has assolit el 100% de la dosi màxima. Atura l\'exposició.';
-        stopAlarmActionText = 'Aturar Alarma';
-      } else if (lang == 'fr') {
-        doseTitle = 'Alerte de Sécurité Solaire! 🚨';
-        doseBody =
-            'Vous avez atteint 100% de la dose maximale. Arrêtez l\'exposition.';
-        stopAlarmActionText = 'Arrêter l\'alarme';
-      } else if (lang == 'it') {
-        doseTitle = 'Allerta di Sicurezza Solare! 🚨';
-        doseBody =
-            'Hai raggiunto le 100% della dose massima. Interrompi l\'esposizione.';
-        stopAlarmActionText = 'Arresta allarme';
-      } else if (lang == 'pt') {
-        doseTitle = 'Alerta de Segurança Solar! 🚨';
-        doseBody = 'Você atingiu 100% da dose máxima. Pare a exposição.';
-        stopAlarmActionText = 'Parar Alarme';
-      } else if (lang == 'de') {
-        doseTitle = 'Solarsicherheitsalarm! 🚨';
-        doseBody =
-            'Sie haben 100% der maximalen Dosis erreicht. Beenden Sie die Exposition.';
-        stopAlarmActionText = 'Alarm stoppen';
-      }
-
-      final AndroidNotificationDetails androidPlatformChannelSpecificsDose =
-          AndroidNotificationDetails(
-            'sun_exposure_channel_id_v2',
-            'Sun Exposure Notifications',
-            channelDescription:
-                'Notifications for safe sun exposure and Vitamin D targets',
-            importance: Importance.max,
-            priority: Priority.high,
-            playSound: true,
-            visibility: NotificationVisibility.public,
-            fullScreenIntent: true,
-            actions: <AndroidNotificationAction>[
-              AndroidNotificationAction(
-                'stop_alarm_action',
-                stopAlarmActionText,
-                showsUserInterface: true,
-              ),
-            ],
-          );
-
-      final NotificationDetails platformChannelSpecificsDose =
-          NotificationDetails(
-            android: androidPlatformChannelSpecificsDose,
-            iOS: const DarwinNotificationDetails(
-              categoryIdentifier: 'sun_exposure_category',
-              presentAlert: true,
-              presentSound: true,
-              presentBadge: true,
-            ),
-          );
-
-      bool shouldScheduleDose = doseRemainingSeconds > 0;
-      if (shouldScheduleDose) {
-        if (_scheduledDoseTime != null && doseRemainingSeconds <= 60) {
-          debugPrint(
-            '⏱️ [NOTIF DEBUG] Recta final Dosi (<=60s) i ja programada. Ometent reprogramació per evitar cancel·lació.',
-          );
-          shouldScheduleDose = false;
-        }
-      }
-
-      if (shouldScheduleDose) {
-        await flutterLocalNotificationsPlugin.cancel(id: 102);
-        final scheduledTimeDose = now.add(
-          Duration(milliseconds: (doseRemainingSeconds * 1000).round()),
-        );
-        try {
-          debugPrint(
-            '📅 [NOTIF DEBUG] Programant Dosi Solar per a: $scheduledTimeDose (TZ: ${tz.TZDateTime.from(scheduledTimeDose, tz.local)})',
-          );
-          await flutterLocalNotificationsPlugin.zonedSchedule(
-            id: 102,
-            title: doseTitle,
-            body: doseBody,
-            scheduledDate: tz.TZDateTime.from(scheduledTimeDose, tz.local),
-            notificationDetails: platformChannelSpecificsDose,
-            androidScheduleMode: AndroidScheduleMode.alarmClock,
-          );
-          debugPrint('✅ [NOTIF DEBUG] Notificació 102 programada amb èxit.');
-          _scheduledDoseTime = scheduledTimeDose;
-        } catch (e) {
-          debugPrint('❌ [NOTIF DEBUG] Error programant Dosi Solar: $e');
-          debugPrint(
-            "Failed to schedule exact alarm for dose, falling back to inexact: $e",
-          );
-          await flutterLocalNotificationsPlugin.zonedSchedule(
-            id: 102,
-            title: doseTitle,
-            body: doseBody,
-            scheduledDate: tz.TZDateTime.from(scheduledTimeDose, tz.local),
-            notificationDetails: platformChannelSpecificsDose,
-            androidScheduleMode: AndroidScheduleMode.inexactAllowWhileIdle,
-          );
-          _scheduledDoseTime = scheduledTimeDose;
-        }
-      }
-    } catch (e) {
-      debugPrint("Error scheduling local notifications: $e");
-    }
-  }
-
-  Future<void> _clearSavedSessionState({
-    bool cancelNotifications = false,
-  }) async {
+  Future<void> _clearSavedSessionState() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('timer_active', false);
@@ -1875,15 +1605,6 @@ class _DashboardScreenState extends State<DashboardScreen>
       await prefs.remove('accumulated_vit_d_pct');
       await prefs.remove('last_skin_intensity');
       await prefs.remove('demo_mode');
-
-      _scheduledDoseTime = null;
-
-      if (cancelNotifications) {
-        debugPrint(
-          '⚠️ [NOTIF DEBUG] Cancel·lant notificació 102 des de _clearSavedSessionState()',
-        );
-        await flutterLocalNotificationsPlugin.cancel(id: 102);
-      }
     } catch (e) {
       debugPrint("Error clearing saved session state: $e");
     }
@@ -1981,12 +1702,6 @@ class _DashboardScreenState extends State<DashboardScreen>
 
       // 5. Re-activació del timer de guardat a LocalStorage:
       // (La gestió dels 10 segons de durada del timer s'aplica directament a _startCountdown)
-
-      // 6. Reprogramació de notificacions de sistema:
-      final double activeIntensity = _demoMode
-          ? (100.0 / 30.0)
-          : _getCurrentPercentagePerSecond();
-      await _scheduleLocalNotifications(activeIntensity);
     } catch (e) {
       debugPrint("Error handling app resumed: $e");
     }
@@ -2536,37 +2251,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   // Iniciar la cuenta atrás
   Future<void> _startCountdown({bool resuming = false}) async {
-    if (!resuming) {
-      final bool hasPermission = await _requestNotificationPermissionIfNeeded();
-      if (!hasPermission && mounted) {
-        final lang = appLanguage.value;
-        String warningMsg = lang == 'es'
-            ? 'Sin permisos de notificación, no recibirás alertas si minimizas la app.'
-            : 'Without notification permissions, you won\'t receive alerts if you minimize the app.';
-        if (lang == 'ca') {
-          warningMsg =
-              'Sense permisos de notificació, no rebràs alertes si minimitzes l\'app.';
-        } else if (lang == 'fr') {
-          warningMsg =
-              'Sans autorisations de notification, vous ne recevrez pas d\'alertes si vous minimisez l\'application.';
-        } else if (lang == 'it') {
-          warningMsg =
-              'Senza i permessi di notifica, non riceverai avvisi se minimizzi l\'app.';
-        } else if (lang == 'pt') {
-          warningMsg =
-              'Sem permissões de notificação, você não receberá alertas se minimizar o aplicativo.';
-        } else if (lang == 'de') {
-          warningMsg =
-              'Ohne Benachrichtigungsberechtigungen erhalten Sie keine Warnungen, wenn Sie die App minimieren.';
-        }
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(warningMsg),
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      }
-    }
+
 
     final bool isPausedResume =
         _accumulatedDosePercentage > 0.0 && _accumulatedDosePercentage < 100.0;
@@ -2580,7 +2265,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         _accumulatedVitDPercentage = 0.0;
         _vitDCelebrated = false;
         _buttonState = 2;
-        _scheduledDoseTime = null;
+
       });
     } else {
       double percentagePerSecond = _demoMode
@@ -2644,6 +2329,8 @@ class _DashboardScreenState extends State<DashboardScreen>
       }
     });
 
+
+
     _saveSessionState();
     _stateSavingTimer?.cancel();
     _stateSavingTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
@@ -2657,9 +2344,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     _stateSavingTimer?.cancel();
     _orbitalEchoController.stop();
 
-    // Cancel pending notifications since we paused
-    await flutterLocalNotificationsPlugin.cancel(id: 102);
-    _scheduledDoseTime = null;
+
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('timer_active', false);
@@ -2678,7 +2363,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     _stateSavingTimer?.cancel();
     _orbitalEchoController.stop();
     _orbitalEchoController.reset();
-    _scheduledDoseTime = null;
+
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('timer_active', false);
@@ -2689,7 +2374,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     await prefs.remove('demo_mode');
     await prefs.remove('daily_limit_date');
 
-    await flutterLocalNotificationsPlugin.cancel(id: 102);
+
 
     setState(() {
       _buttonState = 1;
@@ -2698,24 +2383,14 @@ class _DashboardScreenState extends State<DashboardScreen>
       _accumulatedVitDPercentage = 0.0;
       _vitDCelebrated = false;
       _limitReachedToday = false;
+      _locationError = false;
+      _isOffline = false;
+      _uvAvailable = true;
     });
   }
 
   void _triggerVitDCelebration() {
-    final bool isInForeground =
-        WidgetsBinding.instance.lifecycleState == AppLifecycleState.resumed;
 
-    if (!isInForeground) {
-      debugPrint(
-        '⏱️ [NOTIF DEBUG] Vitamina D assolida en segon pla. S\'omet el SnackBar/so in-app per permetre la notificació del sistema.',
-      );
-      return;
-    }
-
-    if (_isFlashing || _accumulatedDosePercentage >= 100.0) {
-      _postponedVitDNotification = true;
-      return;
-    }
 
     try {
       HapticFeedback.lightImpact();
@@ -2812,14 +2487,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     Navigator.of(context).pop(); // Cerrar diálogo
     _saveDailyLimitReached(); // Persistir hoy como completado
 
-    if (_postponedVitDNotification) {
-      _postponedVitDNotification = false;
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          _triggerVitDCelebration();
-        }
-      });
-    }
+
   }
 
   void _showFullscreenAlert() {
