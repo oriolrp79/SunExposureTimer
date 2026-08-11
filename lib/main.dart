@@ -19,6 +19,7 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'search_city_bottom_sheet.dart';
 import 'services/ip_location_service.dart';
+import 'services/notification_service.dart';
 
 
 // --- CONFIGURACIÓN DE MODO DEMO ---
@@ -27,6 +28,7 @@ const bool showDemoButton = true;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await NotificationService().initialize();
 
 
   // Pre-carrega de SharedPreferences
@@ -1618,6 +1620,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   Future<void> _handleAppResumed() async {
+    if (_buttonState == 2) return;
     try {
       // 1. Recuperació de SharedPreferences (Dades Històriques):
       final prefs = await SharedPreferences.getInstance();
@@ -2336,6 +2339,35 @@ class _DashboardScreenState extends State<DashboardScreen>
     _stateSavingTimer = Timer.periodic(const Duration(seconds: 10), (timer) {
       _saveSessionState();
     });
+
+    // Programació de notificacions quan s'inicia l'exposició
+    final double startingDosePct = shouldResume ? _accumulatedDosePercentage : 0.0;
+    final double startingVitDPct = shouldResume ? _accumulatedVitDPercentage : 0.0;
+    final double pctPerSec = _demoMode ? (100.0 / 30.0) : _getCurrentPercentagePerSecond();
+
+    final double dosePctRemaining = (100.0 - startingDosePct).clamp(0.0, 100.0);
+    final double vitDPctRemaining = (100.0 - startingVitDPct).clamp(0.0, 100.0);
+
+    final int secondsToMaxDose = pctPerSec > 0
+        ? (dosePctRemaining / pctPerSec).round()
+        : 0;
+    final int secondsToVitD = pctPerSec > 0
+        ? (vitDPctRemaining / (pctPerSec * 4.0)).round()
+        : 0;
+
+    try {
+      final notificationService = NotificationService();
+      await notificationService.requestNotificationPermission();
+      await notificationService.requestExactAlarmsPermission();
+      await notificationService.scheduleExposureNotifications(
+        vitDSeconds: secondsToVitD,
+        maxDoseSeconds: secondsToMaxDose,
+        lang: appLanguage.value,
+        textGetter: AppTranslations.getText,
+      );
+    } catch (e) {
+      debugPrint("Error scheduling exposure notifications: $e");
+    }
   }
 
   // Pausar la exposición manteniendo los valores acumulados intactos
@@ -2344,7 +2376,11 @@ class _DashboardScreenState extends State<DashboardScreen>
     _stateSavingTimer?.cancel();
     _orbitalEchoController.stop();
 
-
+    try {
+      await NotificationService().cancelAllExposureNotifications();
+    } catch (e) {
+      debugPrint("Error cancelling notifications: $e");
+    }
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('timer_active', false);
@@ -2364,6 +2400,11 @@ class _DashboardScreenState extends State<DashboardScreen>
     _orbitalEchoController.stop();
     _orbitalEchoController.reset();
 
+    try {
+      await NotificationService().cancelAllExposureNotifications();
+    } catch (e) {
+      debugPrint("Error cancelling notifications: $e");
+    }
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('timer_active', false);
@@ -2436,6 +2477,12 @@ class _DashboardScreenState extends State<DashboardScreen>
   void _onTimeFinished({bool playAlarmSound = true}) {
     _stateSavingTimer?.cancel();
     _clearSavedSessionState();
+
+    try {
+      NotificationService().cancelAllExposureNotifications();
+    } catch (e) {
+      debugPrint("Error cancelling notifications: $e");
+    }
 
     if (playAlarmSound) {
       // 1. Activar alertas sonoras nativas
