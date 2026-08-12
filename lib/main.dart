@@ -2532,6 +2532,12 @@ class _DashboardScreenState extends State<DashboardScreen>
     _stateSavingTimer?.cancel();
     _clearSavedSessionState();
 
+    try {
+      NotificationService().cancelAllExposureNotifications();
+    } catch (e) {
+      debugPrint("Error al cancel·lar les notificacions: $e");
+    }
+
     if (playAlarmSound) {
       // 1. Activar alertas sonoras nativas
       try {
@@ -4485,6 +4491,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
+                      color: (_limitReachedToday && !isRunning)
+                          ? Colors.redAccent
+                          : null,
                     ),
                     textAlign: TextAlign.center,
                   ),

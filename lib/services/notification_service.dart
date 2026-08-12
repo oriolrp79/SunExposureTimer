@@ -163,15 +163,18 @@ class NotificationService {
         sound: 'seeds.mp3',
       );
     } else {
-      // Dosi Solar Màxima amb so personalitzat també (seeds.mp3)
-      androidDetails = const AndroidNotificationDetails(
-        'sun_exposure_max_dose_channel',
-        'Alertes d\'Exposició Solar - Dosi Solar Màxima',
-        channelDescription: 'Notificació quan s\'assoleix el límit de radiació solar.',
+      // Dosi Solar Màxima con sonido de alarma del sistema (insistente)
+      androidDetails = AndroidNotificationDetails(
+        'sun_exposure_alarm_channel',
+        'Alertes d\'Exposició Solar - Dosi Solar Màxima (Alarma)',
+        channelDescription: 'Alarma quan s\'assoleix el límit de radiació solar.',
         importance: Importance.max,
         priority: Priority.high,
-        sound: RawResourceAndroidNotificationSound('seeds'),
+        sound: const UriAndroidNotificationSound('content://settings/system/alarm_alert'),
         playSound: true,
+        additionalFlags: Int32List.fromList(<int>[4]), // FLAG_INSISTENT
+        audioAttributesUsage: AudioAttributesUsage.alarm,
+        category: AndroidNotificationCategory.alarm,
       );
       iosDetails = const DarwinNotificationDetails(
         sound: 'seeds.mp3',
