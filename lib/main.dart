@@ -1419,6 +1419,8 @@ class _DashboardScreenState extends State<DashboardScreen>
   bool _isBannerAdReady = false;
   double? _adWidth;
   bool _firstFrameRendered = false;
+  InterstitialAd? _interstitialAd;
+  bool _isAdLoading = false;
 
   // Lógica del Temporizador (0 = Inicial, 1 = Calculado, 2 = Countdown Activo)
   int _buttonState = 1;
@@ -1508,6 +1510,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         });
         _loadSavedSessionState();
         _loadBannerAd();
+        _loadInterstitialAd();
       }
     });
   }
@@ -1578,6 +1581,32 @@ class _DashboardScreenState extends State<DashboardScreen>
     _bannerAd!.load();
   }
 
+  void _loadInterstitialAd() {
+    if (_isAdLoading || _interstitialAd != null) return;
+    _isAdLoading = true;
+
+    final String adUnitId = Platform.isAndroid
+        ? 'ca-app-pub-3940256099942544/1033173712'
+        : 'ca-app-pub-3940256099942544/4411468910';
+
+    InterstitialAd.load(
+      adUnitId: adUnitId,
+      request: const AdRequest(),
+      adLoadCallback: InterstitialAdLoadCallback(
+        onAdLoaded: (ad) {
+          debugPrint('InterstitialAd loaded successfully.');
+          _interstitialAd = ad;
+          _isAdLoading = false;
+        },
+        onAdFailedToLoad: (error) {
+          debugPrint('InterstitialAd failed to load: $error');
+          _interstitialAd = null;
+          _isAdLoading = false;
+        },
+      ),
+    );
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -1590,6 +1619,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     _stateSavingTimer?.cancel();
     _flashTimer?.cancel();
     _bannerAd?.dispose();
+    _interstitialAd?.dispose();
     _connectivitySubscription?.cancel();
     _networkCheckTimer?.cancel();
     _vitDRippleController.dispose();
@@ -2326,6 +2356,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   // Iniciar la cuenta atrás
   Future<void> _startCountdown({bool resuming = false}) async {
+    _loadInterstitialAd();
     final bool isPausedResume =
         _accumulatedDosePercentage > 0.0 && _accumulatedDosePercentage < 100.0;
     final bool shouldResume = resuming || isPausedResume;
@@ -2593,8 +2624,28 @@ class _DashboardScreenState extends State<DashboardScreen>
       _accumulatedVitDPercentage = 100.0;
     });
 
-    Navigator.of(context).pop(); // Cerrar diálogo
-    _saveDailyLimitReached(); // Persistir hoy como completado
+    if (_interstitialAd != null) {
+      _interstitialAd!.fullScreenContentCallback = FullScreenContentCallback(
+        onAdDismissedFullScreenContent: (ad) {
+          ad.dispose();
+          _interstitialAd = null;
+          _loadInterstitialAd();
+          Navigator.of(context).pop(); // Cerrar diálogo
+          _saveDailyLimitReached(); // Persistir hoy como completado
+        },
+        onAdFailedToShowFullScreenContent: (ad, error) {
+          ad.dispose();
+          _interstitialAd = null;
+          _loadInterstitialAd();
+          Navigator.of(context).pop(); // Cerrar diálogo
+          _saveDailyLimitReached(); // Persistir hoy como completado
+        },
+      );
+      _interstitialAd!.show();
+    } else {
+      Navigator.of(context).pop(); // Cerrar diálogo
+      _saveDailyLimitReached(); // Persistir hoy como completado
+    }
   }
 
   void _showFullscreenAlert() {
