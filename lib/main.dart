@@ -245,6 +245,7 @@ class AppTranslations {
       'solar_intensity': 'Impact on your skin',
       'fullscreen_alert_body':
           'You have completed your recommended maximum daily sun exposure for today according to your skin type ({phototype}).',
+      'accumulated_exposure_time': 'Accumulated\nExposure Time',
     },
     'es': {
       'app_title':
@@ -347,6 +348,7 @@ class AppTranslations {
       'solar_intensity': 'Impacto en tu piel',
       'fullscreen_alert_body':
           'Has completado tu dosis máxima recomendada de exposición solar para hoy de acuerdo a tu fototipo ({phototype}).',
+      'accumulated_exposure_time': 'Tiempo Acumulado\nde Exposición',
     },
     'de': {
       'app_title':
@@ -447,6 +449,7 @@ class AppTranslations {
       'solar_intensity': 'Belastung deiner Haut',
       'fullscreen_alert_body':
           'Sie haben Ihre empfohlene maximale tägliche Sonnenexposition für heute entsprechend Ihrem Hauttyp ({phototype}) erreicht.',
+      'accumulated_exposure_time': 'Akkumulierte\nExpositionszeit',
     },
     'fr': {
       'app_title':
@@ -548,6 +551,7 @@ class AppTranslations {
       'solar_intensity': 'Impact sur votre peau',
       'fullscreen_alert_body':
           'Vous avez atteint votre exposition solaire maximale quotidienne recommandée pour aujourd\'hui selon votre phototype ({phototype}).',
+      'accumulated_exposure_time': 'Temps d\'Exposition\nAccumulé',
     },
     'it': {
       'app_title':
@@ -652,6 +656,7 @@ class AppTranslations {
       'solar_intensity': 'Impatto sulla tua pelle',
       'fullscreen_alert_body':
           'Hai completato la tua esposizione solare massima giornaliera raccomandata per oggi in base al tuo fototipo ({phototype}).',
+      'accumulated_exposure_time': 'Tempo di Esposizione\nAccumulato',
     },
     'pt': {
       'app_title':
@@ -755,6 +760,7 @@ class AppTranslations {
       'solar_intensity': 'Impacto na sua pele',
       'fullscreen_alert_body':
           'Você completou a sua exposição solar máxima diária recomendada para hoje de acordo com o seu fototipo ({phototype}).',
+      'accumulated_exposure_time': 'Tempo de Exposição\nAcumulado',
     },
     'ca': {
       'app_title':
@@ -858,6 +864,7 @@ class AppTranslations {
       'solar_intensity': 'Impacte a la teva pell',
       'fullscreen_alert_body':
           'Has completat la teva dosi màxima recomanada d\'exposició solar per a avui d\'acord amb el teu fototip ({phototype}).',
+      'accumulated_exposure_time': 'Temps Acumulat\nd\'Exposició',
     },
   };
 
@@ -1385,6 +1392,9 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
+  static const int notificationReprogramIntervalMinutes = 3;
+  Timer? _reprogramTimer;
+
   // Ubicación y API
   Position? _currentPosition;
   String _locationName = "Detectando ubicación...";
@@ -1416,6 +1426,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   int _remainingSeconds = 0;
   double _accumulatedDosePercentage = 0.0;
   double _accumulatedVitDPercentage = 0.0;
+  int _elapsedExposureSeconds = 0;
   Timer? _countdownTimer;
   Timer? _calculationTimer;
   Timer? _stateSavingTimer;
@@ -1604,6 +1615,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       );
       await prefs.setDouble('last_skin_intensity', currentIntensity);
       await prefs.setBool('demo_mode', _demoMode);
+      await prefs.setInt('elapsed_exposure_seconds', _elapsedExposureSeconds);
     } catch (e) {
       debugPrint("Error saving session state: $e");
     }
@@ -1618,6 +1630,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       await prefs.remove('accumulated_vit_d_pct');
       await prefs.remove('last_skin_intensity');
       await prefs.remove('demo_mode');
+      await prefs.remove('elapsed_exposure_seconds');
     } catch (e) {
       debugPrint("Error clearing saved session state: $e");
     }
@@ -1654,6 +1667,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       final double? savedVitDPct = prefs.getDouble('accumulated_vit_d_pct');
       final double? lastSkinIntensity = prefs.getDouble('last_skin_intensity');
       final bool? savedDemoMode = prefs.getBool('demo_mode');
+      final int? savedElapsed = prefs.getInt('elapsed_exposure_seconds');
 
       if (lastTimestamp == null ||
           savedDosePct == null ||
@@ -1692,8 +1706,9 @@ class _DashboardScreenState extends State<DashboardScreen>
       if (lastSkinIntensity > 0) {
         remainingSeconds = ((100.0 - newDosePct) / lastSkinIntensity).round();
       }
-      if (remainingSeconds < 0) {
-        remainingSeconds = 0;
+      int newElapsed = (savedElapsed ?? 0);
+      if (elapsedSeconds > 0) {
+        newElapsed += elapsedSeconds.round();
       }
 
       setState(() {
@@ -1701,6 +1716,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         _accumulatedDosePercentage = newDosePct;
         _accumulatedVitDPercentage = newVitDPct;
         _remainingSeconds = remainingSeconds;
+        _elapsedExposureSeconds = newElapsed;
         if (_accumulatedVitDPercentage >= 100.0) {
           if (!_vitDCelebrated) {
             _vitDCelebrated = true;
@@ -1748,12 +1764,12 @@ class _DashboardScreenState extends State<DashboardScreen>
         }
       });
       if (_buttonState == 2) {
-        _reprogramNotificationsWithNewLanguage();
+        _reprogramNotifications();
       }
     }
   }
 
-  Future<void> _reprogramNotificationsWithNewLanguage() async {
+  Future<void> _reprogramNotifications() async {
     final double startingDosePct = _accumulatedDosePercentage;
     final double startingVitDPct = _accumulatedVitDPercentage;
     final double pctPerSec = _demoMode
@@ -1778,7 +1794,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         textGetter: AppTranslations.getText,
       );
     } catch (e) {
-      debugPrint("Error rescheduling on language change: $e");
+      debugPrint("Error rescheduling notifications: $e");
     }
   }
 
@@ -1819,11 +1835,13 @@ class _DashboardScreenState extends State<DashboardScreen>
       final double? savedDosePct = prefs.getDouble('accumulated_dose_pct');
       final double? savedVitDPct = prefs.getDouble('accumulated_vit_d_pct');
       final bool active = prefs.getBool('timer_active') ?? false;
+      final int? savedElapsed = prefs.getInt('elapsed_exposure_seconds');
 
       if (savedDosePct != null) {
         setState(() {
           _accumulatedDosePercentage = savedDosePct;
           _accumulatedVitDPercentage = savedVitDPct ?? 0.0;
+          _elapsedExposureSeconds = savedElapsed ?? 0;
         });
       }
 
@@ -2318,6 +2336,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         _remainingSeconds = durationSeconds;
         _accumulatedDosePercentage = 0.0;
         _accumulatedVitDPercentage = 0.0;
+        _elapsedExposureSeconds = 0;
         _vitDCelebrated = false;
         _buttonState = 2;
       });
@@ -2347,6 +2366,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         }
 
         setState(() {
+          _elapsedExposureSeconds++;
           _accumulatedDosePercentage += percentagePerSecond;
           if (_accumulatedDosePercentage > 100.0) {
             _accumulatedDosePercentage = 100.0;
@@ -2373,6 +2393,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         if (_accumulatedDosePercentage >= 100.0 || _remainingSeconds <= 0) {
           _countdownTimer?.cancel();
           _stateSavingTimer?.cancel();
+          _reprogramTimer?.cancel();
           _orbitalEchoController.stop();
           _orbitalEchoController.reset();
           _onTimeFinished();
@@ -2380,6 +2401,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       } else {
         _countdownTimer?.cancel();
         _stateSavingTimer?.cancel();
+        _reprogramTimer?.cancel();
         _orbitalEchoController.stop();
         _orbitalEchoController.reset();
         _onTimeFinished();
@@ -2392,46 +2414,30 @@ class _DashboardScreenState extends State<DashboardScreen>
       _saveSessionState();
     });
 
-    // Programació de notificacions quan s'inicia l'exposició
-    final double startingDosePct = shouldResume
-        ? _accumulatedDosePercentage
-        : 0.0;
-    final double startingVitDPct = shouldResume
-        ? _accumulatedVitDPercentage
-        : 0.0;
-    final double pctPerSec = _demoMode
-        ? (100.0 / 30.0)
-        : _getCurrentPercentagePerSecond();
-
-    final double dosePctRemaining = (100.0 - startingDosePct).clamp(0.0, 100.0);
-    final double vitDPctRemaining = (100.0 - startingVitDPct).clamp(0.0, 100.0);
-
-    final int secondsToMaxDose = pctPerSec > 0
-        ? (dosePctRemaining / pctPerSec).round()
-        : 0;
-    final int secondsToVitD = pctPerSec > 0
-        ? (vitDPctRemaining / (pctPerSec * 4.0)).round()
-        : 0;
-
     try {
       final notificationService = NotificationService();
       await notificationService.requestNotificationPermission();
       await notificationService.requestExactAlarmsPermission();
-      await notificationService.scheduleExposureNotifications(
-        vitDSeconds: secondsToVitD,
-        maxDoseSeconds: secondsToMaxDose,
-        lang: appLanguage.value,
-        textGetter: AppTranslations.getText,
-      );
+      await _reprogramNotifications();
     } catch (e) {
       debugPrint("Error scheduling exposure notifications: $e");
     }
+
+    _reprogramTimer?.cancel();
+    _reprogramTimer = Timer.periodic(
+      const Duration(minutes: notificationReprogramIntervalMinutes),
+      (timer) async {
+        await _saveSessionState();
+        await _reprogramNotifications();
+      },
+    );
   }
 
   // Pausar la exposición manteniendo los valores acumulados intactos
   Future<void> _pauseCountdown() async {
     _countdownTimer?.cancel();
     _stateSavingTimer?.cancel();
+    _reprogramTimer?.cancel();
     _orbitalEchoController.stop();
 
     try {
@@ -2455,6 +2461,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   Future<void> _resetCountdown() async {
     _countdownTimer?.cancel();
     _stateSavingTimer?.cancel();
+    _reprogramTimer?.cancel();
     _orbitalEchoController.stop();
     _orbitalEchoController.reset();
 
@@ -2530,6 +2537,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   // Acción finalizada
   void _onTimeFinished({bool playAlarmSound = true}) {
     _stateSavingTimer?.cancel();
+    _reprogramTimer?.cancel();
     _clearSavedSessionState();
 
     try {
@@ -4129,7 +4137,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       ),
       child: Row(
         children: [
-          const Icon(Icons.equalizer_rounded, color: Colors.red, size: 24),
+          const Icon(Icons.speed_rounded, color: Colors.red, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -4242,11 +4250,11 @@ class _DashboardScreenState extends State<DashboardScreen>
         ],
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // COLUMNA IZQUIERDA: Título "Dosi Solar Màxima" y countdown circular mostrando la cantidad de exposición en %
           Expanded(
-            flex: 3,
+            flex: 5,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -4443,14 +4451,46 @@ class _DashboardScreenState extends State<DashboardScreen>
               ],
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 8),
           // COLUMNA DERECHA: Botón Iniciar alarma (para iniciar countdown) y Demo
           Expanded(
-            flex: 2,
+            flex: 4,
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
+              mainAxisAlignment: MainAxisAlignment.start,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                Row(
+                  children: [
+                    const Icon(Icons.timer, color: Color(0xFF73C6B6), size: 20),
+                    const SizedBox(width: 4),
+                    Expanded(
+                      child: Text(
+                        AppTranslations.getText(
+                          lang,
+                          'accumulated_exposure_time',
+                        ),
+                        style: GoogleFonts.poppins(
+                          fontSize: 13,
+                          fontWeight: FontWeight.bold,
+                          color: const Color(0xFF2C3E50),
+                        ),
+                        maxLines: 3,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  _formatElapsedSeconds(_elapsedExposureSeconds),
+                  style: GoogleFonts.poppins(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF2C3E50),
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 64),
                 ElevatedButton(
                   onPressed:
                       (_locationError ||
@@ -4603,6 +4643,17 @@ class _DashboardScreenState extends State<DashboardScreen>
     if (uv <= 7.9) return const Color(0xFFE67E22); // Naranja - Alto
     if (uv <= 10.9) return const Color(0xFFE74C3C); // Rojo - Muy Alto
     return const Color(0xFF9B59B6); // Púrpura - Extremo
+  }
+
+  String _formatElapsedSeconds(int totalSeconds) {
+    final int minutes = totalSeconds ~/ 60;
+    if (minutes < 60) {
+      return "$minutes min";
+    } else {
+      final int hours = minutes ~/ 60;
+      final int remainingMinutes = minutes % 60;
+      return "$hours h $remainingMinutes min";
+    }
   }
 }
 
