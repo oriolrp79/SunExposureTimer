@@ -1625,7 +1625,18 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
+      if (_buttonState == 2) {
+        _saveSessionState();
+        _countdownTimer?.cancel();
+        _stateSavingTimer?.cancel();
+        _orbitalEchoController.stop();
+        setState(() {
+          _buttonState = 1;
+        });
+      }
+    } else if (state == AppLifecycleState.resumed) {
       _handleAppResumed();
     }
   }
@@ -1693,7 +1704,7 @@ class _DashboardScreenState extends State<DashboardScreen>
         if (_accumulatedVitDPercentage >= 100.0) {
           if (!_vitDCelebrated) {
             _vitDCelebrated = true;
-            _triggerVitDCelebration();
+            // No trigger celebration here because it was reached in the background
           }
         }
       });
@@ -2345,7 +2356,10 @@ class _DashboardScreenState extends State<DashboardScreen>
             _accumulatedVitDPercentage = 100.0;
             if (!_vitDCelebrated) {
               _vitDCelebrated = true;
-              _triggerVitDCelebration();
+              if (WidgetsBinding.instance.lifecycleState ==
+                  AppLifecycleState.resumed) {
+                _triggerVitDCelebration();
+              }
             }
           }
           double remainingPercentage = 100.0 - _accumulatedDosePercentage;
