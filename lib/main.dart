@@ -23,7 +23,7 @@ import 'services/notification_service.dart';
 
 // --- CONFIGURACIÓN DE MODO DEMO ---
 // Cambiar a 'true' para visualizar el botón "Demo 30s" o 'false' para ocultarlo.
-const bool showDemoButton = true;
+const bool showDemoButton = false;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -232,6 +232,11 @@ class AppTranslations {
           'We could not check for updates. Would you like to visit the Google Play Store to check manually?',
       'open_play_store': 'Open Play Store',
       'cancel': 'Cancel',
+      'update_available_title': 'Update Available',
+      'update_available_msg':
+          'A new version of the app is available. Would you like to update now?',
+      'update_button_later': 'Later',
+      'update_button_now': 'Update',
       'no_light_sensor_msg':
           'Device without light sensor. No attenuators are applied in the sun exposure calculation.',
       'manage_gps': 'GPS Management',
@@ -334,6 +339,11 @@ class AppTranslations {
           'No se pudo buscar actualizaciones. ¿Deseas visitar Google Play Store para comprobarlo manualmente?',
       'open_play_store': 'Abrir Play Store',
       'cancel': 'Cancelar',
+      'update_available_title': 'Actualización disponible',
+      'update_available_msg':
+          'Hay una nueva versión de la aplicación disponible. ¿Quieres actualizar ahora?',
+      'update_button_later': 'Más tarde',
+      'update_button_now': 'Actualizar',
       'no_light_sensor_msg':
           'Dispositivo sin sensor de luz. No se aplican atenuadores en el cálculo de exposición solar.',
       'manage_gps': 'Gestión de GPS',
@@ -435,6 +445,11 @@ class AppTranslations {
           'Es konnte nicht nach Updates gesucht werden. Möchten Sie den Google Play Store besuchen, um manuell zu suchen?',
       'open_play_store': 'Play Store öffnen',
       'cancel': 'Abbrechen',
+      'update_available_title': 'Update verfügbar',
+      'update_available_msg':
+          'Eine neue Version der App ist verfügbar. Möchten Sie jetzt aktualisieren?',
+      'update_button_later': 'Später',
+      'update_button_now': 'Aktualisieren',
       'no_light_sensor_msg':
           'Gerät ohne Lichtsensor. Für die Berechnung der Sonnenexposition werden keine Abschwächer angewendet.',
       'manage_gps': 'GPS-Verwaltung',
@@ -537,6 +552,11 @@ class AppTranslations {
           'Impossible de vérifier les mises à jour. Souhaitez-vous visiter le Google Play Store pour vérifier manuellement ?',
       'open_play_store': 'Ouvrir le Play Store',
       'cancel': 'Annuler',
+      'update_available_title': 'Mise à jour disponible',
+      'update_available_msg':
+          'Une nouvelle version de l\'application est disponible. Voulez-vous mettre à jour maintenant?',
+      'update_button_later': 'Plus tard',
+      'update_button_now': 'Mettre à jour',
       'no_light_sensor_msg':
           'Appareil sans capteur de lumière. Aucun atténuateur n\'est appliqué dans le calcul de l\'exposition solaire.',
       'manage_gps': 'Gestion du GPS',
@@ -642,6 +662,11 @@ class AppTranslations {
           'Impossibile verificare gli aggiornamenti. Vuoi visitare Google Play Store per verificare manualmente?',
       'open_play_store': 'Apri Play Store',
       'cancel': 'Annulla',
+      'update_available_title': 'Aggiornamento disponibile',
+      'update_available_msg':
+          'È disponibile una nova versione dell\'applicazione. Vuoi aggiornare ora?',
+      'update_button_later': 'Più tardi',
+      'update_button_now': 'Aggiorna',
       'no_light_sensor_msg':
           'Dispositivo senza sensore di luce. Non vengono applicati attenuatori nel calcolo dell\'esposizione solare.',
       'manage_gps': 'Gestione GPS',
@@ -746,6 +771,11 @@ class AppTranslations {
           'Não foi possível verificar atualizações. Deseja visitar a Google Play Store para verificar manualmente?',
       'open_play_store': 'Abrir Play Store',
       'cancel': 'Cancelar',
+      'update_available_title': 'Atualização disponível',
+      'update_available_msg':
+          'Uma nova versão do aplicativo está disponível. Deseja atualizar agora?',
+      'update_button_later': 'Mais tarde',
+      'update_button_now': 'Atualizar',
       'no_light_sensor_msg':
           'Dispositivo sem sensor de luz. Não são aplicados atenuadores no cálculo da exposição solar.',
       'manage_gps': 'Gestão de GPS',
@@ -850,6 +880,11 @@ class AppTranslations {
           'No s\'ha pogut buscar actualitzacions. Vols visitar Google Play Store per comprovar-ho manualment?',
       'open_play_store': 'Obrir Play Store',
       'cancel': 'Cancel·lar',
+      'update_available_title': 'Actualització disponible',
+      'update_available_msg':
+          'Hi ha una nova versió de l\'aplicació disponible. Vols actualitzar-la ara?',
+      'update_button_later': 'Més tard',
+      'update_button_now': 'Actualitzar',
       'no_light_sensor_msg':
           'Dispositiu sense sensor de llum. No s\'apliquen atenuadors en el càlcul d\'exposició solar.',
       'manage_gps': 'Gestió de GPS',
@@ -1505,6 +1540,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     // Optimización de arranque rápido: Diferir tareas pesadas para después del renderizado del primer frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
+        _checkUpdateOnStartup();
         setState(() {
           _firstFrameRendered = true;
         });
@@ -3144,6 +3180,107 @@ class _DashboardScreenState extends State<DashboardScreen>
     );
   }
 
+  Future<void> _checkUpdateOnStartup() async {
+    if (kIsWeb || !Platform.isAndroid) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final now = DateTime.now();
+      final todayStr =
+          "${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}";
+      final lastCheck = prefs.getString('last_update_check_date');
+
+      if (lastCheck != todayStr) {
+        // Save date first to avoid repeating check attempt today in case of errors
+        await prefs.setString('last_update_check_date', todayStr);
+
+        final info = await InAppUpdate.checkForUpdate();
+        if (info.updateAvailability == UpdateAvailability.updateAvailable &&
+            mounted) {
+          final lang = appLanguage.value;
+          _showUpdateDialog(lang);
+        }
+      }
+    } catch (e) {
+      debugPrint("Silent startup update check failed: $e");
+    }
+  }
+
+  void _showUpdateDialog(String lang) {
+    showDialog(
+      context: context,
+      barrierDismissible: true,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: Text(
+            AppTranslations.getText(lang, 'update_available_title'),
+            style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+          ),
+          content: Text(
+            AppTranslations.getText(lang, 'update_available_msg'),
+            style: GoogleFonts.poppins(),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: Text(
+                AppTranslations.getText(lang, 'update_button_later'),
+                style: GoogleFonts.poppins(color: Colors.grey),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                // Tanca el diàleg immediatament
+                Navigator.of(context).pop();
+                // Inicia la descàrrega en segon pla que gestiona Google Play
+                try {
+                  final result = await InAppUpdate.startFlexibleUpdate();
+                  if (result != AppUpdateResult.success) {
+                    debugPrint(
+                      "Flexible update download started result: $result",
+                    );
+                  }
+                } catch (e) {
+                  debugPrint(
+                    "Flexible update failed, redirecting to store: $e",
+                  );
+                  // Fallback per obrir la Play Store manualment
+                  final Uri playStoreUri = Uri.parse(
+                    'https://play.google.com/store/apps/details?id=com.suntimer.app',
+                  );
+                  try {
+                    if (await canLaunchUrl(playStoreUri)) {
+                      await launchUrl(
+                        playStoreUri,
+                        mode: LaunchMode.externalApplication,
+                      );
+                    }
+                  } catch (launchError) {
+                    debugPrint("Could not launch Play Store URL: $launchError");
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF73C6B6),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: Text(
+                AppTranslations.getText(lang, 'update_button_now'),
+                style: GoogleFonts.poppins(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   void _initUpdateListener() {
     _updateSubscription = InAppUpdate.installUpdateListener.listen(
       (status) {
@@ -3215,12 +3352,8 @@ class _DashboardScreenState extends State<DashboardScreen>
       }
 
       if (info.updateAvailability == UpdateAvailability.updateAvailable) {
-        final result = await InAppUpdate.startFlexibleUpdate();
-        if (result == AppUpdateResult.success) {
-          // El usuario aceptó la actualización y comenzó a descargarse en segundo plano.
-          // El listener registrado _updateSubscription capturará el estado descargado (downloaded).
-        } else {
-          debugPrint("Flexible update flow result: $result");
+        if (mounted) {
+          _showUpdateDialog(lang);
         }
       } else {
         if (mounted) {
