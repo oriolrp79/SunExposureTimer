@@ -2289,9 +2289,9 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   double _getAttenuationFactor(int lux) {
     if (lux <= 0) {
-      return 0.1;
+      return 0.0;
     } else if (lux <= 400) {
-      return 0.1 + 0.4 * (lux / 400.0);
+      return 0.5 * (lux / 400.0);
     } else if (lux <= 6000) {
       return 0.5 + 0.5 * ((lux - 400.0) / 5600.0);
     } else {
@@ -2334,15 +2334,15 @@ class _DashboardScreenState extends State<DashboardScreen>
         ? _getAttenuationFactor(_luxValue)
         : 1.0;
 
+    final skinImpact = _uvIndex * factorAtenuacion;
     double rawTime;
-    if (_uvIndex < 0.5) {
-      rawTime = 480.0 / factorAtenuacion;
-    } else {
-      rawTime = (currentType.dose / _uvIndex) / factorAtenuacion;
-    }
-
-    if (rawTime > 480.0) {
+    if (skinImpact <= 0.0) {
       rawTime = 480.0;
+    } else {
+      rawTime = currentType.dose / skinImpact;
+      if (rawTime > 480.0) {
+        rawTime = 480.0;
+      }
     }
 
     setState(() {
@@ -2376,7 +2376,9 @@ class _DashboardScreenState extends State<DashboardScreen>
           ? (100.0 / 30.0)
           : _getCurrentPercentagePerSecond();
       double remainingPercentage = 100.0 - _accumulatedDosePercentage;
-      int durationSeconds = (remainingPercentage / percentagePerSecond).round();
+      int durationSeconds = percentagePerSecond > 0.0
+          ? (remainingPercentage / percentagePerSecond).round()
+          : 480 * 60;
       if (durationSeconds < 0) durationSeconds = 0;
 
       setState(() {
@@ -2414,8 +2416,12 @@ class _DashboardScreenState extends State<DashboardScreen>
             }
           }
           double remainingPercentage = 100.0 - _accumulatedDosePercentage;
-          _remainingSeconds = (remainingPercentage / percentagePerSecond)
-              .round();
+          if (percentagePerSecond > 0.0) {
+            _remainingSeconds = (remainingPercentage / percentagePerSecond)
+                .round();
+          } else {
+            _remainingSeconds = 480 * 60;
+          }
           if (_remainingSeconds < 0) {
             _remainingSeconds = 0;
           }
@@ -4134,20 +4140,11 @@ class _DashboardScreenState extends State<DashboardScreen>
         ? _getAttenuationFactor(_luxValue)
         : 1.0;
 
-    double rawTime;
-    if (_uvIndex < 0.5) {
-      rawTime = 480.0 / factorAtenuacion;
-    } else {
-      rawTime = (currentType.dose / _uvIndex) / factorAtenuacion;
+    final skinImpact = _uvIndex * factorAtenuacion;
+    if (skinImpact <= 0.0) {
+      return 0.0;
     }
-
-    if (rawTime > 480.0) {
-      rawTime = 480.0;
-    }
-    if (rawTime < 1.0) {
-      rawTime = 1.0;
-    }
-    return 100.0 / (rawTime * 60.0);
+    return (100.0 * skinImpact) / (60.0 * currentType.dose);
   }
 
   double get _solarRadiationWm2 {

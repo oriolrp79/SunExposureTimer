@@ -197,8 +197,12 @@ class NotificationService {
   }
 
   Future<void> cancelAllExposureNotifications() async {
-    await _notificationsPlugin.cancel(id: 1);
-    await _notificationsPlugin.cancel(id: 2);
-    debugPrint("Notificacions de l'exposició cancel·lades.");
+    try {
+      await _notificationsPlugin.cancel(id: 1);
+      await _notificationsPlugin.cancel(id: 2);
+      debugPrint("Notificacions de l'exposició cancel·lades.");
+    } catch (e) {
+      debugPrint("Error cancelling notifications: $e");
+    }
   }
 }

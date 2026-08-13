@@ -37,6 +37,8 @@ void main() {
       'manual_lon': -3.7037,
     });
 
+    appLanguage.value = 'es';
+
     // Build our app and trigger a frame.
     await tester.pumpWidget(const SunTimerApp());
 
@@ -58,10 +60,10 @@ void main() {
 
     // Verificar que se muestra el tiempo seguro estimado automáticamente y el botón de demo
     expect(find.text('Dosis Solar Máxima'), findsOneWidget);
-    expect(find.text('Demo 10s'), findsOneWidget);
+    expect(find.text('Demo 30s'), findsOneWidget);
 
-    // Tap "Demo 10s" para iniciar la cuenta atrás de demo de 10 segundos
-    final demoBtn = find.text('Demo 10s');
+    // Tap "Demo 30s" para iniciar la cuenta atrás de demo de 30 segundos
+    final demoBtn = find.text('Demo 30s');
     await tester.ensureVisible(demoBtn);
     await tester.pump();
     await tester.tap(demoBtn);
@@ -70,8 +72,8 @@ void main() {
     // Verificar que se muestran los contadores en 0%
     expect(find.text('0%'), findsNWidgets(2));
 
-    // Avanzar el tiempo 10 segundos (1 segundo a la vez para asegurar que el temporizador periódico se dispare)
-    for (int i = 0; i < 10; i++) {
+    // Avanzar el tiempo 30 segundos (1 segundo a la vez para asegurar que el temporizador periódico se dispare)
+    for (int i = 0; i < 30; i++) {
       await tester.pump(const Duration(seconds: 1));
     }
 
