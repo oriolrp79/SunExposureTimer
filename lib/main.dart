@@ -192,6 +192,7 @@ class AppTranslations {
       'solar_dose_pct': 'Max Solar Dose',
       'vitamin_d': 'Vitamin D',
       'start_exposure': 'Start Exposure',
+      'safe_exposure_btn': 'Safe exposure',
       'daily_limit_reached': 'Daily limit reached',
       'cancel_exposure': 'Pause Exposure',
       'safe_exposure_finished_title': 'Daily limit reached!',
@@ -297,6 +298,7 @@ class AppTranslations {
       'solar_dose_pct': 'Dosis Solar Máxima',
       'vitamin_d': 'Vitamina D',
       'start_exposure': 'Iniciar Exposición',
+      'safe_exposure_btn': 'Exposición segura',
       'daily_limit_reached': 'Límite diario alcanzado',
       'cancel_exposure': 'Pausar Exposición',
       'safe_exposure_finished_title': '¡Límite diario alcanzado!',
@@ -403,6 +405,7 @@ class AppTranslations {
       'solar_dose_pct': 'Maximale Sonnendosis',
       'vitamin_d': 'Vitamin D',
       'start_exposure': 'Exposition starten',
+      'safe_exposure_btn': 'Sichere Exposition',
       'daily_limit_reached': 'Tageslimit erreicht',
       'cancel_exposure': 'Belichtung pausieren',
       'safe_exposure_finished_title': 'Sichere Exposition beendet',
@@ -509,6 +512,7 @@ class AppTranslations {
       'solar_dose_pct': 'Dose solaire maximale',
       'vitamin_d': 'Vitamine D',
       'start_exposure': 'Démarrer l\'exposition',
+      'safe_exposure_btn': 'Exposition sûre',
       'daily_limit_reached': 'Limite quotidienne atteinte',
       'cancel_exposure': 'Pause de l\'exposition',
       'safe_exposure_finished_title': 'Exposition sûre terminée',
@@ -620,6 +624,7 @@ class AppTranslations {
       'solar_dose_pct': 'Dose Solare Massima',
       'vitamin_d': 'Vitamina D',
       'start_exposure': 'Avvia Esposizione',
+      'safe_exposure_btn': 'Esposizione sicura',
       'daily_limit_reached': 'Limite giornaliero raggiunto',
       'cancel_exposure': 'Pausa esposizione',
       'safe_exposure_finished_title': 'Esposizione sicura terminata',
@@ -729,6 +734,7 @@ class AppTranslations {
       'solar_dose_pct': 'Dose Solar Máxima',
       'vitamin_d': 'Vitamina D',
       'start_exposure': 'Iniciar Exposição',
+      'safe_exposure_btn': 'Exposição segura',
       'daily_limit_reached': 'Limite diário atingido',
       'cancel_exposure': 'Pausar Exposição',
       'safe_exposure_finished_title': 'Exposição segura concluída',
@@ -837,6 +843,7 @@ class AppTranslations {
       'solar_dose_pct': 'Dosi Solar Màxima',
       'vitamin_d': 'Vitamina D',
       'start_exposure': 'Iniciar Exposició',
+      'safe_exposure_btn': 'Exposició segura',
       'daily_limit_reached': 'Límit diari assolit',
       'cancel_exposure': 'Pausar Exposició',
       'safe_exposure_finished_title': 'Exposició segura finalitzada',
@@ -1428,6 +1435,8 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen>
     with TickerProviderStateMixin, WidgetsBindingObserver {
   static const int notificationReprogramIntervalMinutes = 3;
+  static const int maxExposureSeconds = 6 * 3600; // 21600 segons (6 hores)
+  static const double maxSafeMinutesThreshold = 360.0; // 6 hores
   Timer? _reprogramTimer;
 
   // Ubicación y API
@@ -1470,6 +1479,8 @@ class _DashboardScreenState extends State<DashboardScreen>
   bool _limitReachedToday = false;
   bool _demoMode = false; // Modo demo de 30 segundos
   bool _vitDCelebrated = false;
+  double _lastReprogrammedDosePct = 0.0;
+  double _lastReprogrammedVitDPct = 0.0;
 
   bool _showVitDRipple = false;
   late AnimationController _vitDRippleController;
@@ -1703,17 +1714,21 @@ class _DashboardScreenState extends State<DashboardScreen>
   }
 
   @override
-  void didChangeAppLifecycleState(AppLifecycleState state) {
+  void didChangeAppLifecycleState(AppLifecycleState state) async {
     if (state == AppLifecycleState.paused ||
         state == AppLifecycleState.inactive) {
       if (_buttonState == 2) {
-        _saveSessionState();
+        await _saveSessionState();
+        await _reprogramNotifications();
         _countdownTimer?.cancel();
         _stateSavingTimer?.cancel();
+        _reprogramTimer?.cancel();
         _orbitalEchoController.stop();
-        setState(() {
-          _buttonState = 1;
-        });
+        if (mounted) {
+          setState(() {
+            _buttonState = 1;
+          });
+        }
       }
     } else if (state == AppLifecycleState.resumed) {
       _handleAppResumed();
@@ -1750,12 +1765,21 @@ class _DashboardScreenState extends State<DashboardScreen>
       final double elapsedSeconds =
           (DateTime.now().millisecondsSinceEpoch - lastTimestamp) / 1000.0;
 
+      int savedElapsedSecs = savedElapsed ?? 0;
+      bool limitReachedInBackground = false;
+      double activeElapsedSeconds = elapsedSeconds;
+
+      if (savedElapsedSecs + elapsedSeconds >= maxExposureSeconds) {
+        activeElapsedSeconds = (maxExposureSeconds - savedElapsedSecs).toDouble();
+        limitReachedInBackground = true;
+      }
+
       double newDosePct = savedDosePct;
       double newVitDPct = savedVitDPct ?? 0.0;
 
-      if (elapsedSeconds > 0) {
-        final double doseIncrement = elapsedSeconds * lastSkinIntensity;
-        final double vitDIncrement = elapsedSeconds * lastSkinIntensity * 4.0;
+      if (activeElapsedSeconds > 0) {
+        final double doseIncrement = activeElapsedSeconds * lastSkinIntensity;
+        final double vitDIncrement = activeElapsedSeconds * lastSkinIntensity * 4.0;
 
         newDosePct = savedDosePct + doseIncrement;
         newVitDPct = (savedVitDPct ?? 0.0) + vitDIncrement;
@@ -1772,9 +1796,13 @@ class _DashboardScreenState extends State<DashboardScreen>
       if (lastSkinIntensity > 0) {
         remainingSeconds = ((100.0 - newDosePct) / lastSkinIntensity).round();
       }
-      int newElapsed = (savedElapsed ?? 0);
+      int newElapsed = savedElapsedSecs;
       if (elapsedSeconds > 0) {
-        newElapsed += elapsedSeconds.round();
+        if (limitReachedInBackground) {
+          newElapsed = maxExposureSeconds;
+        } else {
+          newElapsed += elapsedSeconds.round();
+        }
       }
 
       setState(() {
@@ -1790,6 +1818,24 @@ class _DashboardScreenState extends State<DashboardScreen>
           }
         }
       });
+
+      if (limitReachedInBackground) {
+        _countdownTimer?.cancel();
+        _stateSavingTimer?.cancel();
+        _reprogramTimer?.cancel();
+        _orbitalEchoController.stop();
+        _orbitalEchoController.reset();
+        await _clearSavedSessionState();
+        try {
+          await NotificationService().cancelAllExposureNotifications();
+        } catch (e) {
+          debugPrint("Error cancelling notifications: $e");
+        }
+        setState(() {
+          _buttonState = 1;
+        });
+        return;
+      }
 
       if (newDosePct >= 100.0 || remainingSeconds <= 0) {
         _countdownTimer?.cancel();
@@ -1859,6 +1905,8 @@ class _DashboardScreenState extends State<DashboardScreen>
         lang: appLanguage.value,
         textGetter: AppTranslations.getText,
       );
+      _lastReprogrammedDosePct = startingDosePct;
+      _lastReprogrammedVitDPct = startingVitDPct;
     } catch (e) {
       debugPrint("Error rescheduling notifications: $e");
     }
@@ -2406,6 +2454,8 @@ class _DashboardScreenState extends State<DashboardScreen>
         _elapsedExposureSeconds = 0;
         _vitDCelebrated = false;
         _buttonState = 2;
+        _lastReprogrammedDosePct = 0.0;
+        _lastReprogrammedVitDPct = 0.0;
       });
     } else {
       double percentagePerSecond = _demoMode
@@ -2426,6 +2476,24 @@ class _DashboardScreenState extends State<DashboardScreen>
     _countdownTimer?.cancel();
     _orbitalEchoController.repeat();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      if (_elapsedExposureSeconds >= maxExposureSeconds ||
+          _calculatedSafeMinutes > maxSafeMinutesThreshold) {
+        _countdownTimer?.cancel();
+        _stateSavingTimer?.cancel();
+        _reprogramTimer?.cancel();
+        _orbitalEchoController.stop();
+        _orbitalEchoController.reset();
+        try {
+          NotificationService().cancelAllExposureNotifications();
+        } catch (e) {
+          debugPrint("Error cancelling notifications: $e");
+        }
+        setState(() {
+          _buttonState = 1;
+        });
+        return;
+      }
+
       if (_accumulatedDosePercentage < 100.0) {
         double percentagePerSecond;
         if (_demoMode) {
@@ -2470,6 +2538,17 @@ class _DashboardScreenState extends State<DashboardScreen>
           _orbitalEchoController.stop();
           _orbitalEchoController.reset();
           _onTimeFinished();
+        } else {
+          final double doseDelta =
+              (_accumulatedDosePercentage - _lastReprogrammedDosePct).abs();
+          final double vitDDelta =
+              (_accumulatedVitDPercentage - _lastReprogrammedVitDPct).abs();
+          if (doseDelta >= 5.0 || vitDDelta >= 5.0) {
+            _lastReprogrammedDosePct = _accumulatedDosePercentage;
+            _lastReprogrammedVitDPct = _accumulatedVitDPercentage;
+            _saveSessionState();
+            _reprogramNotifications();
+          }
         }
       } else {
         _countdownTimer?.cancel();
@@ -2563,6 +2642,8 @@ class _DashboardScreenState extends State<DashboardScreen>
       _locationError = false;
       _isOffline = false;
       _uvAvailable = true;
+      _lastReprogrammedDosePct = 0.0;
+      _lastReprogrammedVitDPct = 0.0;
     });
   }
 
@@ -4677,13 +4758,17 @@ class _DashboardScreenState extends State<DashboardScreen>
                       (_locationError ||
                           _isOffline ||
                           !_uvAvailable ||
-                          (_limitReachedToday && !isRunning))
+                          (_limitReachedToday && !isRunning) ||
+                          (_calculatedSafeMinutes > maxSafeMinutesThreshold) ||
+                          (_elapsedExposureSeconds >= maxExposureSeconds))
                       ? null
                       : (isRunning ? _pauseCountdown : _startCountdown),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: isRunning
                         ? Colors.redAccent
-                        : ((_limitReachedToday && !isRunning)
+                        : (((_limitReachedToday && !isRunning) ||
+                                 (_calculatedSafeMinutes > maxSafeMinutesThreshold) ||
+                                 (_elapsedExposureSeconds >= maxExposureSeconds))
                               ? Colors.grey.shade400
                               : const Color(0xFF73C6B6)),
                     foregroundColor: Colors.white,
@@ -4705,10 +4790,15 @@ class _DashboardScreenState extends State<DashboardScreen>
                                   lang,
                                   'daily_limit_reached',
                                 )
-                              : AppTranslations.getText(
-                                  lang,
-                                  'start_exposure',
-                                )),
+                              : ((_calculatedSafeMinutes > maxSafeMinutesThreshold || _elapsedExposureSeconds >= maxExposureSeconds)
+                                  ? AppTranslations.getText(
+                                      lang,
+                                      'safe_exposure_btn',
+                                    )
+                                  : AppTranslations.getText(
+                                      lang,
+                                      'start_exposure',
+                                    ))),
                     style: GoogleFonts.poppins(
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
@@ -4939,15 +5029,18 @@ class _OrbitalCircularProgressPainter extends CustomPainter {
 
       final Rect rect = Rect.fromCircle(center: center, radius: radius);
 
+      // Aclarim el color de l'animació cap al blanc per millorar la visibilitat
+      final Color animationColor = Color.lerp(valueColor, Colors.white, 0.45)!;
+
       // Definim el SweepGradient de manera que comenci en transparent (opacitat 0.0),
       // arribi al punt màxim (opacitat 0.8) al mig de l'arc (0.0625 de volta, és a dir, 22.5 graus)
       // i torni a desdibuixar-se fins a transparent (opacitat 0.0) al final de l'arc (0.125 de volta, és a dir, 45 graus).
       echoPaint.shader = SweepGradient(
         colors: [
-          valueColor.withOpacity(0.0),
-          valueColor.withOpacity(0.8),
-          valueColor.withOpacity(0.0),
-          valueColor.withOpacity(0.0),
+          animationColor.withOpacity(0.0),
+          animationColor.withOpacity(0.8),
+          animationColor.withOpacity(0.0),
+          animationColor.withOpacity(0.0),
         ],
         stops: const [
           0.0,
