@@ -252,6 +252,9 @@ class AppTranslations {
       'fullscreen_alert_body':
           'You have completed your recommended maximum daily sun exposure for today according to your skin type ({phototype}).',
       'accumulated_exposure_time': 'Accumulated\nExposure Time',
+      'safe_exposure_banner_title': '🛡️ Safe exposure',
+      'safe_exposure_banner_desc':
+          'Under current conditions, there is no need to track exposure time.',
     },
     'es': {
       'app_title':
@@ -361,6 +364,9 @@ class AppTranslations {
       'fullscreen_alert_body':
           'Has completado tu dosis máxima recomendada de exposición solar para hoy de acuerdo a tu fototipo ({phototype}).',
       'accumulated_exposure_time': 'Tiempo Acumulado\nde Exposición',
+      'safe_exposure_banner_title': '🛡️ Exposición segura',
+      'safe_exposure_banner_desc':
+          'En las condiciones actuales no es necesario controlar el tiempo de exposición.',
     },
     'de': {
       'app_title':
@@ -468,6 +474,9 @@ class AppTranslations {
       'fullscreen_alert_body':
           'Sie haben Ihre empfohlene maximale tägliche Sonnenexposition für heute entsprechend Ihrem Hauttyp ({phototype}) erreicht.',
       'accumulated_exposure_time': 'Akkumulierte\nExpositionszeit',
+      'safe_exposure_banner_title': '🛡️ Sichere Exposition',
+      'safe_exposure_banner_desc':
+          'Unter den aktuellen Bedingungen muss die Expositionszeit nicht überwacht werden.',
     },
     'fr': {
       'app_title':
@@ -576,6 +585,9 @@ class AppTranslations {
       'fullscreen_alert_body':
           'Vous avez atteint votre exposition solaire maximale quotidienne recommandée pour aujourd\'hui selon votre phototype ({phototype}).',
       'accumulated_exposure_time': 'Temps d\'Exposition\nAccumulé',
+      'safe_exposure_banner_title': '🛡️ Exposition sûre',
+      'safe_exposure_banner_desc':
+          'Dans les conditions actuelles, il n\'est pas nécessaire de contrôler le temps d\'exposition.',
     },
     'it': {
       'app_title':
@@ -687,6 +699,9 @@ class AppTranslations {
       'fullscreen_alert_body':
           'Hai completato la tua esposizione solare massima giornaliera raccomandata per oggi in base al tuo fototipo ({phototype}).',
       'accumulated_exposure_time': 'Tempo di Esposizione\nAccumulato',
+      'safe_exposure_banner_title': '🛡️ Esposizione sicura',
+      'safe_exposure_banner_desc':
+          'Nelle condizioni attuali non è necessario controllare il tempo di esposizione.',
     },
     'pt': {
       'app_title':
@@ -797,6 +812,9 @@ class AppTranslations {
       'fullscreen_alert_body':
           'Você completou a sua exposição solar máxima diária recomendada para hoje de acordo com o seu fototipo ({phototype}).',
       'accumulated_exposure_time': 'Tempo de Exposição\nAcumulado',
+      'safe_exposure_banner_title': '🛡️ Exposição segura',
+      'safe_exposure_banner_desc':
+          'Nas condições actuais não é necessário controlar o tempo de exposição.',
     },
     'ca': {
       'app_title':
@@ -907,6 +925,9 @@ class AppTranslations {
       'fullscreen_alert_body':
           'Has completat la teva dosi màxima recomanada d\'exposició solar per a avui d\'acord amb el teu fototip ({phototype}).',
       'accumulated_exposure_time': 'Temps Acumulat\nd\'Exposició',
+      'safe_exposure_banner_title': '🛡️ Exposició segura',
+      'safe_exposure_banner_desc':
+          'En les condicions actuals no cal controlar el temps d\'exposició.',
     },
   };
 
@@ -1770,7 +1791,8 @@ class _DashboardScreenState extends State<DashboardScreen>
       double activeElapsedSeconds = elapsedSeconds;
 
       if (savedElapsedSecs + elapsedSeconds >= maxExposureSeconds) {
-        activeElapsedSeconds = (maxExposureSeconds - savedElapsedSecs).toDouble();
+        activeElapsedSeconds = (maxExposureSeconds - savedElapsedSecs)
+            .toDouble();
         limitReachedInBackground = true;
       }
 
@@ -1779,7 +1801,8 @@ class _DashboardScreenState extends State<DashboardScreen>
 
       if (activeElapsedSeconds > 0) {
         final double doseIncrement = activeElapsedSeconds * lastSkinIntensity;
-        final double vitDIncrement = activeElapsedSeconds * lastSkinIntensity * 4.0;
+        final double vitDIncrement =
+            activeElapsedSeconds * lastSkinIntensity * 4.0;
 
         newDosePct = savedDosePct + doseIncrement;
         newVitDPct = (savedVitDPct ?? 0.0) + vitDIncrement;
@@ -2626,8 +2649,9 @@ class _DashboardScreenState extends State<DashboardScreen>
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool('timer_active', false);
     await prefs.remove('last_timestamp');
-    await prefs.remove('accumulated_dose_pct');
-    await prefs.remove('accumulated_vit_d_pct');
+    await prefs.setDouble('accumulated_dose_pct', 0.0);
+    await prefs.setDouble('accumulated_vit_d_pct', 0.0);
+    await prefs.setInt('elapsed_exposure_seconds', 0);
     await prefs.remove('last_skin_intensity');
     await prefs.remove('demo_mode');
     await prefs.remove('daily_limit_date');
@@ -2637,6 +2661,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       _demoMode = false;
       _accumulatedDosePercentage = 0.0;
       _accumulatedVitDPercentage = 0.0;
+      _elapsedExposureSeconds = 0;
       _vitDCelebrated = false;
       _limitReachedToday = false;
       _locationError = false;
@@ -4753,126 +4778,184 @@ class _DashboardScreenState extends State<DashboardScreen>
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 64),
-                ElevatedButton(
-                  onPressed:
-                      (_locationError ||
-                          _isOffline ||
-                          !_uvAvailable ||
-                          (_limitReachedToday && !isRunning) ||
-                          (_calculatedSafeMinutes > maxSafeMinutesThreshold) ||
-                          (_elapsedExposureSeconds >= maxExposureSeconds))
-                      ? null
-                      : (isRunning ? _pauseCountdown : _startCountdown),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isRunning
-                        ? Colors.redAccent
-                        : (((_limitReachedToday && !isRunning) ||
-                                 (_calculatedSafeMinutes > maxSafeMinutesThreshold) ||
-                                 (_elapsedExposureSeconds >= maxExposureSeconds))
-                              ? Colors.grey.shade400
-                              : const Color(0xFF73C6B6)),
-                    foregroundColor: Colors.white,
-                    elevation: 0,
+                if (!isRunning &&
+                    (_calculatedSafeMinutes > 360.0 ||
+                        _elapsedExposureSeconds >= maxExposureSeconds))
+                  Container(
                     padding: const EdgeInsets.symmetric(
-                      vertical: 14,
-                      horizontal: 8,
+                      horizontal: 12,
+                      vertical: 16,
                     ),
-                    shape: RoundedRectangleBorder(
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF73C6B6).withOpacity(0.08),
                       borderRadius: BorderRadius.circular(20),
-                    ),
-                    alignment: Alignment.center,
-                  ),
-                  child: Text(
-                    isRunning
-                        ? AppTranslations.getText(lang, 'cancel_exposure')
-                        : ((_limitReachedToday && !isRunning)
-                              ? AppTranslations.getText(
-                                  lang,
-                                  'daily_limit_reached',
-                                )
-                              : ((_calculatedSafeMinutes > maxSafeMinutesThreshold || _elapsedExposureSeconds >= maxExposureSeconds)
-                                  ? AppTranslations.getText(
-                                      lang,
-                                      'safe_exposure_btn',
-                                    )
-                                  : AppTranslations.getText(
-                                      lang,
-                                      'start_exposure',
-                                    ))),
-                    style: GoogleFonts.poppins(
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                      color: (_limitReachedToday && !isRunning)
-                          ? Colors.redAccent
-                          : null,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                OutlinedButton(
-                  onPressed: _resetCountdown,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: const Color(0xFF73C6B6),
-                    side: const BorderSide(
-                      color: Color(0xFF73C6B6),
-                      width: 1.5,
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                  ),
-                  child: Text(
-                    AppTranslations.getText(lang, 'reset'),
-                    style: GoogleFonts.poppins(
-                      fontSize: 12,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ),
-                if (!isRunning && showDemoButton) ...[
-                  const SizedBox(height: 10),
-                  GestureDetector(
-                    onTap: (_locationError || _isOffline || !_uvAvailable)
-                        ? null
-                        : () {
-                            setState(() {
-                              _demoMode = true;
-                            });
-                            _startCountdown();
-                          },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 6,
+                      border: Border.all(
+                        color: const Color(0xFF73C6B6).withOpacity(0.2),
+                        width: 1.5,
                       ),
-                      decoration: BoxDecoration(
-                        color: (_locationError || _isOffline || !_uvAvailable)
-                            ? const Color(0xFF2C3E50).withOpacity(0.05)
-                            : const Color(0xFF73C6B6).withOpacity(0.12),
-                        borderRadius: BorderRadius.circular(12),
-                        border: Border.all(
-                          color: (_locationError || _isOffline || !_uvAvailable)
-                              ? const Color(0xFF2C3E50).withOpacity(0.1)
-                              : const Color(0xFF73C6B6).withOpacity(0.3),
-                        ),
-                      ),
-                      child: Center(
-                        child: Text(
-                          "Demo 30s",
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          AppTranslations.getText(
+                            lang,
+                            'safe_exposure_banner_title',
+                          ),
                           style: GoogleFonts.poppins(
-                            fontSize: 10,
+                            fontSize: 14,
                             fontWeight: FontWeight.bold,
+                            color: const Color(0xFF2C3E50),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 8),
+                        Text(
+                          AppTranslations.getText(
+                            lang,
+                            'safe_exposure_banner_desc',
+                          ),
+                          style: GoogleFonts.poppins(
+                            fontSize: 11,
+                            fontWeight: FontWeight.w500,
+                            color: const Color(0xFF2C3E50).withOpacity(0.8),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  )
+                else ...[
+                  ElevatedButton(
+                    onPressed:
+                        (_locationError ||
+                            _isOffline ||
+                            !_uvAvailable ||
+                            (_limitReachedToday && !isRunning) ||
+                            (_calculatedSafeMinutes >
+                                maxSafeMinutesThreshold) ||
+                            (_elapsedExposureSeconds >= maxExposureSeconds))
+                        ? null
+                        : (isRunning ? _pauseCountdown : _startCountdown),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: isRunning
+                          ? Colors.redAccent
+                          : (((_limitReachedToday && !isRunning) ||
+                                    (_calculatedSafeMinutes >
+                                        maxSafeMinutesThreshold) ||
+                                    (_elapsedExposureSeconds >=
+                                        maxExposureSeconds))
+                                ? Colors.grey.shade400
+                                : const Color(0xFF73C6B6)),
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 14,
+                        horizontal: 8,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      alignment: Alignment.center,
+                    ),
+                    child: Text(
+                      isRunning
+                          ? AppTranslations.getText(lang, 'cancel_exposure')
+                          : ((_limitReachedToday && !isRunning)
+                                ? AppTranslations.getText(
+                                    lang,
+                                    'daily_limit_reached',
+                                  )
+                                : ((_calculatedSafeMinutes >
+                                              maxSafeMinutesThreshold ||
+                                          _elapsedExposureSeconds >=
+                                              maxExposureSeconds)
+                                      ? AppTranslations.getText(
+                                          lang,
+                                          'safe_exposure_btn',
+                                        )
+                                      : AppTranslations.getText(
+                                          lang,
+                                          'start_exposure',
+                                        ))),
+                      style: GoogleFonts.poppins(
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                        color: (_limitReachedToday && !isRunning)
+                            ? Colors.redAccent
+                            : null,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  OutlinedButton(
+                    onPressed: _resetCountdown,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: const Color(0xFF73C6B6),
+                      side: const BorderSide(
+                        color: Color(0xFF73C6B6),
+                        width: 1.5,
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
+                    child: Text(
+                      AppTranslations.getText(lang, 'reset'),
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                  if (!isRunning && showDemoButton) ...[
+                    const SizedBox(height: 10),
+                    GestureDetector(
+                      onTap: (_locationError || _isOffline || !_uvAvailable)
+                          ? null
+                          : () {
+                              setState(() {
+                                _demoMode = true;
+                              });
+                              _startCountdown();
+                            },
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 6,
+                        ),
+                        decoration: BoxDecoration(
+                          color: (_locationError || _isOffline || !_uvAvailable)
+                              ? const Color(0xFF2C3E50).withOpacity(0.05)
+                              : const Color(0xFF73C6B6).withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
                             color:
                                 (_locationError || _isOffline || !_uvAvailable)
-                                ? const Color(0xFF2C3E50).withOpacity(0.4)
-                                : const Color(0xFF73C6B6),
+                                ? const Color(0xFF2C3E50).withOpacity(0.1)
+                                : const Color(0xFF73C6B6).withOpacity(0.3),
+                          ),
+                        ),
+                        child: Center(
+                          child: Text(
+                            "Demo 30s",
+                            style: GoogleFonts.poppins(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color:
+                                  (_locationError ||
+                                      _isOffline ||
+                                      !_uvAvailable)
+                                  ? const Color(0xFF2C3E50).withOpacity(0.4)
+                                  : const Color(0xFF73C6B6),
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
+                  ],
                 ],
               ],
             ),
