@@ -255,6 +255,9 @@ class AppTranslations {
       'safe_exposure_banner_title': '🛡️ Safe exposure',
       'safe_exposure_banner_desc':
           'Under current conditions, there is no need to track exposure time.',
+      'uv_forecast_title': 'Hourly UV Forecast',
+      'uv_forecast_btn_label': 'Hourly UV Forecast →',
+      'current_hour_label': 'Now',
     },
     'es': {
       'app_title':
@@ -367,6 +370,9 @@ class AppTranslations {
       'safe_exposure_banner_title': '🛡️ Exposición segura',
       'safe_exposure_banner_desc':
           'En las condiciones actuales no es necesario controlar el tiempo de exposición.',
+      'uv_forecast_title': 'Previsión UV por horas',
+      'uv_forecast_btn_label': 'Previsión UV por horas →',
+      'current_hour_label': 'Ahora',
     },
     'de': {
       'app_title':
@@ -477,6 +483,9 @@ class AppTranslations {
       'safe_exposure_banner_title': '🛡️ Sichere Exposition',
       'safe_exposure_banner_desc':
           'Unter den aktuellen Bedingungen muss die Expositionszeit nicht überwacht werden.',
+      'uv_forecast_title': 'Stündliche UV-Vorhersage',
+      'uv_forecast_btn_label': 'Stündliche UV-Prognose →',
+      'current_hour_label': 'Jetzt',
     },
     'fr': {
       'app_title':
@@ -588,6 +597,9 @@ class AppTranslations {
       'safe_exposure_banner_title': '🛡️ Exposition sûre',
       'safe_exposure_banner_desc':
           'Dans les conditions actuelles, il n\'est pas nécessaire de contrôler le temps d\'exposition.',
+      'uv_forecast_title': 'Prévisions UV par heure',
+      'uv_forecast_btn_label': 'Prévisions UV horaires →',
+      'current_hour_label': 'Maint.',
     },
     'it': {
       'app_title':
@@ -702,6 +714,9 @@ class AppTranslations {
       'safe_exposure_banner_title': '🛡️ Esposizione sicura',
       'safe_exposure_banner_desc':
           'Nelle condizioni attuali non è necessario controllare il tempo di esposizione.',
+      'uv_forecast_title': 'Previsioni UV orarie',
+      'uv_forecast_btn_label': 'Previsioni UV orarie →',
+      'current_hour_label': 'Ora',
     },
     'pt': {
       'app_title':
@@ -815,6 +830,9 @@ class AppTranslations {
       'safe_exposure_banner_title': '🛡️ Exposição segura',
       'safe_exposure_banner_desc':
           'Nas condições actuais não é necessário controlar o tempo de exposição.',
+      'uv_forecast_title': 'Previsão UV por hora',
+      'uv_forecast_btn_label': 'Previsão UV por horas →',
+      'current_hour_label': 'Agora',
     },
     'ca': {
       'app_title':
@@ -928,6 +946,9 @@ class AppTranslations {
       'safe_exposure_banner_title': '🛡️ Exposició segura',
       'safe_exposure_banner_desc':
           'En les condicions actuals no cal controlar el temps d\'exposició.',
+      'uv_forecast_title': 'Previsió UV per hores',
+      'uv_forecast_btn_label': 'Previsió UV per hores →',
+      'current_hour_label': 'Ara',
     },
   };
 
@@ -1516,9 +1537,22 @@ class _DashboardScreenState extends State<DashboardScreen>
   late String _currentTimeString;
   late Timer _clockTimer;
 
+  List<Map<String, dynamic>> _hourlyForecast = [];
+  PageController? _pageController;
+  int _currentPage = 0;
+
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: 0);
+    final today = DateTime.now();
+    _hourlyForecast = List.generate(
+      24,
+      (i) => {
+        'hour': DateTime(today.year, today.month, today.day, i),
+        'uv': _calculateEstimatedUvForHour(i),
+      },
+    );
     WidgetsBinding.instance.addObserver(this);
 
     _vitDRippleController = AnimationController(
@@ -1677,6 +1711,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
   @override
   void dispose() {
+    _pageController?.dispose();
     WidgetsBinding.instance.removeObserver(this);
     appLanguage.removeListener(_onLanguageChanged);
     _clockTimer.cancel();
@@ -2321,6 +2356,19 @@ class _DashboardScreenState extends State<DashboardScreen>
     }
   }
 
+  // Estimación de UV por hora para el gráfico
+  double _calculateEstimatedUvForHour(int hour) {
+    if (hour < 8 || hour > 19) return 0.1;
+    final diff = (hour - 13).abs(); // Distancia al mediodía (13:00)
+    double estimated = 8.0 - (diff * 1.2);
+    return estimated < 0.5 ? 0.5 : estimated;
+  }
+
+  // Estimación de UV secundaria si la API falla
+  double _calculateEstimatedUv() {
+    return _calculateEstimatedUvForHour(DateTime.now().hour);
+  }
+
   // Petición a Open-Meteo API
   Future<void> _fetchUvIndex(double lat, double lon) async {
     final url =
@@ -2345,9 +2393,36 @@ class _DashboardScreenState extends State<DashboardScreen>
               closestIndex = i;
             }
           }
+
+          // Extraer previsión de las 24 horas del día actual
+          final List<Map<String, dynamic>> forecast = [];
+          final today = DateTime.now();
+          for (int i = 0; i < hourlyTimes.length; i++) {
+            final time = DateTime.parse(hourlyTimes[i] as String);
+            if (time.year == today.year &&
+                time.month == today.month &&
+                time.day == today.day) {
+              forecast.add({
+                'hour': time,
+                'uv': (hourlyUv[i] as num).toDouble(),
+              });
+            }
+          }
+
+          // Si por zona horaria no hay coincidencias exactas para "hoy", cogemos las primeras 24 horas de la respuesta
+          if (forecast.isEmpty) {
+            for (int i = 0; i < math.min(24, hourlyTimes.length); i++) {
+              forecast.add({
+                'hour': DateTime.parse(hourlyTimes[i] as String),
+                'uv': (hourlyUv[i] as num).toDouble(),
+              });
+            }
+          }
+
           setState(() {
             _uvIndex = (hourlyUv[closestIndex] as num).toDouble();
             _uvAvailable = true;
+            _hourlyForecast = forecast;
           });
           _calculateRecommendedTime();
           return;
@@ -2356,23 +2431,23 @@ class _DashboardScreenState extends State<DashboardScreen>
       throw 'Respuesta inválida de la API.';
     } catch (e) {
       debugPrint("Error obteniendo UV: $e");
-      // Asignar un UV por defecto según la hora/luz para que no falle el prototipo
+      // Asignar un UV por defecto según la hora/luz para que no falle el prototipo y rellenar gráfica
+      final List<Map<String, dynamic>> fallbackForecast = [];
+      final today = DateTime.now();
+      for (int i = 0; i < 24; i++) {
+        final time = DateTime(today.year, today.month, today.day, i);
+        fallbackForecast.add({
+          'hour': time,
+          'uv': _calculateEstimatedUvForHour(i),
+        });
+      }
       setState(() {
         _uvIndex = _calculateEstimatedUv();
         _uvAvailable = false;
+        _hourlyForecast = fallbackForecast;
       });
       _calculateRecommendedTime();
     }
-  }
-
-  // Estimación de UV secundaria si la API falla
-  double _calculateEstimatedUv() {
-    // Estimación básica: máx 7.5 al mediodía, disminuye en extremos
-    final hour = DateTime.now().hour;
-    if (hour < 8 || hour > 19) return 0.1;
-    final diff = (hour - 13).abs(); // Distancia al mediodía (13:00)
-    double estimated = 8.0 - (diff * 1.2);
-    return estimated < 0.5 ? 0.5 : estimated;
   }
 
   // Obtiene la estación del año basada en coordenadas e históricas
@@ -3499,6 +3574,758 @@ class _DashboardScreenState extends State<DashboardScreen>
     }
   }
 
+  Widget _buildHeader(String lang, String dayString, String season) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                "Sun Exposure Timer", // NOTRANSLATE: The app title in the header must always remain in English ("Sun Exposure Timer")
+                style: GoogleFonts.poppins(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF2C3E50),
+                  letterSpacing: 0.5,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      "$dayString • $season",
+                      style: GoogleFonts.poppins(
+                        fontSize: 12,
+                        color: const Color(0xFF2C3E50).withOpacity(0.6),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _showHeaderInfoDialog,
+                    child: Icon(
+                      Icons.info_outline_rounded,
+                      size: 22,
+                      color: const Color(0xFF2C3E50).withOpacity(0.6),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: _showSettingsDialog,
+                    child: Icon(
+                      Icons.settings_outlined,
+                      size: 22,
+                      color: const Color(0xFF2C3E50).withOpacity(0.6),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(width: 12),
+        // Indicador de Hora e Info GPS
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            Text(
+              _currentTimeString,
+              style: GoogleFonts.poppins(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: const Color(0xFF2C3E50),
+              ),
+            ),
+            const SizedBox(height: 2),
+            Row(
+              children: [
+                Icon(
+                  _locationError ? Icons.location_off : Icons.location_on,
+                  size: 14,
+                  color: _locationError
+                      ? Colors.orange
+                      : const Color(0xFF73C6B6),
+                ),
+                const SizedBox(width: 4),
+                Text(
+                  _locationError
+                      ? AppTranslations.getText(lang, 'simulated')
+                      : AppTranslations.getText(lang, 'gps_active'),
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    color: const Color(0xFF2C3E50).withOpacity(0.6),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSkinTypeCard(FitzpatrickType currentType, String lang) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 12,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 14,
+            height: 14,
+            decoration: BoxDecoration(
+              color: currentType.color,
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: const Color(0xFF2C3E50).withOpacity(0.2),
+                width: 1,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  "${AppTranslations.getText(lang, 'your_skin_type')}: ${AppTranslations.getText(lang, 'skin_type_${widget.selectedSkinTypeIndex + 1}_name')}",
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF2C3E50),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.visible,
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  "${currentType.dose} J/m²",
+                  style: GoogleFonts.poppins(
+                    fontSize: 9,
+                    color: const Color(0xFF2C3E50).withOpacity(0.6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 4),
+          GestureDetector(
+            onTap: widget.onResetSkinType,
+            child: const Icon(
+              Icons.edit_outlined,
+              size: 16,
+              color: Color(0xFF73C6B6),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildLocationCard(String lang) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 12,
+            offset: Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.map_outlined, color: Color(0xFF73C6B6), size: 14),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  AppTranslations.getText(lang, 'location'),
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: FontWeight.bold,
+                    color: const Color(0xFF2C3E50),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  _locationError
+                      ? AppTranslations.getText(
+                          lang,
+                          _isOffline
+                              ? 'location_unavailable'
+                              : 'search_your_city',
+                        )
+                      : _locationName,
+                  style: GoogleFonts.poppins(
+                    fontSize: 9,
+                    color: _locationError
+                        ? Colors.redAccent
+                        : const Color(0xFF2C3E50).withOpacity(0.6),
+                  ),
+                  maxLines: 2,
+                  overflow: TextOverflow.visible,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 4),
+          if (!_isGpsActive) ...[
+            GestureDetector(
+              onTap: _openSearchCityBottomSheet,
+              child: const Icon(
+                Icons.search_rounded,
+                size: 16,
+                color: Color(0xFF73C6B6),
+              ),
+            ),
+          ],
+          if (_isGpsActive || (!_isOffline && !_gpsPermissionDenied)) ...[
+            GestureDetector(
+              onTap: () async {
+                if (!_isGpsActive) {
+                  setState(() {
+                    _isFetchingUv = true;
+                  });
+                  try {
+                    LocationPermission permission =
+                        await Geolocator.requestPermission();
+                    if (permission == LocationPermission.whileInUse ||
+                        permission == LocationPermission.always) {
+                      setState(() {
+                        _gpsPermissionDenied = false;
+                      });
+                      await _fetchLocationAndUv();
+                    } else {
+                      setState(() {
+                        _gpsPermissionDenied = true;
+                      });
+                    }
+                  } catch (e) {
+                    debugPrint(
+                      "Error requesting GPS permission on refresh: $e",
+                    );
+                    setState(() {
+                      _gpsPermissionDenied = true;
+                    });
+                  } finally {
+                    setState(() {
+                      _isFetchingUv = false;
+                    });
+                  }
+                } else {
+                  _fetchLocationAndUv();
+                }
+              },
+              child: _isFetchingUv
+                  ? const SizedBox(
+                      width: 12,
+                      height: 12,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 1.5,
+                        valueColor: AlwaysStoppedAnimation(Color(0xFF73C6B6)),
+                      ),
+                    )
+                  : const Icon(
+                      Icons.refresh_rounded,
+                      size: 16,
+                      color: Color(0xFF73C6B6),
+                    ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _buildSegmentedControl() {
+    return Container(
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.5),
+        borderRadius: BorderRadius.circular(30),
+        border: Border.all(
+          color: const Color(0xFF2C3E50).withOpacity(0.08),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // Home Segment
+          GestureDetector(
+            onTap: () {
+              _pageController?.animateToPage(
+                0,
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeInOut,
+              );
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              decoration: BoxDecoration(
+                color: _currentPage == 0
+                    ? const Color(0xFF73C6B6)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: _currentPage == 0
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF73C6B6).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Icon(
+                Icons.data_saver_on_rounded,
+                size: 20,
+                color: _currentPage == 0
+                    ? Colors.white
+                    : const Color(0xFF2C3E50).withOpacity(0.6),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          // Chart Segment
+          GestureDetector(
+            onTap: () {
+              _pageController?.animateToPage(
+                1,
+                duration: const Duration(milliseconds: 350),
+                curve: Curves.easeInOut,
+              );
+            },
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 8),
+              decoration: BoxDecoration(
+                color: _currentPage == 1
+                    ? const Color(0xFF73C6B6)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: _currentPage == 1
+                    ? [
+                        BoxShadow(
+                          color: const Color(0xFF73C6B6).withOpacity(0.3),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ]
+                    : null,
+              ),
+              child: Icon(
+                Icons.show_chart_rounded,
+                size: 20,
+                color: _currentPage == 1
+                    ? Colors.white
+                    : const Color(0xFF2C3E50).withOpacity(0.6),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildMainDashboardLowerSection(String lang) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            // SENSOR LUZ AMBIENTAL
+            Expanded(
+              child: Container(
+                height: 120,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: _hasPhysicalLightSensor
+                      ? Colors.white
+                      : const Color(
+                          0xFFEAEDED,
+                        ), // Grisáceo / disabled background
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x0A000000),
+                      blurRadius: 16,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: _hasPhysicalLightSensor
+                    ? Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            height: 22,
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _getEnvironmentIcon(_luxValue),
+                                  size: 22,
+                                  color: _getEnvironmentIconColor(_luxValue),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Row(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.center,
+                                    children: [
+                                      Flexible(
+                                        child: Text(
+                                          AppTranslations.getText(
+                                            lang,
+                                            'real_light',
+                                          ),
+                                          style: GoogleFonts.poppins(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.bold,
+                                            color: const Color(0xFF2C3E50),
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      GestureDetector(
+                                        onTap: _showLightSensorInfoDialog,
+                                        child: Icon(
+                                          Icons.info_outline_rounded,
+                                          size: 14,
+                                          color: const Color(
+                                            0xFF2C3E50,
+                                          ).withOpacity(0.5),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 0),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.center,
+                                child: Text.rich(
+                                  TextSpan(
+                                    text: _formatLux(_luxValue),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 36,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF2C3E50),
+                                    ),
+                                    children: [
+                                      TextSpan(
+                                        text: " lx",
+                                        style: GoogleFonts.poppins(
+                                          fontSize: 18,
+                                          fontWeight: FontWeight.w600,
+                                          color: const Color(
+                                            0xFF2C3E50,
+                                          ).withOpacity(0.6),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                _getEnvironmentName(_luxValue, lang),
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: _getEnvironmentIconColor(_luxValue),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ],
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Icon(
+                                Icons.lightbulb_outline_rounded,
+                                color: const Color(0xFF2C3E50).withOpacity(0.3),
+                                size: 22,
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  AppTranslations.getText(lang, 'real_light'),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 13,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF2C3E50),
+                                  ),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          Expanded(
+                            child: Center(
+                              child: Text(
+                                AppTranslations.getText(
+                                  lang,
+                                  'no_light_sensor_msg',
+                                ),
+                                style: GoogleFonts.poppins(
+                                  fontSize: 9.5,
+                                  fontWeight: FontWeight.w500,
+                                  color: const Color(
+                                    0xFF2C3E50,
+                                  ).withOpacity(0.6),
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+            const SizedBox(width: 16),
+
+            // ÍNDICE UV REAL/ESTIMADO
+            Expanded(
+              child: Container(
+                height: 120,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 10,
+                ),
+                decoration: BoxDecoration(
+                  color: (_locationError || _isOffline || !_uvAvailable)
+                      ? const Color(0xFFEAEDED)
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0x0A000000),
+                      blurRadius: 16,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: (_locationError || _isOffline || !_uvAvailable)
+                    ? Center(
+                        child: Text(
+                          "Índex UV no disponible",
+                          style: GoogleFonts.poppins(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: const Color(0xFF2C3E50).withOpacity(0.6),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      )
+                    : Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                            height: 22,
+                            child: Row(
+                              children: [
+                                SvgPicture.asset(
+                                  'assets/icons/heat_24.svg',
+                                  width: 22,
+                                  height: 22,
+                                  colorFilter: const ColorFilter.mode(
+                                    Color.fromARGB(255, 149, 62, 255),
+                                    BlendMode.srcIn,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    AppTranslations.getText(
+                                      lang,
+                                      'uv_index_title',
+                                    ),
+                                    style: GoogleFonts.poppins(
+                                      fontSize: 13,
+                                      fontWeight: FontWeight.bold,
+                                      color: const Color(0xFF2C3E50),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: 0),
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.center,
+                                child: Text(
+                                  _uvIndex.toStringAsFixed(1),
+                                  style: GoogleFonts.poppins(
+                                    fontSize: 36,
+                                    fontWeight: FontWeight.bold,
+                                    color: const Color(0xFF2C3E50),
+                                  ),
+                                ),
+                              ),
+                              Text(
+                                _uvIndex <= 2.9
+                                    ? AppTranslations.getText(lang, 'uv_low')
+                                    : _uvIndex <= 5.9
+                                    ? AppTranslations.getText(
+                                        lang,
+                                        'uv_moderate',
+                                      )
+                                    : _uvIndex <= 7.9
+                                    ? AppTranslations.getText(lang, 'uv_high')
+                                    : _uvIndex <= 10.9
+                                    ? AppTranslations.getText(
+                                        lang,
+                                        'uv_very_high',
+                                      )
+                                    : AppTranslations.getText(
+                                        lang,
+                                        'uv_extreme',
+                                      ),
+                                textAlign: TextAlign.center,
+                                style: GoogleFonts.poppins(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.bold,
+                                  color: _getUvColor(_uvIndex),
+                                ),
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        _buildSolarIntensityCard(),
+        const SizedBox(height: 16),
+        _buildCombinedExposureCard(),
+      ],
+    );
+  }
+
+  Widget _buildUvForecastCard(String lang) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(28),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x0A000000),
+            blurRadius: 24,
+            offset: Offset(0, 8),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(
+                Icons.show_chart_rounded,
+                color: Color(0xFF73C6B6),
+                size: 24,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                AppTranslations.getText(lang, 'uv_forecast_title'),
+                style: GoogleFonts.poppins(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF2C3E50),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          Padding(
+            padding: const EdgeInsets.only(left: 32),
+            child: Builder(
+              builder: (context) {
+                final today = DateTime.now();
+                final day = today.day.toString().padLeft(2, '0');
+                final month = today.month.toString().padLeft(2, '0');
+                final year = today.year.toString();
+                return Text(
+                  "$day/$month/$year",
+                  style: GoogleFonts.poppins(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    color: const Color(0xFF2C3E50).withOpacity(0.6),
+                  ),
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 16),
+          UvForecastGraph(
+            forecast: _hourlyForecast,
+            currentHourLabel: AppTranslations.getText(
+              lang,
+              'current_hour_label',
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final lang = appLanguage.value;
@@ -3549,750 +4376,71 @@ class _DashboardScreenState extends State<DashboardScreen>
               bottom: false,
               child: Column(
                 children: [
-                  Expanded(
-                    child: SingleChildScrollView(
-                      physics: const BouncingScrollPhysics(),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 24.0,
-                          vertical: 16.0,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24.0, 16.0, 24.0, 0.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        _buildHeader(lang, dayString, season),
+                        const SizedBox(height: 16),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            // HEADER DE LA APLICACIÓN
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        "Sun Exposure Timer", // NOTRANSLATE: The app title in the header must always remain in English ("Sun Exposure Timer")
-                                        style: GoogleFonts.poppins(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: const Color(0xFF2C3E50),
-                                          letterSpacing: 0.5,
-                                        ),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                      Row(
-                                        children: [
-                                          Flexible(
-                                            child: Text(
-                                              "$dayString • $season",
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 12,
-                                                color: const Color(
-                                                  0xFF2C3E50,
-                                                ).withOpacity(0.6),
-                                              ),
-                                              maxLines: 1,
-                                              overflow: TextOverflow.ellipsis,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          GestureDetector(
-                                            onTap: _showHeaderInfoDialog,
-                                            child: Icon(
-                                              Icons.info_outline_rounded,
-                                              size: 22,
-                                              color: const Color(
-                                                0xFF2C3E50,
-                                              ).withOpacity(0.6),
-                                            ),
-                                          ),
-                                          const SizedBox(width: 8),
-                                          GestureDetector(
-                                            onTap: _showSettingsDialog,
-                                            child: Icon(
-                                              Icons.settings_outlined,
-                                              size: 22,
-                                              color: const Color(
-                                                0xFF2C3E50,
-                                              ).withOpacity(0.6),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                // Indicador de Hora e Info GPS
-                                Column(
-                                  crossAxisAlignment: CrossAxisAlignment.end,
-                                  children: [
-                                    Text(
-                                      _currentTimeString,
-                                      style: GoogleFonts.poppins(
-                                        fontSize: 22,
-                                        fontWeight: FontWeight.w700,
-                                        color: const Color(0xFF2C3E50),
-                                      ),
-                                    ),
-                                    const SizedBox(height: 2),
-                                    Row(
-                                      children: [
-                                        Icon(
-                                          _locationError
-                                              ? Icons.location_off
-                                              : Icons.location_on,
-                                          size: 14,
-                                          color: _locationError
-                                              ? Colors.orange
-                                              : const Color(0xFF73C6B6),
-                                        ),
-                                        const SizedBox(width: 4),
-                                        Text(
-                                          _locationError
-                                              ? AppTranslations.getText(
-                                                  lang,
-                                                  'simulated',
-                                                )
-                                              : AppTranslations.getText(
-                                                  lang,
-                                                  'gps_active',
-                                                ),
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 11,
-                                            color: const Color(
-                                              0xFF2C3E50,
-                                            ).withOpacity(0.6),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ],
-                                ),
-                              ],
+                            Expanded(
+                              child: _buildSkinTypeCard(currentType, lang),
                             ),
-                            const SizedBox(height: 20),
-
-                            // FILA DE FOTOTIPO SELECCIONADO
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 12,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0x0A000000),
-                                    blurRadius: 16,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  Container(
-                                    width: 28,
-                                    height: 28,
-                                    decoration: BoxDecoration(
-                                      color: currentType.color,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: const Color(
-                                          0xFF2C3E50,
-                                        ).withOpacity(0.2),
-                                        width: 2,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          "${AppTranslations.getText(lang, 'your_skin_type')}: ${AppTranslations.getText(lang, 'skin_type_${widget.selectedSkinTypeIndex + 1}_name')}",
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                            color: const Color(0xFF2C3E50),
-                                          ),
-                                        ),
-                                        Text(
-                                          "${AppTranslations.getText(lang, 'safe_dose')}: ${currentType.dose} J/m²",
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 11,
-                                            color: const Color(
-                                              0xFF2C3E50,
-                                            ).withOpacity(0.6),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  IconButton(
-                                    onPressed: widget.onResetSkinType,
-                                    icon: const Icon(
-                                      Icons.edit_outlined,
-                                      size: 20,
-                                      color: Color(0xFF73C6B6),
-                                    ),
-                                    tooltip: AppTranslations.getText(
-                                      lang,
-                                      'change_skin_type',
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            // COORDINADAS CARD
-                            Container(
-                              padding: const EdgeInsets.all(16),
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0x0A000000),
-                                    blurRadius: 16,
-                                    offset: Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Row(
-                                children: [
-                                  const Icon(
-                                    Icons.map_outlined,
-                                    color: Color(0xFF73C6B6),
-                                    size: 24,
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      children: [
-                                        Text(
-                                          AppTranslations.getText(
-                                            lang,
-                                            'location',
-                                          ),
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 13,
-                                            fontWeight: FontWeight.bold,
-                                            color: const Color(0xFF2C3E50),
-                                          ),
-                                        ),
-                                        Text(
-                                          _locationError
-                                              ? AppTranslations.getText(
-                                                  lang,
-                                                  _isOffline
-                                                      ? 'location_unavailable'
-                                                      : 'search_your_city',
-                                                )
-                                              : _locationName,
-                                          style: GoogleFonts.poppins(
-                                            fontSize: 11,
-                                            color: _locationError
-                                                ? Colors.redAccent
-                                                : const Color(
-                                                    0xFF2C3E50,
-                                                  ).withOpacity(0.6),
-                                          ),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      if (!_isGpsActive) ...[
-                                        IconButton(
-                                          onPressed: _openSearchCityBottomSheet,
-                                          icon: const Icon(
-                                            Icons.search_rounded,
-                                            size: 20,
-                                            color: Color(0xFF73C6B6),
-                                          ),
-                                        ),
-                                      ],
-                                      if (_isGpsActive ||
-                                          (!_isOffline &&
-                                              !_gpsPermissionDenied)) ...[
-                                        IconButton(
-                                          onPressed: () async {
-                                            if (!_isGpsActive) {
-                                              setState(() {
-                                                _isFetchingUv = true;
-                                              });
-                                              try {
-                                                LocationPermission permission =
-                                                    await Geolocator.requestPermission();
-                                                if (permission ==
-                                                        LocationPermission
-                                                            .whileInUse ||
-                                                    permission ==
-                                                        LocationPermission
-                                                            .always) {
-                                                  setState(() {
-                                                    _gpsPermissionDenied =
-                                                        false;
-                                                  });
-                                                  await _fetchLocationAndUv();
-                                                } else {
-                                                  setState(() {
-                                                    _gpsPermissionDenied = true;
-                                                  });
-                                                }
-                                              } catch (e) {
-                                                debugPrint(
-                                                  "Error requesting GPS permission on refresh: $e",
-                                                );
-                                                setState(() {
-                                                  _gpsPermissionDenied = true;
-                                                });
-                                              } finally {
-                                                setState(() {
-                                                  _isFetchingUv = false;
-                                                });
-                                              }
-                                            } else {
-                                              _fetchLocationAndUv();
-                                            }
-                                          },
-                                          icon: _isFetchingUv
-                                              ? const SizedBox(
-                                                  width: 18,
-                                                  height: 18,
-                                                  child: CircularProgressIndicator(
-                                                    strokeWidth: 2,
-                                                    valueColor:
-                                                        AlwaysStoppedAnimation(
-                                                          Color(0xFF73C6B6),
-                                                        ),
-                                                  ),
-                                                )
-                                              : const Icon(
-                                                  Icons.refresh_rounded,
-                                                  size: 20,
-                                                  color: Color(0xFF73C6B6),
-                                                ),
-                                        ),
-                                      ],
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(height: 16),
-
-                            Row(
-                              children: [
-                                // SENSOR LUZ AMBIENTAL
-                                Expanded(
-                                  child: Container(
-                                    height: 120,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color: _hasPhysicalLightSensor
-                                          ? Colors.white
-                                          : const Color(
-                                              0xFFEAEDED,
-                                            ), // Grisáceo / disabled background
-                                      borderRadius: BorderRadius.circular(24),
-                                      boxShadow: const [
-                                        BoxShadow(
-                                          color: Color(0x0A000000),
-                                          blurRadius: 16,
-                                          offset: Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child: _hasPhysicalLightSensor
-                                        ? Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              SizedBox(
-                                                height: 22,
-                                                child: Row(
-                                                  children: [
-                                                    Icon(
-                                                      _getEnvironmentIcon(
-                                                        _luxValue,
-                                                      ),
-                                                      size: 22,
-                                                      color:
-                                                          _getEnvironmentIconColor(
-                                                            _luxValue,
-                                                          ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Expanded(
-                                                      child: Row(
-                                                        crossAxisAlignment:
-                                                            CrossAxisAlignment
-                                                                .center,
-                                                        children: [
-                                                          Flexible(
-                                                            child: Text(
-                                                              AppTranslations.getText(
-                                                                lang,
-                                                                'real_light',
-                                                              ),
-                                                              style: GoogleFonts.poppins(
-                                                                fontSize: 13,
-                                                                fontWeight:
-                                                                    FontWeight
-                                                                        .bold,
-                                                                color:
-                                                                    const Color(
-                                                                      0xFF2C3E50,
-                                                                    ),
-                                                              ),
-                                                              maxLines: 1,
-                                                              overflow:
-                                                                  TextOverflow
-                                                                      .ellipsis,
-                                                            ),
-                                                          ),
-                                                          const SizedBox(
-                                                            width: 4,
-                                                          ),
-                                                          GestureDetector(
-                                                            onTap:
-                                                                _showLightSensorInfoDialog,
-                                                            child: Icon(
-                                                              Icons
-                                                                  .info_outline_rounded,
-                                                              size: 14,
-                                                              color:
-                                                                  const Color(
-                                                                    0xFF2C3E50,
-                                                                  ).withOpacity(
-                                                                    0.5,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(height: 0),
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                children: [
-                                                  FittedBox(
-                                                    fit: BoxFit.scaleDown,
-                                                    alignment: Alignment.center,
-                                                    child: Text.rich(
-                                                      TextSpan(
-                                                        text: _formatLux(
-                                                          _luxValue,
-                                                        ),
-                                                        style:
-                                                            GoogleFonts.poppins(
-                                                              fontSize: 36,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color:
-                                                                  const Color(
-                                                                    0xFF2C3E50,
-                                                                  ),
-                                                            ),
-                                                        children: [
-                                                          TextSpan(
-                                                            text: " lx",
-                                                            style: GoogleFonts.poppins(
-                                                              fontSize: 18,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .w600,
-                                                              color:
-                                                                  const Color(
-                                                                    0xFF2C3E50,
-                                                                  ).withOpacity(
-                                                                    0.6,
-                                                                  ),
-                                                            ),
-                                                          ),
-                                                        ],
-                                                      ),
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    _getEnvironmentName(
-                                                      _luxValue,
-                                                      lang,
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                    style: GoogleFonts.poppins(
-                                                      fontSize: 15,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color:
-                                                          _getEnvironmentIconColor(
-                                                            _luxValue,
-                                                          ),
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          )
-                                        : Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.start,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.spaceBetween,
-                                            children: [
-                                              Row(
-                                                children: [
-                                                  Icon(
-                                                    Icons
-                                                        .lightbulb_outline_rounded,
-                                                    color: const Color(
-                                                      0xFF2C3E50,
-                                                    ).withOpacity(0.3),
-                                                    size: 22,
-                                                  ),
-                                                  const SizedBox(width: 8),
-                                                  Expanded(
-                                                    child: Text(
-                                                      AppTranslations.getText(
-                                                        lang,
-                                                        'real_light',
-                                                      ),
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                            fontSize: 13,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: const Color(
-                                                              0xFF2C3E50,
-                                                            ),
-                                                          ),
-                                                      maxLines: 1,
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              Expanded(
-                                                child: Center(
-                                                  child: Text(
-                                                    AppTranslations.getText(
-                                                      lang,
-                                                      'no_light_sensor_msg',
-                                                    ),
-                                                    style: GoogleFonts.poppins(
-                                                      fontSize: 9.5,
-                                                      fontWeight:
-                                                          FontWeight.w500,
-                                                      color: const Color(
-                                                        0xFF2C3E50,
-                                                      ).withOpacity(0.6),
-                                                    ),
-                                                    textAlign: TextAlign.center,
-                                                  ),
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-
-                                // ÍNDICE UV REAL/ESTIMADO
-                                Expanded(
-                                  child: Container(
-                                    height: 120,
-                                    padding: const EdgeInsets.symmetric(
-                                      horizontal: 14,
-                                      vertical: 10,
-                                    ),
-                                    decoration: BoxDecoration(
-                                      color:
-                                          (_locationError ||
-                                              _isOffline ||
-                                              !_uvAvailable)
-                                          ? const Color(0xFFEAEDED)
-                                          : Colors.white,
-                                      borderRadius: BorderRadius.circular(24),
-                                      boxShadow: const [
-                                        BoxShadow(
-                                          color: Color(0x0A000000),
-                                          blurRadius: 16,
-                                          offset: Offset(0, 4),
-                                        ),
-                                      ],
-                                    ),
-                                    child:
-                                        (_locationError ||
-                                            _isOffline ||
-                                            !_uvAvailable)
-                                        ? Center(
-                                            child: Text(
-                                              "Índex UV no disponible",
-                                              style: GoogleFonts.poppins(
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w600,
-                                                color: const Color(
-                                                  0xFF2C3E50,
-                                                ).withOpacity(0.6),
-                                              ),
-                                              textAlign: TextAlign.center,
-                                            ),
-                                          )
-                                        : Column(
-                                            crossAxisAlignment:
-                                                CrossAxisAlignment.stretch,
-                                            mainAxisAlignment:
-                                                MainAxisAlignment.start,
-                                            children: [
-                                              SizedBox(
-                                                height: 22,
-                                                child: Row(
-                                                  children: [
-                                                    SvgPicture.asset(
-                                                      'assets/icons/heat_24.svg',
-                                                      width: 22,
-                                                      height: 22,
-                                                      colorFilter:
-                                                          const ColorFilter.mode(
-                                                            Color.fromARGB(
-                                                              255,
-                                                              149,
-                                                              62,
-                                                              255,
-                                                            ),
-                                                            BlendMode.srcIn,
-                                                          ),
-                                                    ),
-                                                    const SizedBox(width: 8),
-                                                    Expanded(
-                                                      child: Text(
-                                                        AppTranslations.getText(
-                                                          lang,
-                                                          'uv_index_title',
-                                                        ),
-                                                        style:
-                                                            GoogleFonts.poppins(
-                                                              fontSize: 13,
-                                                              fontWeight:
-                                                                  FontWeight
-                                                                      .bold,
-                                                              color:
-                                                                  const Color(
-                                                                    0xFF2C3E50,
-                                                                  ),
-                                                            ),
-                                                        maxLines: 1,
-                                                        overflow: TextOverflow
-                                                            .ellipsis,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                              const SizedBox(height: 0),
-                                              Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.center,
-                                                children: [
-                                                  FittedBox(
-                                                    fit: BoxFit.scaleDown,
-                                                    alignment: Alignment.center,
-                                                    child: Text(
-                                                      _uvIndex.toStringAsFixed(
-                                                        1,
-                                                      ),
-                                                      style:
-                                                          GoogleFonts.poppins(
-                                                            fontSize: 36,
-                                                            fontWeight:
-                                                                FontWeight.bold,
-                                                            color: const Color(
-                                                              0xFF2C3E50,
-                                                            ),
-                                                          ),
-                                                    ),
-                                                  ),
-                                                  Text(
-                                                    _uvIndex <= 2.9
-                                                        ? AppTranslations.getText(
-                                                            lang,
-                                                            'uv_low',
-                                                          )
-                                                        : _uvIndex <= 5.9
-                                                        ? AppTranslations.getText(
-                                                            lang,
-                                                            'uv_moderate',
-                                                          )
-                                                        : _uvIndex <= 7.9
-                                                        ? AppTranslations.getText(
-                                                            lang,
-                                                            'uv_high',
-                                                          )
-                                                        : _uvIndex <= 10.9
-                                                        ? AppTranslations.getText(
-                                                            lang,
-                                                            'uv_very_high',
-                                                          )
-                                                        : AppTranslations.getText(
-                                                            lang,
-                                                            'uv_extreme',
-                                                          ),
-                                                    textAlign: TextAlign.center,
-                                                    style: GoogleFonts.poppins(
-                                                      fontSize: 15,
-                                                      fontWeight:
-                                                          FontWeight.bold,
-                                                      color: _getUvColor(
-                                                        _uvIndex,
-                                                      ),
-                                                    ),
-                                                    maxLines: 1,
-                                                    overflow:
-                                                        TextOverflow.ellipsis,
-                                                  ),
-                                                ],
-                                              ),
-                                            ],
-                                          ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 16),
-                            _buildSolarIntensityCard(),
-                            const SizedBox(height: 16),
-                            // LÓGICA DE ESTADO DEL BOTÓN PRINCIPAL / DETALLES DE ACCIÓN
-                            _buildCombinedExposureCard(),
-                            const SizedBox(height: 20),
+                            const SizedBox(width: 12),
+                            Expanded(child: _buildLocationCard(lang)),
                           ],
                         ),
-                      ),
+                        const SizedBox(height: 16),
+                        Center(child: _buildSegmentedControl()),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: PageView(
+                      controller: _pageController,
+                      onPageChanged: (index) {
+                        setState(() {
+                          _currentPage = index;
+                        });
+                      },
+                      children: [
+                        // Pàgina 0: Main Screen lower section
+                        SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24.0,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _buildMainDashboardLowerSection(lang),
+                                const SizedBox(height: 20),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Pàgina 1: UV Forecast Screen lower section
+                        SingleChildScrollView(
+                          physics: const BouncingScrollPhysics(),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 24.0,
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                _buildUvForecastCard(lang),
+                                const SizedBox(height: 20),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   // ESPACIO RESERVADO PARA ADS EN LA PARTE INFERIOR
@@ -5146,5 +5294,259 @@ class _OrbitalCircularProgressPainter extends CustomPainter {
         oldDelegate.valueColor != valueColor ||
         oldDelegate.isRunning != isRunning ||
         oldDelegate.animationValue != animationValue;
+  }
+}
+
+class UvForecastGraph extends StatelessWidget {
+  final List<Map<String, dynamic>> forecast;
+  final String currentHourLabel;
+
+  const UvForecastGraph({
+    super.key,
+    required this.forecast,
+    required this.currentHourLabel,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 180,
+      width: double.infinity,
+      child: CustomPaint(
+        painter: UvForecastPainter(
+          forecast: forecast,
+          currentHourLabel: currentHourLabel,
+        ),
+      ),
+    );
+  }
+}
+
+class UvForecastPainter extends CustomPainter {
+  final List<Map<String, dynamic>> forecast;
+  final String currentHourLabel;
+
+  UvForecastPainter({required this.forecast, required this.currentHourLabel});
+
+  Color _getUvColor(double uv) {
+    if (uv <= 2.9) return const Color(0xFF2ECC71); // Verde - Bajo
+    if (uv <= 5.9) return const Color(0xFFF1C40F); // Amarillo - Moderado
+    if (uv <= 7.9) return const Color(0xFFE67E22); // Naranja - Alto
+    if (uv <= 10.9) return const Color(0xFFE74C3C); // Rojo - Muy Alto
+    return const Color(0xFF9B59B6); // Púrpura - Extremo
+  }
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (forecast.isEmpty) return;
+
+    final double paddingLeft = 24.0;
+    final double paddingRight = 24.0;
+    final double paddingTop = 24.0;
+    final double paddingBottom = 24.0;
+
+    final double chartWidth = size.width - paddingLeft - paddingRight;
+    final double chartHeight = size.height - paddingTop - paddingBottom;
+
+    // Find max UV
+    double maxUv = 12.0;
+    for (var item in forecast) {
+      final uv = (item['uv'] as num).toDouble();
+      if (uv > maxUv) {
+        maxUv = uv;
+      }
+    }
+
+    // Convert forecast data to points
+    final List<Offset> points = [];
+    for (int i = 0; i < forecast.length; i++) {
+      final uv = (forecast[i]['uv'] as num).toDouble();
+      final double x = paddingLeft + (i / 23.0) * chartWidth;
+      final double y = size.height - paddingBottom - (uv / maxUv) * chartHeight;
+      points.add(Offset(x, y));
+    }
+
+    final currentHour = DateTime.now().hour;
+
+    // 1. Draw background grid/horizontal helper lines
+    final gridPaint = Paint()
+      ..color = const Color(0xFF2C3E50).withOpacity(0.05)
+      ..strokeWidth = 1.0;
+
+    // Draw 3 horizontal lines (low, medium, high)
+    for (int j = 1; j <= 3; j++) {
+      final double y = paddingTop + (j / 4.0) * chartHeight;
+      canvas.drawLine(
+        Offset(paddingLeft, y),
+        Offset(size.width - paddingRight, y),
+        gridPaint,
+      );
+    }
+
+    // 2. Draw current hour vertical highlight line
+    if (currentHour >= 0 && currentHour < points.length) {
+      final currentPoint = points[currentHour];
+      final linePaint = Paint()
+        ..color = const Color(0xFF73C6B6).withOpacity(0.3)
+        ..strokeWidth = 1.5
+        ..style = PaintingStyle.stroke;
+
+      // Draw a dashed vertical line
+      double startY = paddingTop;
+      final double endY = size.height - paddingBottom;
+      while (startY < endY) {
+        canvas.drawLine(
+          Offset(currentPoint.dx, startY),
+          Offset(currentPoint.dx, math.min(startY + 4, endY)),
+          linePaint,
+        );
+        startY += 8;
+      }
+    }
+
+    // 3. Draw smooth Bezier curve line
+    final path = Path();
+    path.moveTo(points[0].dx, points[0].dy);
+    for (int i = 0; i < points.length - 1; i++) {
+      final p0 = points[i];
+      final p1 = points[i + 1];
+      final controlPoint1 = Offset(p0.dx + (p1.dx - p0.dx) / 2, p0.dy);
+      final controlPoint2 = Offset(p0.dx + (p1.dx - p0.dx) / 2, p1.dy);
+      path.cubicTo(
+        controlPoint1.dx,
+        controlPoint1.dy,
+        controlPoint2.dx,
+        controlPoint2.dy,
+        p1.dx,
+        p1.dy,
+      );
+    }
+
+    final colors = forecast
+        .map((e) => _getUvColor((e['uv'] as num).toDouble()))
+        .toList();
+    final stops = List.generate(24, (index) => index / 23.0);
+    final shader = LinearGradient(
+      colors: colors,
+      stops: stops,
+    ).createShader(Rect.fromLTWH(paddingLeft, 0, chartWidth, size.height));
+
+    final linePaint = Paint()
+      ..shader = shader
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3.5
+      ..strokeCap = StrokeCap.round;
+
+    canvas.drawPath(path, linePaint);
+
+    // 4. Draw key points, values, and horizontal labels
+    for (int i = 0; i < forecast.length; i++) {
+      final uv = (forecast[i]['uv'] as num).toDouble();
+      final point = points[i];
+      final isKeyPoint = (i % 3 == 0) || (i == 23);
+
+      if (isKeyPoint) {
+        // Draw small dot
+        final dotPaint = Paint()
+          ..color = _getUvColor(uv)
+          ..style = PaintingStyle.fill;
+        canvas.drawCircle(point, 4.0, dotPaint);
+
+        final whiteBorder = Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 1.5;
+        canvas.drawCircle(point, 4.0, whiteBorder);
+
+        // Draw UV value label above the curve
+        _drawText(
+          canvas,
+          uv.toStringAsFixed(1),
+          Offset(point.dx, point.dy - 12),
+          bold: true,
+          fontSize: 9,
+          color: const Color(0xFF2C3E50),
+        );
+      }
+
+      // Draw bottom hour labels
+      if (isKeyPoint) {
+        String label;
+        if (i == currentHour) {
+          label = currentHourLabel;
+        } else {
+          label = "${i.toString().padLeft(2, '0')}:00";
+        }
+
+        final isCurrent = i == currentHour;
+        _drawText(
+          canvas,
+          label,
+          Offset(point.dx, size.height - paddingBottom + 12),
+          bold: isCurrent,
+          fontSize: 9,
+          color: isCurrent
+              ? const Color(0xFF73C6B6)
+              : const Color(0xFF2C3E50).withOpacity(0.6),
+        );
+      }
+    }
+
+    // 5. Draw current hour glow point (if not already handled)
+    if (currentHour >= 0 && currentHour < points.length) {
+      final currentPoint = points[currentHour];
+      final currentUv = (forecast[currentHour]['uv'] as num).toDouble();
+
+      final glowPaint = Paint()
+        ..color = const Color(0xFF73C6B6).withOpacity(0.25)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(currentPoint, 10.0, glowPaint);
+
+      final centerPaint = Paint()
+        ..color = _getUvColor(currentUv)
+        ..style = PaintingStyle.fill;
+      canvas.drawCircle(currentPoint, 5.5, centerPaint);
+
+      final borderPaint = Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.5;
+      canvas.drawCircle(currentPoint, 5.5, borderPaint);
+    }
+  }
+
+  void _drawText(
+    Canvas canvas,
+    String text,
+    Offset position, {
+    bool bold = false,
+    double fontSize = 10,
+    Color color = const Color(0xFF2C3E50),
+  }) {
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: GoogleFonts.poppins(
+          fontSize: fontSize,
+          fontWeight: bold ? FontWeight.bold : FontWeight.normal,
+          color: color,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(
+        position.dx - textPainter.width / 2,
+        position.dy - textPainter.height / 2,
+      ),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant UvForecastPainter oldDelegate) {
+    return oldDelegate.forecast != forecast ||
+        oldDelegate.currentHourLabel != currentHourLabel;
   }
 }
