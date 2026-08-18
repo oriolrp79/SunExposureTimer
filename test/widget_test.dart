@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/material.dart';
 
 import 'package:sun_timer/main.dart';
 
@@ -56,7 +57,7 @@ void main() {
     // Tap "Aceptar"
     await tester.tap(find.text('Aceptar'));
     await tester.pump();
-    await tester.pump(const Duration(milliseconds: 100));
+    await tester.pump(const Duration(seconds: 8));
 
     // Verificar que se muestra el tiempo seguro estimado automáticamente y el botón de demo
     expect(find.text('Dosis Solar Máxima'), findsOneWidget);
