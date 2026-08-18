@@ -251,7 +251,7 @@ class AppTranslations {
       'solar_intensity': 'Impact on your skin',
       'fullscreen_alert_body':
           'You have completed your recommended maximum daily sun exposure for today according to your skin type ({phototype}).',
-      'accumulated_exposure_time': 'Accumulated\nExposure Time',
+      'accumulated_exposure_time': 'Accumulated\nExposure\nTimer',
       'safe_exposure_banner_title': '🛡️ Safe exposure',
       'safe_exposure_banner_desc':
           'Under current conditions, there is no need to track exposure time.',
@@ -368,7 +368,7 @@ class AppTranslations {
       'solar_intensity': 'Impacto en tu piel',
       'fullscreen_alert_body':
           'Has completado tu dosis máxima recomendada de exposición solar para hoy de acuerdo a tu fototipo ({phototype}).',
-      'accumulated_exposure_time': 'Tiempo Acumulado\nde Exposición',
+      'accumulated_exposure_time': 'Tiempo\nAcumulado\nde\nExposición',
       'safe_exposure_banner_title': '🛡️ Exposición segura',
       'safe_exposure_banner_desc':
           'En las condiciones actuales no es necesario controlar el tiempo de exposición.',
@@ -521,7 +521,7 @@ class AppTranslations {
       'location_unavailable': 'Localisation indisponible',
       'search_your_city': 'Recherchez votre ville',
       'location': 'Localisation',
-      'real_light': 'Lumière réelle',
+      'real_light': 'Lumière\nréelle',
       'simulated_lux': 'Lux simulé',
       'direct_sun': 'Soleil direct',
       'shade_umbrella': 'Ombre',
@@ -599,7 +599,7 @@ class AppTranslations {
       'solar_intensity': 'Impact sur votre peau',
       'fullscreen_alert_body':
           'Vous avez atteint votre exposition solaire maximale quotidienne recommandée pour aujourd\'hui selon votre phototype ({phototype}).',
-      'accumulated_exposure_time': 'Temps d\'Exposition\nAccumulé',
+      'accumulated_exposure_time': 'Temps\nd\'Exposition\nAccumulé',
       'safe_exposure_banner_title': '🛡️ Exposition sûre',
       'safe_exposure_banner_desc':
           'Dans les conditions actuelles, il n\'est pas nécessaire de contrôler le temps d\'exposition.',
@@ -718,7 +718,7 @@ class AppTranslations {
       'solar_intensity': 'Impatto sulla tua pelle',
       'fullscreen_alert_body':
           'Hai completato la tua esposizione solare massima giornaliera raccomandata per oggi in base al tuo fototipo ({phototype}).',
-      'accumulated_exposure_time': 'Tempo di Esposizione\nAccumulato',
+      'accumulated_exposure_time': 'Tempo di\nEsposizione\nAccumulato',
       'safe_exposure_banner_title': '🛡️ Esposizione sicura',
       'safe_exposure_banner_desc':
           'Nelle condizioni attuali non è necessario controllare il tempo di esposizione.',
@@ -836,7 +836,7 @@ class AppTranslations {
       'solar_intensity': 'Impacto na sua pele',
       'fullscreen_alert_body':
           'Você completou a sua exposição solar máxima diária recomendada para hoje de acordo com o seu fototipo ({phototype}).',
-      'accumulated_exposure_time': 'Tempo de Exposição\nAcumulado',
+      'accumulated_exposure_time': 'Tempo de\nExposição\nAcumulado',
       'safe_exposure_banner_title': '🛡️ Exposição segura',
       'safe_exposure_banner_desc':
           'Nas condições actuais não é necessário controlar o tempo de exposição.',
@@ -954,7 +954,7 @@ class AppTranslations {
       'solar_intensity': 'Impacte a la teva pell',
       'fullscreen_alert_body':
           'Has completat la teva dosi màxima recomanada d\'exposició solar per a avui d\'acord amb el teu fototip ({phototype}).',
-      'accumulated_exposure_time': 'Temps Acumulat\nd\'Exposició',
+      'accumulated_exposure_time': 'Temps\nAcumulat\nd\'Exposició',
       'safe_exposure_banner_title': '🛡️ Exposició segura',
       'safe_exposure_banner_desc':
           'En les condicions actuals no cal controlar el temps d\'exposició.',
@@ -1856,7 +1856,8 @@ class _DashboardScreenState extends State<DashboardScreen>
       bool limitReachedInBackground = false;
       double activeElapsedSeconds = savedAutoPaused ? 0.0 : elapsedSeconds;
 
-      if (!savedAutoPaused && savedElapsedSecs + elapsedSeconds >= maxExposureSeconds) {
+      if (!savedAutoPaused &&
+          savedElapsedSecs + elapsedSeconds >= maxExposureSeconds) {
         activeElapsedSeconds = (maxExposureSeconds - savedElapsedSecs)
             .toDouble();
         limitReachedInBackground = true;
@@ -2091,7 +2092,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
           // Programar càlcul periòdic cada 2 segons
           _calculationTimer?.cancel();
-           _calculationTimer = Timer.periodic(const Duration(seconds: 2), (
+          _calculationTimer = Timer.periodic(const Duration(seconds: 2), (
             timer,
           ) {
             if (_buttonState == 1 || _exposureSessionActive) {
@@ -2570,7 +2571,7 @@ class _DashboardScreenState extends State<DashboardScreen>
 
     final currentType = fitzpatrickTypes[widget.selectedSkinTypeIndex];
     final double doseTolerance = currentType.dose.toDouble();
-    
+
     final double theoreticalSafeMinutesSun = _uvIndex <= 0.0
         ? double.infinity
         : (doseTolerance / (60.0 * _uvIndex));
@@ -2588,7 +2589,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           setState(() {
             _isAutoPaused = true;
           });
-          
+
           _countdownTimer?.cancel();
           _stateSavingTimer?.cancel();
           _reprogramTimer?.cancel();
@@ -3840,14 +3841,23 @@ class _DashboardScreenState extends State<DashboardScreen>
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  "${AppTranslations.getText(lang, 'your_skin_type')}: ${AppTranslations.getText(lang, 'skin_type_${widget.selectedSkinTypeIndex + 1}_name')}",
+                  AppTranslations.getText(lang, 'your_skin_type'),
                   style: GoogleFonts.poppins(
                     fontSize: 10,
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF2C3E50),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.visible,
+                ),
+                Text(
+                  AppTranslations.getText(
+                    lang,
+                    'skin_type_${widget.selectedSkinTypeIndex + 1}_name',
+                  ),
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    color: const Color(0xFF2C3E50),
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -3906,24 +3916,41 @@ class _DashboardScreenState extends State<DashboardScreen>
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  _locationError
-                      ? AppTranslations.getText(
-                          lang,
-                          _isOffline
-                              ? 'location_unavailable'
-                              : 'search_your_city',
-                        )
-                      : _locationName,
-                  style: GoogleFonts.poppins(
-                    fontSize: 9,
-                    color: _locationError
-                        ? Colors.redAccent
-                        : const Color(0xFF2C3E50).withOpacity(0.6),
+                if (!_locationError && _locationName.startsWith("Lat: ")) ...[
+                  Text(
+                    _locationName.split(", ").first,
+                    style: GoogleFonts.poppins(
+                      fontSize: 9,
+                      color: const Color(0xFF2C3E50).withOpacity(0.6),
+                    ),
                   ),
-                  maxLines: 2,
-                  overflow: TextOverflow.visible,
-                ),
+                  Text(
+                    _locationName.split(", ").last,
+                    style: GoogleFonts.poppins(
+                      fontSize: 9,
+                      color: const Color(0xFF2C3E50).withOpacity(0.6),
+                    ),
+                  ),
+                ] else ...[
+                  Text(
+                    _locationError
+                        ? AppTranslations.getText(
+                            lang,
+                            _isOffline
+                                ? 'location_unavailable'
+                                : 'search_your_city',
+                          )
+                        : _locationName,
+                    style: GoogleFonts.poppins(
+                      fontSize: 9,
+                      color: _locationError
+                          ? Colors.redAccent
+                          : const Color(0xFF2C3E50).withOpacity(0.6),
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.visible,
+                  ),
+                ],
               ],
             ),
           ),
@@ -4097,7 +4124,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             // SENSOR LUZ AMBIENTAL
             Expanded(
               child: Container(
-                height: 120,
+                height: (lang == 'fr') ? 134 : 120,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
                   vertical: 10,
@@ -4123,7 +4150,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                         mainAxisAlignment: MainAxisAlignment.start,
                         children: [
                           SizedBox(
-                            height: 22,
+                            height: (lang == 'fr') ? 36 : 22,
                             child: Row(
                               children: [
                                 Icon(
@@ -4144,11 +4171,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                                             'real_light',
                                           ),
                                           style: GoogleFonts.poppins(
-                                            fontSize: 13,
+                                            fontSize: (lang == 'de') ? 10 : 13,
                                             fontWeight: FontWeight.bold,
                                             color: const Color(0xFF2C3E50),
                                           ),
-                                          maxLines: 1,
+                                          maxLines: (lang == 'fr') ? 2 : 1,
                                           overflow: TextOverflow.ellipsis,
                                         ),
                                       ),
@@ -4230,11 +4257,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 child: Text(
                                   AppTranslations.getText(lang, 'real_light'),
                                   style: GoogleFonts.poppins(
-                                    fontSize: 13,
+                                    fontSize: (lang == 'de') ? 10 : 13,
                                     fontWeight: FontWeight.bold,
                                     color: const Color(0xFF2C3E50),
                                   ),
-                                  maxLines: 1,
+                                  maxLines: (lang == 'fr') ? 2 : 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
                               ),
@@ -4267,7 +4294,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             // ÍNDICE UV REAL/ESTIMADO
             Expanded(
               child: Container(
-                height: 120,
+                height: (lang == 'fr') ? 134 : 120,
                 padding: const EdgeInsets.symmetric(
                   horizontal: 14,
                   vertical: 10,
@@ -4860,7 +4887,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                           alignment: Alignment.center,
                           transform: Matrix4.rotationY(math.pi),
                           child: AnimatedBuilder(
-                            animation: Listenable.merge([_orbitalEchoController, _blinkController]),
+                            animation: Listenable.merge([
+                              _orbitalEchoController,
+                              _blinkController,
+                            ]),
                             builder: (context, child) {
                               return OrbitalCircularProgressIndicator(
                                 value: progress,
@@ -4869,7 +4899,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 valueColor: _getCountdownColor(progress),
                                 isRunning: isRunning && !_isAutoPaused,
                                 animationValue: _orbitalEchoController.value,
-                                opacity: _isAutoPaused ? _blinkAnimation.value : 1.0,
+                                opacity: _isAutoPaused
+                                    ? _blinkAnimation.value
+                                    : 1.0,
                               );
                             },
                           ),
@@ -4949,7 +4981,10 @@ class _DashboardScreenState extends State<DashboardScreen>
                           alignment: Alignment.center,
                           transform: Matrix4.rotationY(math.pi),
                           child: AnimatedBuilder(
-                            animation: Listenable.merge([_orbitalEchoController, _blinkController]),
+                            animation: Listenable.merge([
+                              _orbitalEchoController,
+                              _blinkController,
+                            ]),
                             builder: (context, child) {
                               return OrbitalCircularProgressIndicator(
                                 value: _receivedVitDPercentage / 100.0,
@@ -4958,7 +4993,9 @@ class _DashboardScreenState extends State<DashboardScreen>
                                 valueColor: const Color(0xFF0023FF),
                                 isRunning: isRunning && !_isAutoPaused,
                                 animationValue: _orbitalEchoController.value,
-                                opacity: _isAutoPaused ? _blinkAnimation.value : 1.0,
+                                opacity: _isAutoPaused
+                                    ? _blinkAnimation.value
+                                    : 1.0,
                               );
                             },
                           ),
@@ -5042,11 +5079,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                           'accumulated_exposure_time',
                         ),
                         style: GoogleFonts.poppins(
-                          fontSize: 13,
+                          fontSize: (lang == 'en' || lang == 'de') ? 11 : 13,
                           fontWeight: FontWeight.bold,
                           color: const Color(0xFF2C3E50),
                         ),
-                        maxLines: 3,
+                        maxLines: 4,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ),
@@ -5240,7 +5277,11 @@ class _DashboardScreenState extends State<DashboardScreen>
                       ),
                     ),
                   ),
-                  if (!isRunning && (showDemoButton || Platform.environment.containsKey('FLUTTER_TEST'))) ...[
+                  if (!isRunning &&
+                      (showDemoButton ||
+                          Platform.environment.containsKey(
+                            'FLUTTER_TEST',
+                          ))) ...[
                     const SizedBox(height: 10),
                     GestureDetector(
                       onTap: (_locationError || _isOffline || !_uvAvailable)
