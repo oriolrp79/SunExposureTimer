@@ -27,7 +27,6 @@ const bool showDemoButton = false;
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await NotificationService().initialize();
 
   // Pre-carrega de SharedPreferences
   final prefs = await SharedPreferences.getInstance();
@@ -41,8 +40,6 @@ Future<void> main() async {
   final int? savedSkinType = prefs.containsKey('skin_type')
       ? prefs.getInt('skin_type')
       : null;
-
-  MobileAds.instance.initialize();
 
   // Permet que l'aplicació es dibuixi sota les barres del sistema (edge-to-edge) per permetre transparències reals
   SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
@@ -59,6 +56,9 @@ Future<void> main() async {
       statusBarIconBrightness: Brightness.dark,
     ),
   );
+
+  // Inicialització asíncrona no bloquejant de les notificacions en paral·lel
+  NotificationService().initialize();
 
   runApp(SunTimerApp(initialSkinType: savedSkinType));
 }
@@ -1605,41 +1605,55 @@ class _DashboardScreenState extends State<DashboardScreen>
       (timer) => _updateClock(),
     );
 
-    // Detecció de connectivitat inicial i subscripció reactiva en temps real
-    _connectivitySubscription = Connectivity().onConnectivityChanged.listen((
-      List<ConnectivityResult> results,
-    ) {
-      _updateConnectivityState(results);
-    });
-
-    // Heartbeat periòdic cada 3 segons per a una comprovació de connectivitat robusta
-    _networkCheckTimer = Timer.periodic(const Duration(seconds: 3), (
-      timer,
-    ) async {
-      try {
-        final List<ConnectivityResult> results = await Connectivity()
-            .checkConnectivity();
-        _updateConnectivityState(results);
-      } catch (e) {
-        debugPrint("Error checking connectivity heartbeat: $e");
-      }
-    });
-
-    _initUpdateListener();
-
     // Calcular inicialmente
     _calculateRecommendedTime();
 
     // Optimización de arranque rápido: Diferir tareas pesadas para después del renderizado del primer frame
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) {
-        _checkUpdateOnStartup();
         setState(() {
           _firstFrameRendered = true;
         });
+
+        // Configurar connectivitat de forma asíncrona no bloquejant
+        _connectivitySubscription = Connectivity().onConnectivityChanged.listen(
+          (List<ConnectivityResult> results) {
+            _updateConnectivityState(results);
+          },
+        );
+
+        // Heartbeat periòdic de connectivitat
+        _networkCheckTimer = Timer.periodic(const Duration(seconds: 3), (
+          timer,
+        ) async {
+          try {
+            final List<ConnectivityResult> results = await Connectivity()
+                .checkConnectivity();
+            _updateConnectivityState(results);
+          } catch (e) {
+            debugPrint("Error checking connectivity heartbeat: $e");
+          }
+        });
+
+        _initUpdateListener();
+
+        // Lectura de GPS y carga de estado guardado en segundo plano
         _loadSavedSessionState();
-        _loadBannerAd();
-        _loadInterstitialAd();
+
+        // Diferir Google Mobile Ads (AdMob) de forma asíncrona no bloquejant
+        Future.delayed(const Duration(milliseconds: 800), () {
+          if (mounted) {
+            MobileAds.instance.initialize().then((_) {
+              if (mounted) {
+                _loadBannerAd();
+                _loadInterstitialAd();
+              }
+            });
+          }
+        });
+
+        // Comprobación de actualizaciones en segundo plano silenciosa
+        _checkUpdateOnStartup();
       }
     });
   }
@@ -3823,8 +3837,8 @@ class _DashboardScreenState extends State<DashboardScreen>
       child: Row(
         children: [
           Container(
-            width: 14,
-            height: 14,
+            width: 20,
+            height: 20,
             decoration: BoxDecoration(
               color: currentType.color,
               shape: BoxShape.circle,
@@ -3843,7 +3857,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 Text(
                   AppTranslations.getText(lang, 'your_skin_type'),
                   style: GoogleFonts.poppins(
-                    fontSize: 10,
+                    fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF2C3E50),
                   ),
@@ -3875,7 +3889,7 @@ class _DashboardScreenState extends State<DashboardScreen>
             onTap: widget.onResetSkinType,
             child: const Icon(
               Icons.edit_outlined,
-              size: 16,
+              size: 20,
               color: Color(0xFF73C6B6),
             ),
           ),
@@ -3900,7 +3914,7 @@ class _DashboardScreenState extends State<DashboardScreen>
       ),
       child: Row(
         children: [
-          const Icon(Icons.map_outlined, color: Color(0xFF73C6B6), size: 14),
+          const Icon(Icons.map_outlined, color: Color(0xFF73C6B6), size: 20),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
@@ -3910,7 +3924,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                 Text(
                   AppTranslations.getText(lang, 'location'),
                   style: GoogleFonts.poppins(
-                    fontSize: 10,
+                    fontSize: 13,
                     fontWeight: FontWeight.bold,
                     color: const Color(0xFF2C3E50),
                   ),
@@ -3960,7 +3974,7 @@ class _DashboardScreenState extends State<DashboardScreen>
               onTap: _openSearchCityBottomSheet,
               child: const Icon(
                 Icons.search_rounded,
-                size: 16,
+                size: 20,
                 color: Color(0xFF73C6B6),
               ),
             ),
@@ -4013,7 +4027,7 @@ class _DashboardScreenState extends State<DashboardScreen>
                     )
                   : const Icon(
                       Icons.refresh_rounded,
-                      size: 16,
+                      size: 20,
                       color: Color(0xFF73C6B6),
                     ),
             ),
