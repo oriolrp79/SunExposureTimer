@@ -1700,7 +1700,7 @@ class _DashboardScreenState extends State<DashboardScreen>
     }
 
     _bannerAd = BannerAd(
-      adUnitId: 'ca-app-pub-3940256099942544/6300978111',
+      adUnitId: 'ca-app-pub-4810202464688810/4145128676',
       size: size,
       request: const AdRequest(),
       listener: BannerAdListener(
@@ -1729,8 +1729,8 @@ class _DashboardScreenState extends State<DashboardScreen>
     _isAdLoading = true;
 
     final String adUnitId = Platform.isAndroid
-        ? 'ca-app-pub-3940256099942544/1033173712'
-        : 'ca-app-pub-3940256099942544/4411468910';
+        ? 'ca-app-pub-4810202464688810/7438988349'
+        : 'ca-app-pub-4810202464688810/7438988349';
 
     InterstitialAd.load(
       adUnitId: adUnitId,
